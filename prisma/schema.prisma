@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  phone     String   @unique
+  balance   Float    @default(0) // Available credits
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tasks         Task[]
+  creditLedgers CreditLedger[]
+  orders        Order[]
+}
+
+model Workflow {
+  id             String   @id @default(cuid())
+  title          String
+  description    String?
+  coverImage     String?
+  category       String?
+  runningHubId   String // The ID of the workflow in RunningHub
+  config         Json? // RunningHub UI config for dynamic inputs
+  baseCreditCost Float    @default(0) // Original cost from RunningHub
+  platformCost   Float    @default(0) // Platform cost (e.g. 1.5 * baseCreditCost)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  tasks Task[]
+}
+
+enum TaskStatus {
+  PENDING
+  RUNNING
+  SUCCESS
+  FAILED
+}
+
+model Task {
+  id               String     @id @default(cuid())
+  userId           String
+  workflowId       String
+  runningHubTaskId String? // Task ID returned by RunningHub API
+  status           TaskStatus @default(PENDING)
+  inputs           Json? // JSON inputs sent to the workflow
+  outputs          Json? // JSON outputs (images, videos, text) from the workflow
+  progress         Float      @default(0)
+  creditCost       Float // The actual platform cost deducted for this task
+  errorMessage     String?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id])
+  workflow Workflow @relation(fields: [workflowId], references: [id])
+}
+
+enum LedgerType {
+  FREEZE
+  DEDUCT
+  REFUND
+  RECHARGE
+}
+
+model CreditLedger {
+  id          String     @id @default(cuid())
+  userId      String
+  taskId      String? // Link to the task that caused this, if applicable
+  orderId     String? // Link to the top-up order, if applicable
+  amount      Float
+  type        LedgerType
+  description String?
+  createdAt   DateTime   @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  CANCELLED
+  FAILED
+}
+
+enum PaymentMethod {
+  WECHAT_PAY
+  ALIPAY
+}
+
+model Order {
+  id            String        @id @default(cuid())
+  userId        String
+  amount        Float // Fiat amount (e.g., CNY)
+  credits       Float // Number of credits bought
+  status        OrderStatus   @default(PENDING)
+  paymentMethod PaymentMethod
+  transactionId String? // External transaction ID from WeChat/Alipay
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
