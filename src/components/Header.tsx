@@ -33,15 +33,23 @@ export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?
     <>
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center space-x-2">
-              {logoUrl ? (
-                <Image src={logoUrl} alt="Logo" width={120} height={40} className="object-contain" />
-              ) : (
-                <span className="text-xl font-bold">papagaga</span>
-              )}
+          {/* Left: Logo Only */}
+          <div className="flex items-center">
+            <Link href="/" className="flex items-center">
+              <Image 
+                src={logoUrl || "/logo.png"} 
+                alt="Logo" 
+                width={120} 
+                height={32} 
+                className="h-8 w-auto object-contain" 
+              />
             </Link>
-            <nav className="hidden md:flex gap-6">
+          </div>
+
+          {/* Right: Navigation and Actions */}
+          <div className="flex items-center gap-6 ml-auto">
+            {/* Navigation links moved to the right */}
+            <nav className="hidden md:flex gap-6 items-center">
               {navLinks.map((link, i) => (
                 link.type === "redirect" ? (
                   <Link
@@ -62,10 +70,24 @@ export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?
                 )
               ))}
             </nav>
-          </div>
-          <div className="flex items-center gap-4">
-            <Button variant="outline" size="sm">Log In</Button>
-            <Button size="sm">Sign Up</Button>
+
+            <div className="flex items-center gap-4">
+              {/* 
+                // TODO: Conditional rendering for Logged-In User Status
+                {isLoggedIn ? (
+                  <>
+                    <Button variant="outline" size="sm">Invite</Button>
+                    <NotificationIcon />
+                    <CustomerSupportIcon />
+                    <Button size="sm">VIP Supermarket</Button>
+                    <UserAvatarDropdown />
+                  </>
+                ) : (
+              */}
+              <Button variant="outline" size="sm">Log In</Button>
+              <Button size="sm">Sign Up</Button>
+              {/* )} */}
+            </div>
           </div>
         </div>
       </header>

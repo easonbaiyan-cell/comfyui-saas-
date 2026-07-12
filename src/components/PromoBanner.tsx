@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { X } from "lucide-react";
 
 export function PromoBanner({ text, countdownUntil }: { text?: string, countdownUntil?: Date }) {
   const [timeLeft, setTimeLeft] = useState<string>("");
+  const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
     if (!countdownUntil) return;
@@ -29,14 +31,46 @@ export function PromoBanner({ text, countdownUntil }: { text?: string, countdown
     return () => clearInterval(interval);
   }, [countdownUntil]);
 
-  if (!text) return null;
+  if (!text || !isVisible) return null;
+
+  // Function to highlight promotional keywords
+  const highlightKeywords = (originalText: string) => {
+    // We can split and replace known keywords like "37 折" or "0.37元/秒" 
+    // For a generic approach, we can use a basic regex if keywords are known, 
+    // or just render the text if it's already formatting-aware. 
+    // Since we receive plain text, let's just highlight specific strings for now:
+    const keywords = ["限时 37 折", "0.37元/秒", "37 折", "Launch Offer", "50% off"];
+    
+    let parts = [originalText];
+    keywords.forEach(kw => {
+      parts = parts.flatMap(part => {
+        if (typeof part !== 'string') return part;
+        const split = part.split(kw);
+        return split.reduce((acc: any[], current, idx) => {
+          if (idx === 0) return [current];
+          return [...acc, <span key={`${kw}-${idx}`} className="bg-pink-500 text-white px-2 py-0.5 rounded-md mx-1 font-bold">{kw}</span>, current];
+        }, []);
+      });
+    });
+    
+    return parts;
+  };
 
   return (
-    <div className="bg-primary text-primary-foreground py-2 px-4 text-center text-sm font-medium">
-      {text}
-      {countdownUntil && (
-        <span className="ml-4 font-bold tabular-nums tracking-wider">{timeLeft}</span>
-      )}
+    <div className="relative bg-primary text-primary-foreground py-2 px-10 text-center text-sm font-medium flex items-center justify-center min-h-[40px]">
+      <div className="flex-1 flex items-center justify-center flex-wrap gap-2">
+        <span>{highlightKeywords(text)}</span>
+        {countdownUntil && (
+          <span className="font-bold tabular-nums tracking-wider bg-black/20 px-2 py-0.5 rounded-md">{timeLeft}</span>
+        )}
+      </div>
+      <button 
+        onClick={() => setIsVisible(false)}
+        className="absolute right-4 p-1 hover:bg-black/20 rounded-full transition-colors flex-shrink-0"
+        aria-label="Close banner"
+      >
+        <X size={16} />
+      </button>
     </div>
   );
 }
