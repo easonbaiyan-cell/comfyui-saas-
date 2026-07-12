@@ -35,18 +35,14 @@ export function PromoBanner({ text, countdownUntil }: { text?: string, countdown
 
   // Function to highlight promotional keywords
   const highlightKeywords = (originalText: string) => {
-    // We can split and replace known keywords like "37 折" or "0.37元/秒" 
-    // For a generic approach, we can use a basic regex if keywords are known, 
-    // or just render the text if it's already formatting-aware. 
-    // Since we receive plain text, let's just highlight specific strings for now:
     const keywords = ["限时 37 折", "0.37元/秒", "37 折", "Launch Offer", "50% off"];
     
-    let parts = [originalText];
+    let parts: (string | React.ReactNode)[] = [originalText];
     keywords.forEach(kw => {
       parts = parts.flatMap(part => {
-        if (typeof part !== 'string') return part;
+        if (typeof part !== 'string') return [part];
         const split = part.split(kw);
-        return split.reduce((acc: any[], current, idx) => {
+        return split.reduce((acc: (string | React.ReactNode)[], current, idx) => {
           if (idx === 0) return [current];
           return [...acc, <span key={`${kw}-${idx}`} className="bg-pink-500 text-white px-2 py-0.5 rounded-md mx-1 font-bold">{kw}</span>, current];
         }, []);

@@ -2,14 +2,26 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
+import { Bell, HeadphonesIcon, LogOut, User as UserIcon } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import type { User } from "@supabase/supabase-js";
 
 interface NavLink {
   label: string;
@@ -21,6 +33,25 @@ interface NavLink {
 export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?: NavLink[] }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState<{title: string, body: string}>({ title: "", body: "" });
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    // Initial fetch
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user || null);
+    });
+
+    // Subscribe to auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+  };
 
   const handleLinkClick = (link: NavLink) => {
     if (link.type === "modal") {
@@ -78,21 +109,57 @@ export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?
             </nav>
 
             <div className="flex items-center gap-4">
-              {/* 
-                // TODO: Conditional rendering for Logged-In User Status
-                {isLoggedIn ? (
-                  <>
-                    <Button variant="outline" size="sm">Invite</Button>
-                    <NotificationIcon />
-                    <CustomerSupportIcon />
-                    <Button size="sm">VIP Supermarket</Button>
-                    <UserAvatarDropdown />
-                  </>
-                ) : (
-              */}
-              <Button variant="outline" size="sm">Log In</Button>
-              <Button size="sm">Sign Up</Button>
-              {/* )} */}
+              {user ? (
+                <>
+                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                    <Bell className="h-5 w-5" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                    <HeadphonesIcon className="h-5 w-5" />
+                  </Button>
+                  <Button size="sm" variant="outline" className="hidden sm:flex border-purple-500/30 hover:bg-purple-500/10 hover:text-purple-400 text-purple-500">
+                    VIP Supermarket
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger render={
+                      <Button variant="ghost" className="relative h-8 w-8 rounded-full ml-2">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src="/placeholder-user.jpg" alt={user.phone || "User"} />
+                          <AvatarFallback><UserIcon className="h-4 w-4" /></AvatarFallback>
+                        </Avatar>
+                      </Button>
+                    } />
+                    <DropdownMenuContent className="w-56" align="end">
+                      <DropdownMenuLabel className="font-normal">
+                        <div className="flex flex-col space-y-1">
+                          <p className="text-sm font-medium leading-none">My Account</p>
+                          <p className="text-xs leading-none text-muted-foreground">
+                            {user.phone || user.email}
+                          </p>
+                        </div>
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem>Dashboard</DropdownMenuItem>
+                      <DropdownMenuItem>Billing & Credits</DropdownMenuItem>
+                      <DropdownMenuItem>Settings</DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Log out</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
+              ) : (
+                <>
+                  <Button variant="outline" size="sm" onClick={() => window.location.href = "/login"}>
+                    Log In
+                  </Button>
+                  <Button size="sm" onClick={() => window.location.href = "/login"}>
+                    Sign Up
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
