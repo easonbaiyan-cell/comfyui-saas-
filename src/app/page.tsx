@@ -1,121 +1,113 @@
-import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Play } from 'lucide-react';
-import prisma from '@/lib/prisma';
-import Link from 'next/link';
-import { Workflow } from '@prisma/client';
+import { PromoBanner } from "@/components/PromoBanner";
+import { Header } from "@/components/Header";
+import { WorkflowGrid } from "@/components/WorkflowGrid";
+import prisma from "@/lib/prisma";
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60; // Revalidate at most every 60 seconds
 
-export default async function PortalPage() {
-  let workflows: Workflow[] = [];
+export default async function Home() {
+  // Try to fetch settings, handle the case where DB is empty or fails gracefully
+  let siteSettings = null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let workflows: any[] = [];
+
   try {
-    workflows = await prisma.workflow.findMany({
-      orderBy: { createdAt: 'desc' }
+    const settings = await prisma.siteSetting.findFirst({
+      orderBy: { createdAt: "desc" },
     });
+    siteSettings = settings;
+    
+    const wfs = await prisma.workflow.findMany({
+      where: { isActive: true },
+      orderBy: { createdAt: "desc" },
+    });
+    // Transform Decimal to number for the UI component
+    workflows = wfs.map(w => ({
+      ...w,
+      creditCost: w.creditCost ? Number(w.creditCost) : 0
+    }));
   } catch (error) {
-    console.error('Failed to fetch workflows:', error);
+    console.error("Error fetching data:", error);
+    // Continue with defaults if DB fails
   }
 
-  // Mock data if DB is empty (useful for initial visualization)
+  // Fallbacks if nothing in DB yet
+  const bannerText = siteSettings?.topBannerText || "Welcome to papagaga.com! Launch Offer: 50% off all workflows.";
+  // Stable date if missing (prevent hydration mismatches and impure function errors)
+  const defaultFutureDate = new Date();
+  defaultFutureDate.setDate(defaultFutureDate.getDate() + 7);
+  const bannerCountdown = siteSettings?.topBannerCountdown || defaultFutureDate;
+  const logoUrl = siteSettings?.logoUrl || undefined;
+  
+  // Parse navLinks from JSONB
+  let navLinks = [];
+  try {
+    if (siteSettings?.navLinks) {
+      navLinks = typeof siteSettings.navLinks === 'string' 
+        ? JSON.parse(siteSettings.navLinks) 
+        : siteSettings.navLinks;
+    }
+  } catch (e) {
+    console.error("Error parsing nav links", e);
+  }
+
+  if (navLinks.length === 0) {
+    navLinks = [
+      { label: "Workflows", type: "redirect", url: "/#workflows" },
+      { label: "Pricing", type: "modal", content: "Pricing modal content: Workflows cost 1.5x base runninghub credits." },
+      { label: "About", type: "redirect", url: "/about" },
+    ];
+  }
+
+  // Dummy fallback workflows if DB is totally empty
   if (workflows.length === 0) {
     workflows = [
       {
-        id: 'mock-1',
-        title: 'Midjourney 风格动漫化',
-        description: '将输入的人物照片转换为高质量的日系动漫风格，保持原图特征。',
-        coverImage: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=500&q=80',
-        category: '图像风格化',
-        platformCost: 15,
-        runningHubId: 'rh-123',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        baseCreditCost: 10,
-        config: null
+        id: "1",
+        runninghubId: "123",
+        title: "FLUX.1 Pro Generator",
+        description: "High-quality image generation using FLUX.1 Pro model.",
+        coverImageUrl: "https://images.unsplash.com/photo-1698428800057-0a373b53a067?q=80&w=600&auto=format&fit=crop",
+        category: "Image",
+        creditCost: 15
       },
       {
-        id: 'mock-2',
-        title: '电商产品白底图替换',
-        description: '自动识别商品主体，一键替换为高级感纯色或真实场景背景。',
-        coverImage: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80',
-        category: '电商工具',
-        platformCost: 8,
-        runningHubId: 'rh-124',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        baseCreditCost: 5,
-        config: null
-      },
-      {
-        id: 'mock-3',
-        title: '老照片高清修复',
-        description: '利用 AI 技术修复模糊、破损的老照片，提升人脸细节和整体清晰度。',
-        coverImage: 'https://images.unsplash.com/photo-1552168324-d612d77725e3?w=500&q=80',
-        category: '图像修复',
-        platformCost: 20,
-        runningHubId: 'rh-125',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        baseCreditCost: 13,
-        config: null
+        id: "2",
+        runninghubId: "456",
+        title: "Video Upscaler 4K",
+        description: "Upscale your videos to 4K resolution with AI.",
+        coverImageUrl: "https://images.unsplash.com/photo-1695653422960-4c3112bd22fa?q=80&w=600&auto=format&fit=crop",
+        category: "Video",
+        creditCost: 45
       }
     ];
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">探索工作流</h1>
-        <p className="text-muted-foreground mt-2">
-          发现并执行基于 ComfyUI 驱动的高质量 AI 生成方案。
-        </p>
-      </div>
+    <div className="flex min-h-screen flex-col">
+      <PromoBanner text={bannerText} countdownUntil={bannerCountdown as Date} />
+      <Header logoUrl={logoUrl} navLinks={navLinks} />
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {workflows.map((workflow) => (
-          <Card key={workflow.id} className="group overflow-hidden flex flex-col transition-all hover:shadow-md hover:border-primary/50">
-            <div className="aspect-video w-full overflow-hidden bg-muted relative">
-              {workflow.coverImage ? (
-                <img
-                  src={workflow.coverImage}
-                  alt={workflow.title}
-                  className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-                  暂无封面
-                </div>
-              )}
-              {workflow.category && (
-                <Badge className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm text-foreground hover:bg-background/90">
-                  {workflow.category}
-                </Badge>
-              )}
-            </div>
-            
-            <CardHeader className="p-4 flex-1">
-              <CardTitle className="line-clamp-1 text-lg">{workflow.title}</CardTitle>
-              <CardDescription className="line-clamp-2 mt-2">
-                {workflow.description || '暂无描述。'}
-              </CardDescription>
-            </CardHeader>
-            
-            <CardFooter className="p-4 pt-0 flex items-center justify-between border-t border-border/50 mt-4">
-              <div className="flex items-baseline space-x-1">
-                <span className="text-lg font-bold text-primary">{workflow.platformCost}</span>
-                <span className="text-xs text-muted-foreground">积分/次</span>
-              </div>
-              <Link href={`/workflows/${workflow.id}`}>
-                <Button size="sm" className="gap-2">
-                  <Play className="w-4 h-4 fill-current" />
-                  运行
-                </Button>
-              </Link>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
+      <main className="flex-1">
+        <section className="container mx-auto px-4 py-12">
+          <div className="mb-8 flex flex-col gap-2">
+            <h1 className="text-3xl font-bold tracking-tight" id="workflows">Featured Workflows</h1>
+            <p className="text-muted-foreground">
+              Discover and run the latest AI workflows.
+            </p>
+          </div>
+          
+          <WorkflowGrid workflows={workflows} />
+        </section>
+      </main>
+
+      <footer className="border-t py-6 md:py-0">
+        <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-4 md:h-16 md:flex-row">
+          <p className="text-sm text-muted-foreground">
+            &copy; {new Date().getFullYear()} papagaga. All rights reserved.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }
