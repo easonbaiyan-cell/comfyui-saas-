@@ -50,6 +50,12 @@ export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?
           <div className="flex items-center gap-6 ml-auto">
             {/* Navigation links moved to the right */}
             <nav className="hidden md:flex gap-6 items-center">
+              <Link
+                href="/invite"
+                className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
+              >
+                Invite & Earn
+              </Link>
               {navLinks.map((link, i) => (
                 link.type === "redirect" ? (
                   <Link
