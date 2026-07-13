@@ -1,4 +1,5 @@
 import React from 'react';
+import { X } from 'lucide-react';
 
 const CheckIcon = ({ className }: { className?: string }) => (
   <svg
@@ -15,12 +16,27 @@ const CheckIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-export default function PricingModal() {
+interface PricingModalProps {
+  onClose?: () => void;
+  defaultPlan?: string;
+}
+
+export default function PricingModal({ onClose }: PricingModalProps) {
   return (
-    <div className="min-h-screen w-full bg-[#0b0d13] bg-opacity-95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-white font-sans">
+    <div className="fixed inset-0 z-50 min-h-screen w-full bg-[#0b0d13] bg-opacity-95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-white font-sans overflow-y-auto">
       
+      {/* Close Button */}
+      {onClose && (
+        <button
+          onClick={onClose}
+          className="absolute top-6 right-6 p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-full transition-colors z-10"
+        >
+          <X className="w-6 h-6" />
+        </button>
+      )}
+
       {/* 3 Cards Container */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl w-full">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl w-full my-auto">
         
         {/* Card 1: 基础包月 */}
         <div className="relative flex flex-col rounded-2xl border border-gray-800 bg-gradient-to-b from-gray-900/50 to-black p-6 backdrop-blur-sm">
@@ -170,7 +186,7 @@ export default function PricingModal() {
       </div>
 
       {/* Footer Info */}
-      <div className="max-w-6xl w-full mt-10 text-left text-xs text-gray-500 leading-relaxed">
+      <div className="max-w-6xl w-full mt-10 mb-4 text-left text-xs text-gray-500 leading-relaxed">
         <p className="flex items-start gap-1">
           <span className="text-sm mt-[-1px]">✨</span>
           <span>积分使用说明：免费用户登录每日赠送 20 积分，每日赠送 2 次 5 折生成特权；云端存储空间保留 30 天；订阅积分每 31 天进行重置，过期作废。本平台实行单一积分制。</span>
