@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import PricingModal from "./PricingModal";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
@@ -36,6 +37,9 @@ export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?
   const [infoModalContent, setInfoModalContent] = useState<{title: string, body: string}>({ title: "", body: "" });
   
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  // 新增：控制定价页面弹窗的开关
+  const [isPricingOpen, setIsPricingOpen] = useState(false); 
+  
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
@@ -87,12 +91,22 @@ export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?
           <div className="flex items-center gap-6 ml-auto">
             {/* Navigation links moved to the right */}
             <nav className="hidden md:flex gap-6 items-center">
+              
+              {/* 新增的 About 按钮，点击唤起收费弹窗 */}
+              <button
+                onClick={() => setIsPricingOpen(true)}
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                关于 (About)
+              </button>
+
               <Link
                 href="/invite"
                 className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
               >
                 Invite & Earn
               </Link>
+              
               {navLinks.map((link, i) => (
                 link.type === "redirect" ? (
                   <Link
@@ -123,18 +137,26 @@ export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?
                   <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
                     <HeadphonesIcon className="h-5 w-5" />
                   </Button>
-                  <Button size="sm" variant="outline" className="hidden sm:flex border-purple-500/30 hover:bg-purple-500/10 hover:text-purple-400 text-purple-500">
+                  
+                  {/* VIP Supermarket 按钮也绑定了唤起收费弹窗 */}
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="hidden sm:flex border-purple-500/30 hover:bg-purple-500/10 hover:text-purple-400 text-purple-500"
+                    onClick={() => setIsPricingOpen(true)}
+                  >
                     VIP Supermarket
                   </Button>
+                  
                   <DropdownMenu>
-                    <DropdownMenuTrigger render={
+                    <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="relative h-8 w-8 rounded-full ml-2">
                         <Avatar className="h-8 w-8">
                           <AvatarImage src="/placeholder-user.jpg" alt={user.phone || "User"} />
                           <AvatarFallback><UserIcon className="h-4 w-4" /></AvatarFallback>
                         </Avatar>
                       </Button>
-                    } />
+                    </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56" align="end">
                       <DropdownMenuLabel className="font-normal">
                         <div className="flex flex-col space-y-1">
@@ -180,6 +202,21 @@ export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?
       
       {/* Global Auth Modal */}
       <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
+
+      {/* 新增：Pricing Modal (收费弹窗) */}
+      {isPricingOpen && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm" 
+          onClick={() => setIsPricingOpen(false)}
+        >
+          <div 
+            className="relative max-h-screen overflow-y-auto w-full flex justify-center p-4" 
+            onClick={(e) => e.stopPropagation()}
+          >
+            <PricingModal />
+          </div>
+        </div>
+      )}
     </>
   );
 }
