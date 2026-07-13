@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Bell, HeadphonesIcon, LogOut, User as UserIcon } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { AuthModal } from "./AuthModal";
 import {
   Dialog,
   DialogContent,
@@ -31,8 +32,10 @@ interface NavLink {
 }
 
 export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?: NavLink[] }) {
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalContent, setModalContent] = useState<{title: string, body: string}>({ title: "", body: "" });
+  const [infoModalOpen, setInfoModalOpen] = useState(false);
+  const [infoModalContent, setInfoModalContent] = useState<{title: string, body: string}>({ title: "", body: "" });
+  
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
@@ -44,6 +47,9 @@ export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?
     // Subscribe to auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user || null);
+      if (session?.user) {
+        setAuthModalOpen(false); // Close auth modal if user logs in
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -55,8 +61,8 @@ export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?
 
   const handleLinkClick = (link: NavLink) => {
     if (link.type === "modal") {
-      setModalContent({ title: link.label, body: link.content || "" });
-      setModalOpen(true);
+      setInfoModalContent({ title: link.label, body: link.content || "" });
+      setInfoModalOpen(true);
     }
   };
 
@@ -151,30 +157,29 @@ export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?
                   </DropdownMenu>
                 </>
               ) : (
-                <>
-                  <Button variant="outline" size="sm" onClick={() => window.location.href = "/login"}>
-                    Log In
-                  </Button>
-                  <Button size="sm" onClick={() => window.location.href = "/login"}>
-                    Sign Up
-                  </Button>
-                </>
+                <Button size="sm" onClick={() => setAuthModalOpen(true)}>
+                  登录/注册
+                </Button>
               )}
             </div>
           </div>
         </div>
       </header>
 
-      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+      {/* Info Modal */}
+      <Dialog open={infoModalOpen} onOpenChange={setInfoModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{modalContent.title}</DialogTitle>
+            <DialogTitle>{infoModalContent.title}</DialogTitle>
           </DialogHeader>
           <div className="mt-4 text-sm whitespace-pre-wrap">
-            {modalContent.body}
+            {infoModalContent.body}
           </div>
         </DialogContent>
       </Dialog>
+      
+      {/* Global Auth Modal */}
+      <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
     </>
   );
 }
