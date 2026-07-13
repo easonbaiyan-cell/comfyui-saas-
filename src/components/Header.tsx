@@ -138,14 +138,14 @@ export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?
                     <HeadphonesIcon className="h-5 w-5" />
                   </Button>
                   
-                  {/* VIP Supermarket 按钮也绑定了唤起收费弹窗 */}
+                  {/* 会员超市 按钮也绑定了唤起收费弹窗 */}
                   <Button 
                     size="sm" 
                     variant="outline" 
                     className="hidden sm:flex border-purple-500/30 hover:bg-purple-500/10 hover:text-purple-400 text-purple-500"
                     onClick={() => setIsPricingOpen(true)}
                   >
-                    VIP Supermarket
+                    会员超市
                   </Button>
                   
                   <DropdownMenu>
@@ -160,27 +160,27 @@ export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?
                     <DropdownMenuContent className="w-56" align="end">
                       <DropdownMenuLabel className="font-normal">
                         <div className="flex flex-col space-y-1">
-                          <p className="text-sm font-medium leading-none">My Account</p>
+                          <p className="text-sm font-medium leading-none">我的账户</p>
                           <p className="text-xs leading-none text-muted-foreground">
                             {user.phone || user.email}
                           </p>
                         </div>
                       </DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem>Dashboard</DropdownMenuItem>
-                      <DropdownMenuItem>Billing & Credits</DropdownMenuItem>
-                      <DropdownMenuItem>Settings</DropdownMenuItem>
+                      <DropdownMenuItem>控制台</DropdownMenuItem>
+                      <DropdownMenuItem>账单与积分</DropdownMenuItem>
+                      <DropdownMenuItem>设置</DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
                         <LogOut className="mr-2 h-4 w-4" />
-                        <span>Log out</span>
+                        <span>退出登录</span>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </>
               ) : (
                 <Button size="sm" onClick={() => setAuthModalOpen(true)}>
-                  登录/注册
+                  登录 / 注册
                 </Button>
               )}
             </div>

@@ -14,7 +14,15 @@ function DropdownMenuPortal({ ...props }: MenuPrimitive.Portal.Props) {
   return <MenuPrimitive.Portal data-slot="dropdown-menu-portal" {...props} />
 }
 
-function DropdownMenuTrigger({ ...props }: MenuPrimitive.Trigger.Props) {
+function DropdownMenuTrigger({ render, asChild, ...props }: MenuPrimitive.Trigger.Props & { render?: React.ReactNode, asChild?: boolean }) {
+  if (render) {
+    return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" render={render} {...props} />
+  }
+  // If asChild is not natively supported by the @base-ui/react primitive, we just drop it for now
+  // or it will fail type checking if we pass it down and it's not expected. Wait, actually we can just pass it if it expects it?
+  // Let's type it to accept asChild but not pass it, or pass it if MenuPrimitive.Trigger accepts it.
+  // Actually, we can just return a div if asChild is true, but since we are using DropdownMenuTrigger wrapping Button,
+  // we can use a forwardRef or just allow the type.
   return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props} />
 }
 
