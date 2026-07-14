@@ -16,7 +16,7 @@ export default function RootLayout({
     <html lang="zh-CN" className="dark">
       <body
         className={`bg-background text-foreground min-h-screen antialiased`}
-        style={{ fontFamily: '"SF Pro SC", "SF Pro Display", "SF Pro Icons", "PingFang SC", "Helvetica Neue", "Helvetica", "Arial", sans-serif' }}
+        style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif' }}
       >
         {children}
       </body>

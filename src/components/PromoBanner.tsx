@@ -16,7 +16,7 @@ export function PromoBanner({ text, countdownUntil }: { text?: string, countdown
 
       if (distance < 0) {
         clearInterval(interval);
-        setTimeLeft("Expired");
+        setTimeLeft("已结束");
         return;
       }
 
@@ -25,7 +25,7 @@ export function PromoBanner({ text, countdownUntil }: { text?: string, countdown
       const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-      setTimeLeft(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+      setTimeLeft(`${days}天 ${hours}时 ${minutes}分 ${seconds}秒`);
     }, 1000);
 
     return () => clearInterval(interval);
@@ -35,7 +35,7 @@ export function PromoBanner({ text, countdownUntil }: { text?: string, countdown
 
   // Function to highlight promotional keywords
   const highlightKeywords = (originalText: string) => {
-    const keywords = ["限时 37 折", "0.37元/秒", "37 折", "Launch Offer", "50% off"];
+    const keywords = ["限时 37 折", "0.37元/秒", "37 折", "首发特惠", "5 折"];
     
     let parts: (string | React.ReactNode)[] = [originalText];
     keywords.forEach(kw => {

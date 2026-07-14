@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { X } from 'lucide-react';
 
 const CheckIcon = ({ className }: { className?: string }) => (
   <svg
@@ -15,23 +16,64 @@ const CheckIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-export default function PricingModal() {
+export default function PricingModal({ onClose }: { onClose?: () => void }) {
+  // Mock current subscription logic
+  // 0 = 未登录/未订阅, 1 = 基础包月, 2 = 连续包月, 3 = 连续包年
+  const currentPlan = 0;
+  const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
+
+  const plans = [
+    { id: 1, title: '基础包月', price: 1280, originalPrice: 1680, perMonth: true },
+    { id: 2, title: '连续包月', price: 680, originalPrice: 1680, perMonth: true },
+    { id: 3, title: '连续包年', price: 6800, originalPrice: 20160, perMonth: false }
+  ];
+
+  const getButtonState = (planId: number, price: number) => {
+    if (currentPlan === 0) return { text: '未订阅', disabled: false, highlight: true };
+    if (currentPlan === planId) return { text: '当前订阅中', disabled: true, highlight: false };
+    if (currentPlan > planId) return { text: '当前订阅高于此档', disabled: true, highlight: false };
+
+    // Upgrade case
+    const currentPlanPrice = plans.find(p => p.id === currentPlan)?.price || 0;
+    const diff = price - currentPlanPrice;
+    return { text: `仅需 ￥${diff} 即可升级`, disabled: false, highlight: true };
+  };
+
   return (
-    <div className="min-h-screen w-full bg-[#0b0d13] bg-opacity-95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-white font-sans">
+    <div className="relative w-full max-w-6xl mx-auto bg-[#0b0d13] rounded-2xl p-8 border border-white/10 shadow-2xl overflow-hidden font-sans">
+      {onClose && (
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+        >
+          <X className="w-6 h-6 stroke-[1.5]" />
+        </button>
+      )}
       
+      <div className="text-center mb-8">
+        <h2 className="text-2xl font-bold text-white">会员超市</h2>
+      </div>
+
       {/* 3 Cards Container */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl w-full">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
         
         {/* Card 1: 基础包月 */}
-        <div className="relative flex flex-col rounded-2xl border border-gray-800 bg-gradient-to-b from-gray-900/50 to-black p-6 backdrop-blur-sm">
-          <div className="absolute top-0 right-6 -translate-y-1/2 px-3 py-1 bg-gradient-to-r from-gray-600 to-gray-800 rounded-full text-xs font-bold shadow-lg">
+        <div
+          onClick={() => setSelectedPlan(1)}
+          className={`relative flex flex-col rounded-2xl border transition-all duration-300 cursor-pointer p-6 backdrop-blur-sm
+            ${selectedPlan === 1
+              ? 'border-gray-400 shadow-[0_0_20px_rgba(156,163,175,0.3)] scale-[1.02] bg-gradient-to-b from-gray-800/80 to-black'
+              : 'border-gray-800 bg-gradient-to-b from-gray-900/50 to-black hover:border-gray-700'}
+          `}
+        >
+          <div className="absolute top-0 right-6 -translate-y-1/2 px-3 py-1 bg-gradient-to-r from-gray-600 to-gray-800 rounded-full text-xs font-bold text-white shadow-lg">
             限时 7.5 折
           </div>
           <div className="mb-4">
             <h3 className="text-xl font-semibold text-gray-200">基础包月</h3>
           </div>
           <div className="mb-1 flex items-baseline gap-2">
-            <span className="text-4xl font-bold">¥1280</span>
+            <span className="text-4xl font-bold text-white">¥1280</span>
             <span className="text-sm text-gray-500 line-through">¥1680</span>
             <span className="text-sm text-gray-400">/月</span>
           </div>
@@ -43,8 +85,14 @@ export default function PricingModal() {
             <p className="text-xs text-gray-500 mt-1">每月生成约180个视频，每个视频约7元</p>
           </div>
           
-          <button disabled className="w-full py-3 px-4 rounded-xl bg-gray-800 text-gray-500 font-medium cursor-not-allowed mb-6">
-            当前订阅高于此档
+          <button
+            disabled={getButtonState(1, 1280).disabled}
+            className={`w-full py-3 px-4 rounded-xl font-semibold transition-colors mb-6
+              ${getButtonState(1, 1280).disabled
+                ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                : 'bg-gray-700 hover:bg-gray-600 text-white shadow-lg'}`}
+          >
+            {getButtonState(1, 1280).text}
           </button>
           
           <hr className="border-gray-800 mb-6" />
@@ -70,8 +118,15 @@ export default function PricingModal() {
         </div>
 
         {/* Card 2: 连续包月 (Main highlight) */}
-        <div className="relative flex flex-col rounded-2xl border-2 border-indigo-500/80 bg-gradient-to-b from-indigo-950/40 to-black p-6 shadow-[0_0_30px_-5px_rgba(99,102,241,0.3)] transform md:-translate-y-4">
-          <div className="absolute top-0 right-6 -translate-y-1/2 px-3 py-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full text-xs font-bold shadow-lg">
+        <div
+          onClick={() => setSelectedPlan(2)}
+          className={`relative flex flex-col rounded-2xl border-2 transition-all duration-300 cursor-pointer p-6 transform md:-translate-y-4
+            ${selectedPlan === 2
+              ? 'border-indigo-400 shadow-[0_0_35px_rgba(99,102,241,0.5)] scale-[1.05] bg-gradient-to-b from-indigo-900/60 to-black'
+              : 'border-indigo-500/80 bg-gradient-to-b from-indigo-950/40 to-black shadow-[0_0_20px_-5px_rgba(99,102,241,0.2)] hover:border-indigo-400/80'}
+          `}
+        >
+          <div className="absolute top-0 right-6 -translate-y-1/2 px-3 py-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full text-xs font-bold text-white shadow-lg">
             限时 4 折
           </div>
           <div className="mb-4">
@@ -92,8 +147,14 @@ export default function PricingModal() {
             <p className="text-xs text-gray-400 mt-1">每月生成约180个视频，每个视频约3.5元</p>
           </div>
           
-          <button className="w-full py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition-colors mb-6 shadow-[0_0_15px_rgba(79,70,229,0.5)]">
-            当前订阅中
+          <button
+            disabled={getButtonState(2, 680).disabled}
+            className={`w-full py-3 px-4 rounded-xl font-semibold transition-colors mb-6
+              ${getButtonState(2, 680).disabled
+                ? 'bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700'
+                : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-[0_0_15px_rgba(79,70,229,0.5)]'}`}
+          >
+            {getButtonState(2, 680).text}
           </button>
           
           <hr className="border-gray-800 mb-6" />
@@ -119,7 +180,14 @@ export default function PricingModal() {
         </div>
 
         {/* Card 3: 连续包年 (Gold highlight) */}
-        <div className="relative flex flex-col rounded-2xl border border-yellow-700/50 bg-gradient-to-b from-yellow-950/30 to-black p-6">
+        <div
+          onClick={() => setSelectedPlan(3)}
+          className={`relative flex flex-col rounded-2xl border transition-all duration-300 cursor-pointer p-6
+            ${selectedPlan === 3
+              ? 'border-yellow-500 shadow-[0_0_25px_rgba(234,179,8,0.3)] scale-[1.02] bg-gradient-to-b from-yellow-900/40 to-black'
+              : 'border-yellow-700/50 bg-gradient-to-b from-yellow-950/30 to-black hover:border-yellow-600/70'}
+          `}
+        >
           <div className="absolute top-0 right-6 -translate-y-1/2 px-3 py-1 bg-gradient-to-r from-yellow-500 to-yellow-700 rounded-full text-xs font-bold text-yellow-950 shadow-lg">
             限时 3 折
           </div>
@@ -127,7 +195,7 @@ export default function PricingModal() {
             <h3 className="text-xl font-semibold text-yellow-500/90">连续包年</h3>
           </div>
           <div className="mb-1 flex items-baseline gap-2">
-            <span className="text-4xl font-bold">¥6800</span>
+            <span className="text-4xl font-bold text-white">¥6800</span>
             <span className="text-sm text-gray-500 line-through">¥20160</span>
             <span className="text-sm text-gray-400">/年</span>
           </div>
@@ -141,8 +209,14 @@ export default function PricingModal() {
             <p className="text-xs text-gray-500 mt-1">每月生成约180个视频，每个视频约3元</p>
           </div>
           
-          <button className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-yellow-700/20 to-yellow-600/20 border border-yellow-600/50 hover:bg-yellow-600/30 text-yellow-500 font-semibold transition-colors mb-6">
-            仅需 ¥6120 即可升级
+          <button
+            disabled={getButtonState(3, 6800).disabled}
+            className={`w-full py-3 px-4 rounded-xl font-semibold transition-colors mb-6
+              ${getButtonState(3, 6800).disabled
+                ? 'bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700'
+                : 'bg-gradient-to-r from-yellow-700/80 to-yellow-600/80 border border-yellow-500/50 hover:from-yellow-600 hover:to-yellow-500 text-white shadow-[0_0_15px_rgba(234,179,8,0.4)]'}`}
+          >
+            {getButtonState(3, 6800).text}
           </button>
           
           <hr className="border-gray-800 mb-6" />
@@ -170,7 +244,7 @@ export default function PricingModal() {
       </div>
 
       {/* Footer Info */}
-      <div className="max-w-6xl w-full mt-10 text-left text-xs text-gray-500 leading-relaxed">
+      <div className="w-full mt-10 text-left text-xs text-gray-500 leading-relaxed border-t border-white/10 pt-4">
         <p className="flex items-start gap-1">
           <span className="text-sm mt-[-1px]">✨</span>
           <span>积分使用说明：免费用户登录每日赠送 20 积分，每日赠送 2 次 5 折生成特权；云端存储空间保留 30 天；订阅积分每 31 天进行重置，过期作废。本平台实行单一积分制。</span>
