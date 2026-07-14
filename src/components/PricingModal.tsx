@@ -40,15 +40,19 @@ export default function PricingModal({ onClose }: { onClose?: () => void }) {
   };
 
   return (
-    <div className="relative w-full max-w-6xl mx-auto bg-[#0b0d13] rounded-2xl p-8 border border-white/10 shadow-2xl overflow-hidden font-sans">
-      {onClose && (
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
-        >
-          <X className="w-6 h-6 stroke-[1.5]" />
-        </button>
-      )}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md" onClick={onClose}>
+      <div
+        className="relative w-full max-w-6xl max-h-[90vh] overflow-y-auto mx-auto bg-[#0b0d13] rounded-2xl p-8 border border-white/10 shadow-2xl font-sans"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors z-10"
+          >
+            <X className="w-6 h-6 stroke-[1.5]" />
+          </button>
+        )}
       
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-white">会员超市</h2>
@@ -251,6 +255,7 @@ export default function PricingModal({ onClose }: { onClose?: () => void }) {
         </p>
       </div>
       
+      </div>
     </div>
   );
 }

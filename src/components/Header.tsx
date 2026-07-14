@@ -33,9 +33,6 @@ interface NavLink {
 }
 
 export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?: NavLink[] }) {
-  const [infoModalOpen, setInfoModalOpen] = useState(false);
-  const [infoModalContent, setInfoModalContent] = useState<{title: string, body: string}>({ title: "", body: "" });
-  
   const [authModalOpen, setAuthModalOpen] = useState(false);
   // 新增：控制定价页面弹窗的开关
   const [isPricingOpen, setIsPricingOpen] = useState(false); 
@@ -63,13 +60,6 @@ export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?
     await supabase.auth.signOut();
   };
 
-  const handleLinkClick = (link: NavLink) => {
-    if (link.type === "modal") {
-      setInfoModalContent({ title: link.label, body: link.content || "" });
-      setInfoModalOpen(true);
-    }
-  };
-
   return (
     <>
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -88,44 +78,15 @@ export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?
           </div>
 
           {/* Right: Navigation and Actions */}
-          <div className="flex items-center gap-6 ml-auto">
-            {/* Navigation links moved to the right */}
-            <nav className="hidden md:flex gap-6 items-center">
-              
-              {/* 新增的 About 按钮，点击唤起收费弹窗 */}
-
-
-              <Link
-                href="/invite"
-                className="bg-[#1a1a1a] hover:bg-[#2a2a2a] text-[#d4af37] px-4 py-2 rounded-full text-sm font-medium transition-colors border border-[#d4af37]/30"
-              >
-                邀请获取积分
-              </Link>
-              
-              {navLinks.map((link, i) => (
-                link.type === "redirect" ? (
-                  <Link
-                    key={i}
-                    href={link.url || "#"}
-                    className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    {link.label}
-                  </Link>
-                ) : (
-                  <button
-                    key={i}
-                    onClick={() => handleLinkClick(link)}
-                    className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    {link.label}
-                  </button>
-                )
-              ))}
-            </nav>
-
-            <div className="flex items-center gap-3">
-              {user ? (
+          <div className="flex items-center gap-3 ml-auto">
+              {true || user ? (
                 <>
+                  <Link
+                    href="/invite"
+                    className="hidden sm:flex items-center bg-[#1a1a1a] hover:bg-[#2a2a2a] text-[#d4af37] px-4 py-2 rounded-full text-sm font-medium transition-colors border border-[#d4af37]/30 h-10 mr-2"
+                  >
+                    邀请获取积分
+                  </Link>
                   <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-white bg-[#1a1a1a] rounded-xl h-10 w-10 relative">
                     <Bell className="h-5 w-5" />
                     <span className="absolute top-2 right-2 block h-2.5 w-2.5 rounded-full bg-yellow-400 ring-2 ring-[#1a1a1a]"></span>
@@ -134,7 +95,7 @@ export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?
                     <HeadphonesIcon className="h-5 w-5" />
                   </Button>
                   
-                  {/* 会员超市 按钮也绑定了唤起收费弹窗 */}
+                  {/* 会员超市 按钮绑定了唤起收费弹窗 */}
                   <Button 
                     size="sm" 
                     className="hidden sm:flex bg-[#1a1a1a] hover:bg-[#2a2a2a] text-[#00e5ff] border border-transparent hover:border-[#00e5ff]/30 px-4 rounded-xl h-10"
@@ -156,7 +117,7 @@ export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="relative h-8 w-8 rounded-full p-0">
                           <Avatar className="h-8 w-8">
-                            <AvatarImage src="/placeholder-user.jpg" alt={user.phone || "User"} />
+                            <AvatarImage src="/placeholder-user.jpg" alt={user?.phone || "User"} />
                             <AvatarFallback><UserIcon className="h-4 w-4" /></AvatarFallback>
                           </Avatar>
                         </Button>
@@ -166,7 +127,7 @@ export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?
                         <div className="flex flex-col space-y-1">
                           <p className="text-sm font-medium leading-none">我的账户</p>
                           <p className="text-xs leading-none text-muted-foreground">
-                            {user.phone || user.email}
+                            {user?.phone || user?.email || "Guest"}
                           </p>
                         </div>
                       </DropdownMenuLabel>
@@ -188,39 +149,16 @@ export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?
                   登录 / 注册
                 </Button>
               )}
-            </div>
           </div>
         </div>
       </header>
-
-      {/* Info Modal */}
-      <Dialog open={infoModalOpen} onOpenChange={setInfoModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{infoModalContent.title}</DialogTitle>
-          </DialogHeader>
-          <div className="mt-4 text-sm whitespace-pre-wrap">
-            {infoModalContent.body}
-          </div>
-        </DialogContent>
-      </Dialog>
       
       {/* Global Auth Modal */}
       <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
 
       {/* 新增：Pricing Modal (收费弹窗) */}
       {isPricingOpen && (
-        <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm" 
-          onClick={() => setIsPricingOpen(false)}
-        >
-          <div 
-            className="relative max-h-screen overflow-y-auto w-full flex justify-center p-4" 
-            onClick={(e) => e.stopPropagation()}
-          >
-            <PricingModal onClose={() => setIsPricingOpen(false)} />
-          </div>
-        </div>
+        <PricingModal onClose={() => setIsPricingOpen(false)} />
       )}
     </>
   );
