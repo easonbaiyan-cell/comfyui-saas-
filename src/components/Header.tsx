@@ -6,7 +6,7 @@ import { InviteModal } from "./InviteModal";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
-import { Bell, HeadphonesIcon, LogOut, User as UserIcon, Zap, Home, Video, CreditCard, Settings } from "lucide-react";
+import { Bell, HeadphonesIcon, LogOut, User as UserIcon, Zap, Home, Video, CreditCard, Settings, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { AuthModal } from "./AuthModal";
 import {
@@ -30,6 +30,10 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
   const [isPricingOpen, setIsPricingOpen] = useState(false); 
   // 新增：控制邀请页面弹窗的开关
   const [isInviteOpen, setIsInviteOpen] = useState(false);
+  // 新增：控制客服弹窗
+  const [isCustomerServiceOpen, setIsCustomerServiceOpen] = useState(false);
+  // 新增：控制消息抽屉
+  const [isMessageOpen, setIsMessageOpen] = useState(false);
   
   const [user, setUser] = useState<User | null>(null);
 
@@ -80,13 +84,38 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
             >
               邀请获取积分
             </button>
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-white bg-[#1a1a1a] rounded-xl h-10 w-10 relative">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-muted-foreground hover:text-white bg-[#1a1a1a] rounded-xl h-10 w-10 relative"
+              onClick={() => setIsMessageOpen(true)}
+            >
               <Bell className="h-5 w-5" />
               <span className="absolute top-2 right-2 block h-2.5 w-2.5 rounded-full bg-yellow-400 ring-2 ring-[#1a1a1a]"></span>
             </Button>
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-white bg-[#1a1a1a] rounded-xl h-10 w-10">
-              <HeadphonesIcon className="h-5 w-5" />
-            </Button>
+            <div
+              className="relative"
+              onMouseEnter={() => setIsCustomerServiceOpen(true)}
+              onMouseLeave={() => setIsCustomerServiceOpen(false)}
+            >
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground hover:text-white bg-[#1a1a1a] rounded-xl h-10 w-10"
+                onClick={() => setIsCustomerServiceOpen(!isCustomerServiceOpen)}
+              >
+                <HeadphonesIcon className="h-5 w-5" />
+              </Button>
+
+              {isCustomerServiceOpen && (
+                <div className="absolute mt-2 right-0 z-50 bg-[#0a0a0a] border border-white/10 rounded-xl p-4 shadow-2xl w-48">
+                  <div className="text-center text-xs text-gray-400">扫码添加专属客服</div>
+                  <div className="w-32 h-32 bg-white rounded-md mx-auto mt-2 flex items-center justify-center text-black/50 text-xs">
+                    二维码占位
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* 会员超市 按钮绑定了唤起收费弹窗 */}
             <Button
@@ -175,6 +204,73 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
 
       {/* 新增：Invite Modal (邀请弹窗) */}
       <InviteModal isOpen={isInviteOpen} onClose={() => setIsInviteOpen(false)} />
+
+      {/* 消息侧边抽屉 */}
+      {isMessageOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 z-40"
+          onClick={() => setIsMessageOpen(false)}
+        />
+      )}
+
+      <div
+        className={`fixed top-0 right-0 h-full w-80 bg-[#0a0a0a] border-l border-white/10 z-50 transform transition-transform duration-300 ${
+          isMessageOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <div className="flex flex-col h-full">
+          {/* 头部 */}
+          <div className="flex items-center justify-between p-4 border-b border-white/10">
+            <h2 className="text-lg font-semibold text-white">消息中心</h2>
+            <button
+              onClick={() => setIsMessageOpen(false)}
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* 分类 Tab */}
+          <div className="px-4 border-b border-white/5">
+            <div className="inline-block py-3 text-sm font-medium text-white border-b-2 border-yellow-500">
+              官方消息
+            </div>
+          </div>
+
+          {/* 消息列表 */}
+          <div className="flex-1 overflow-y-auto p-4">
+            {/* Mock Message 1 */}
+            <div className="bg-[#1a1a1a] rounded-lg p-3 mb-3">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="h-2 w-2 rounded-full bg-yellow-400"></span>
+                <h3 className="text-sm font-semibold text-white">全新「控制台」上线</h3>
+              </div>
+              <p className="text-xs text-gray-400 mb-2 truncate">原消费记录已全面升级，提供更清晰的账单明细和使用分析。</p>
+              <div className="text-[10px] text-gray-500">2026-05-15</div>
+            </div>
+
+            {/* Mock Message 2 */}
+            <div className="bg-[#1a1a1a] rounded-lg p-3 mb-3">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="h-2 w-2 rounded-full bg-yellow-400"></span>
+                <h3 className="text-sm font-semibold text-white">充值优惠活动</h3>
+              </div>
+              <p className="text-xs text-gray-400 mb-2 truncate">本月充值积分享受额外20%赠送，多充多送，活动限时进行中。</p>
+              <div className="text-[10px] text-gray-500">2026-05-12</div>
+            </div>
+
+            {/* Mock Message 3 */}
+            <div className="bg-[#1a1a1a] rounded-lg p-3 mb-3">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="h-2 w-2 rounded-full bg-gray-500"></span>
+                <h3 className="text-sm font-semibold text-white">系统维护通知</h3>
+              </div>
+              <p className="text-xs text-gray-400 mb-2 truncate">预计于周日凌晨2点进行系统升级，期间可能出现短暂的访问波动。</p>
+              <div className="text-[10px] text-gray-500">2026-05-01</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </>
   );
 }
