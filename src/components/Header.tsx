@@ -69,34 +69,35 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
           </div>
 
           {/* Right: Navigation and Actions */}
-          <div className="flex items-center gap-3 ml-auto">
-              {user ? (
-                <>
-                  <Link
-                    href="/invite"
-                    className="hidden sm:flex items-center bg-[#1a1a1a] hover:bg-[#2a2a2a] text-[#d4af37] px-4 py-2 rounded-full text-sm font-medium transition-colors border border-[#d4af37]/30 h-10 mr-2"
-                  >
-                    邀请获取积分
-                  </Link>
-                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-white bg-[#1a1a1a] rounded-xl h-10 w-10 relative">
-                    <Bell className="h-5 w-5" />
-                    <span className="absolute top-2 right-2 block h-2.5 w-2.5 rounded-full bg-yellow-400 ring-2 ring-[#1a1a1a]"></span>
-                  </Button>
-                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-white bg-[#1a1a1a] rounded-xl h-10 w-10">
-                    <HeadphonesIcon className="h-5 w-5" />
-                  </Button>
-                  
-                  {/* 会员超市 按钮绑定了唤起收费弹窗 */}
-                  <Button 
-                    size="sm" 
-                    className="hidden sm:flex bg-[#1a1a1a] hover:bg-[#2a2a2a] text-[#00e5ff] border border-transparent hover:border-[#00e5ff]/30 px-4 rounded-xl h-10"
-                    onClick={() => setIsPricingOpen(true)}
-                  >
-                    <Home className="mr-2 h-4 w-4" />
-                    会员超市
-                  </Button>
-                  
-                  <DropdownMenu>
+          <div className="flex items-center gap-4 ml-auto">
+            {/* 1. 常驻展示区：放在鉴权判断的外部，永远显示 */}
+            <Link
+              href="/invite"
+              className="hidden sm:flex items-center bg-[#1a1a1a] hover:bg-[#2a2a2a] text-[#d4af37] px-4 py-2 rounded-full text-sm font-medium transition-colors border border-[#d4af37]/30 h-10 mr-2"
+            >
+              邀请获取积分
+            </Link>
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-white bg-[#1a1a1a] rounded-xl h-10 w-10 relative">
+              <Bell className="h-5 w-5" />
+              <span className="absolute top-2 right-2 block h-2.5 w-2.5 rounded-full bg-yellow-400 ring-2 ring-[#1a1a1a]"></span>
+            </Button>
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-white bg-[#1a1a1a] rounded-xl h-10 w-10">
+              <HeadphonesIcon className="h-5 w-5" />
+            </Button>
+
+            {/* 会员超市 按钮绑定了唤起收费弹窗 */}
+            <Button
+              size="sm"
+              className="hidden sm:flex bg-[#1a1a1a] hover:bg-[#2a2a2a] text-[#00e5ff] border border-transparent hover:border-[#00e5ff]/30 px-4 rounded-xl h-10"
+              onClick={() => setIsPricingOpen(true)}
+            >
+              <Home className="mr-2 h-4 w-4" />
+              会员超市
+            </Button>
+
+            {/* 2. 鉴权状态区：根据用户状态切换 */}
+            {user ? (
+              <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <div className="flex items-center gap-3 bg-[#131622] hover:bg-[#1a1f33] border border-white/5 px-4 py-1.5 rounded-full transition-all cursor-pointer select-none">
                         <span className="text-xs text-gray-400 font-medium">会员中心</span>
@@ -120,26 +121,26 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
                         </div>
                       </div>
 
-                      <DropdownMenuItem asChild className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors cursor-pointer focus:bg-white/5 focus:text-white">
-                        <Link href="/dashboard?tab=creations">
+                      <DropdownMenuItem render={
+                        <Link href="/dashboard?tab=creations" className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors cursor-pointer focus:bg-white/5 focus:text-white w-full">
                           <Video className="h-4 w-4" />
                           <span>我的创作</span>
                         </Link>
-                      </DropdownMenuItem>
+                      } />
 
-                      <DropdownMenuItem asChild className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors cursor-pointer focus:bg-white/5 focus:text-white">
-                        <Link href="/dashboard?tab=billing">
+                      <DropdownMenuItem render={
+                        <Link href="/dashboard?tab=billing" className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors cursor-pointer focus:bg-white/5 focus:text-white w-full">
                           <CreditCard className="h-4 w-4" />
                           <span>积分与账单</span>
                         </Link>
-                      </DropdownMenuItem>
+                      } />
 
-                      <DropdownMenuItem asChild className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors cursor-pointer focus:bg-white/5 focus:text-white">
-                        <Link href="/dashboard?tab=settings">
+                      <DropdownMenuItem render={
+                        <Link href="/dashboard?tab=settings" className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors cursor-pointer focus:bg-white/5 focus:text-white w-full">
                           <Settings className="h-4 w-4" />
                           <span>个人设置</span>
                         </Link>
-                      </DropdownMenuItem>
+                      } />
 
                       <hr className="border-white/5 my-1" />
 
@@ -149,15 +150,14 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                </>
-              ) : (
-                <Button
+            ) : (
+              <Button
                   className="bg-white text-black hover:bg-gray-100 rounded-full font-medium"
                   onClick={() => setIsAuthOpen(true)}
                 >
-                  登录 / 注册
-                </Button>
-              )}
+                登录 / 注册
+              </Button>
+            )}
           </div>
         </div>
       </header>
