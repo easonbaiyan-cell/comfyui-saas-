@@ -25,8 +25,8 @@ export function WorkflowGrid({ workflows }: { workflows: Workflow[] }) {
   if (!workflows.length) {
     return (
       <div className="flex min-h-[400px] flex-col items-center justify-center rounded-xl border border-dashed text-center text-muted-foreground">
-        <p>No workflows available yet.</p>
-        <p className="text-sm">Check back later or configure some in the admin panel.</p>
+        <p>暂无可用工作流。</p>
+        <p className="text-sm">请稍后再来看看，或在后台进行配置。</p>
       </div>
     );
   }
@@ -45,7 +45,7 @@ export function WorkflowGrid({ workflows }: { workflows: Workflow[] }) {
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-muted text-muted-foreground">
-                No Cover
+                暂无封面
               </div>
             )}
             <div className="absolute inset-0 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100 flex items-center justify-center">
@@ -66,15 +66,15 @@ export function WorkflowGrid({ workflows }: { workflows: Workflow[] }) {
               <CardTitle className="line-clamp-1 text-base">{workflow.title}</CardTitle>
             </div>
             <CardDescription className="line-clamp-2 text-sm mt-1 h-10">
-              {workflow.description || "No description provided."}
+              {workflow.description || "暂无描述。"}
             </CardDescription>
           </CardHeader>
           <CardFooter className="p-4 pt-2 flex items-center justify-between border-t mt-4">
             <div className="flex items-center gap-1.5 text-sm font-medium">
-              <span className="text-primary">{Number(workflow.creditCost).toString()} Credits</span>
+              <span className="text-primary">{Number(workflow.creditCost).toString()} 积分</span>
             </div>
             <Link href={`/w/${workflow.runninghubId}`}>
-              <Button size="sm" variant="ghost">Details →</Button>
+              <Button size="sm" variant="ghost">详情 →</Button>
             </Link>
           </CardFooter>
         </Card>

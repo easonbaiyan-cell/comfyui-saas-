@@ -32,7 +32,7 @@ export default async function Home() {
   }
 
   // Fallbacks if nothing in DB yet
-  const bannerText = siteSettings?.topBannerText || "Welcome to papagaga.com! Launch Offer: 50% off all workflows.";
+  const bannerText = siteSettings?.topBannerText || "欢迎来到 papagaga.com！首发特惠：所有工作流 5 折。";
   // Stable date if missing (prevent hydration mismatches and impure function errors)
   const defaultFutureDate = new Date();
   defaultFutureDate.setDate(defaultFutureDate.getDate() + 7);
@@ -53,9 +53,9 @@ export default async function Home() {
 
   if (navLinks.length === 0) {
     navLinks = [
-      { label: "Workflows", type: "redirect", url: "/#workflows" },
-      { label: "Pricing", type: "modal", content: "Pricing modal content: Workflows cost 1.5x base runninghub credits." },
-      { label: "About", type: "redirect", url: "/about" },
+      { label: "工作流", type: "redirect", url: "/#workflows" },
+      { label: "定价", type: "modal", content: "定价 modal content: 工作流 cost 1.5x base runninghub credits." },
+      { label: "关于", type: "redirect", url: "/about" },
     ];
   }
 
@@ -66,7 +66,7 @@ export default async function Home() {
         id: "1",
         runninghubId: "123",
         title: "FLUX.1 Pro Generator",
-        description: "High-quality image generation using FLUX.1 Pro model.",
+        description: "使用 FLUX.1 Pro 模型生成高质量图像。",
         coverImageUrl: "https://images.unsplash.com/photo-1698428800057-0a373b53a067?q=80&w=600&auto=format&fit=crop",
         category: "Image",
         creditCost: 15
@@ -75,7 +75,7 @@ export default async function Home() {
         id: "2",
         runninghubId: "456",
         title: "Video Upscaler 4K",
-        description: "Upscale your videos to 4K resolution with AI.",
+        description: "使用 AI 将您的视频提升至 4K 分辨率。",
         coverImageUrl: "https://images.unsplash.com/photo-1695653422960-4c3112bd22fa?q=80&w=600&auto=format&fit=crop",
         category: "Video",
         creditCost: 45
@@ -91,9 +91,9 @@ export default async function Home() {
       <main className="flex-1">
         <section className="container mx-auto px-4 py-12">
           <div className="mb-8 flex flex-col gap-2">
-            <h1 className="text-3xl font-bold tracking-tight" id="workflows">Featured Workflows</h1>
+            <h1 className="text-3xl font-bold tracking-tight" id="workflows">Featured 工作流</h1>
             <p className="text-muted-foreground">
-              Discover and run the latest AI workflows.
+              发现并运行最新的 AI 工作流。
             </p>
           </div>
           
@@ -104,7 +104,7 @@ export default async function Home() {
       <footer className="border-t py-6 md:py-0">
         <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-4 md:h-16 md:flex-row">
           <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} papagaga. All rights reserved.
+            &copy; {new Date().getFullYear()} papagaga. 版权所有。
           </p>
         </div>
       </footer>
