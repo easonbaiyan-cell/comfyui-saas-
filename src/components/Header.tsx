@@ -93,7 +93,7 @@ export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?
             <nav className="hidden md:flex gap-6 items-center">
               
               {/* 新增的 About 按钮，点击唤起收费弹窗 */}
-
+              
 
               <Link
                 href="/invite"

@@ -1,40 +1,64 @@
-import React, { useState } from 'react';
-import { X } from 'lucide-react';
+"use client";
 
-const CheckIcon = ({ className }: { className?: string }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className || "w-4 h-4"}
-  >
-    <polyline points="20 6 9 17 4 12" />
-  </svg>
-);
+import { useState } from "react";
+import { X } from "lucide-react";
 
-export default function PricingModal({ onClose }: { onClose?: () => void }) {
-  // Mock current subscription logic
-  // 0 = 未登录/未订阅, 1 = 基础包月, 2 = 连续包月, 3 = 连续包年
-  const currentPlan = 0;
-  const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
+// Check Icon Component (custom SVG based on your screenshot's style)
+function CheckIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
+interface PricingModalProps {
+  onClose?: () => void;
+  // currentPlan 模拟当前用户的订阅状态：
+  // 0 = 未订阅, 1 = 基础包月, 2 = 连续包月, 3 = 连续包年
+  currentPlan?: number; 
+}
+
+export default function PricingModal({ onClose, currentPlan = 0 }: PricingModalProps) {
+  const [selectedPlan, setSelectedPlan] = useState<number>(2); // Default to the middle plan
 
   const plans = [
-    { id: 1, title: '基础包月', price: 1280, originalPrice: 1680, perMonth: true },
-    { id: 2, title: '连续包月', price: 680, originalPrice: 1680, perMonth: true },
-    { id: 3, title: '连续包年', price: 6800, originalPrice: 20160, perMonth: false }
+    { id: 1, price: 1280 },
+    { id: 2, price: 680 },
+    { id: 3, price: 6800 },
   ];
 
   const getButtonState = (planId: number, price: number) => {
-    if (currentPlan === 0) return { text: '未订阅', disabled: false, highlight: true };
-    if (currentPlan === planId) return { text: '当前订阅中', disabled: true, highlight: false };
-    if (currentPlan > planId) return { text: '当前订阅高于此档', disabled: true, highlight: false };
+    // 状态 1：未订阅任何套餐
+    if (currentPlan === 0) {
+      return { text: "立即开通", disabled: false, highlight: true };
+    }
+    
+    // 状态 2：当前就是这个套餐
+    if (currentPlan === planId) {
+      return { text: "当前套餐", disabled: true, highlight: false };
+    }
 
-    // Upgrade case
+    // 获取当前套餐的真实价格用于比较
     const currentPlanPrice = plans.find(p => p.id === currentPlan)?.price || 0;
+
+    // 状态 3：用户当前套餐更高级（向下兼容/降级不可选）
+    if (price < currentPlanPrice) {
+      return { text: "不支持降级", disabled: true, highlight: false };
+    }
+
+    // 状态 4：用户当前套餐低，点击高级套餐显示差价
     const diff = price - currentPlanPrice;
     return { text: `仅需 ￥${diff} 即可升级`, disabled: false, highlight: true };
   };
@@ -42,7 +66,7 @@ export default function PricingModal({ onClose }: { onClose?: () => void }) {
   return (
     <div className="relative w-full max-w-6xl mx-auto bg-[#0b0d13] rounded-2xl p-8 border border-white/10 shadow-2xl overflow-hidden font-sans">
       {onClose && (
-        <button
+        <button 
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
         >
@@ -58,11 +82,11 @@ export default function PricingModal({ onClose }: { onClose?: () => void }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
         
         {/* Card 1: 基础包月 */}
-        <div
+        <div 
           onClick={() => setSelectedPlan(1)}
           className={`relative flex flex-col rounded-2xl border transition-all duration-300 cursor-pointer p-6 backdrop-blur-sm
-            ${selectedPlan === 1
-              ? 'border-gray-400 shadow-[0_0_20px_rgba(156,163,175,0.3)] scale-[1.02] bg-gradient-to-b from-gray-800/80 to-black'
+            ${selectedPlan === 1 
+              ? 'border-gray-400 shadow-[0_0_20px_rgba(156,163,175,0.3)] scale-[1.02] bg-gradient-to-b from-gray-800/80 to-black' 
               : 'border-gray-800 bg-gradient-to-b from-gray-900/50 to-black hover:border-gray-700'}
           `}
         >
@@ -85,11 +109,11 @@ export default function PricingModal({ onClose }: { onClose?: () => void }) {
             <p className="text-xs text-gray-500 mt-1">每月生成约180个视频，每个视频约7元</p>
           </div>
           
-          <button
-            disabled={getButtonState(1, 1280).disabled}
-            className={`w-full py-3 px-4 rounded-xl font-semibold transition-colors mb-6
-              ${getButtonState(1, 1280).disabled
-                ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
+          <button 
+            disabled={getButtonState(1, 1280).disabled} 
+            className={`w-full py-3 px-4 rounded-xl font-semibold transition-colors mb-6 
+              ${getButtonState(1, 1280).disabled 
+                ? 'bg-gray-800 text-gray-500 cursor-not-allowed' 
                 : 'bg-gray-700 hover:bg-gray-600 text-white shadow-lg'}`}
           >
             {getButtonState(1, 1280).text}
@@ -118,11 +142,11 @@ export default function PricingModal({ onClose }: { onClose?: () => void }) {
         </div>
 
         {/* Card 2: 连续包月 (Main highlight) */}
-        <div
+        <div 
           onClick={() => setSelectedPlan(2)}
           className={`relative flex flex-col rounded-2xl border-2 transition-all duration-300 cursor-pointer p-6 transform md:-translate-y-4
-            ${selectedPlan === 2
-              ? 'border-indigo-400 shadow-[0_0_35px_rgba(99,102,241,0.5)] scale-[1.05] bg-gradient-to-b from-indigo-900/60 to-black'
+            ${selectedPlan === 2 
+              ? 'border-indigo-400 shadow-[0_0_35px_rgba(99,102,241,0.5)] scale-[1.05] bg-gradient-to-b from-indigo-900/60 to-black' 
               : 'border-indigo-500/80 bg-gradient-to-b from-indigo-950/40 to-black shadow-[0_0_20px_-5px_rgba(99,102,241,0.2)] hover:border-indigo-400/80'}
           `}
         >
@@ -147,9 +171,9 @@ export default function PricingModal({ onClose }: { onClose?: () => void }) {
             <p className="text-xs text-gray-400 mt-1">每月生成约180个视频，每个视频约3.5元</p>
           </div>
           
-          <button
+          <button 
             disabled={getButtonState(2, 680).disabled}
-            className={`w-full py-3 px-4 rounded-xl font-semibold transition-colors mb-6
+            className={`w-full py-3 px-4 rounded-xl font-semibold transition-colors mb-6 
               ${getButtonState(2, 680).disabled
                 ? 'bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700'
                 : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-[0_0_15px_rgba(79,70,229,0.5)]'}`}
@@ -180,7 +204,7 @@ export default function PricingModal({ onClose }: { onClose?: () => void }) {
         </div>
 
         {/* Card 3: 连续包年 (Gold highlight) */}
-        <div
+        <div 
           onClick={() => setSelectedPlan(3)}
           className={`relative flex flex-col rounded-2xl border transition-all duration-300 cursor-pointer p-6
             ${selectedPlan === 3
@@ -209,7 +233,7 @@ export default function PricingModal({ onClose }: { onClose?: () => void }) {
             <p className="text-xs text-gray-500 mt-1">每月生成约180个视频，每个视频约3元</p>
           </div>
           
-          <button
+          <button 
             disabled={getButtonState(3, 6800).disabled}
             className={`w-full py-3 px-4 rounded-xl font-semibold transition-colors mb-6
               ${getButtonState(3, 6800).disabled
