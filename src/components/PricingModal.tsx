@@ -16,12 +16,7 @@ const CheckIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-interface PricingModalProps {
-  onClose?: () => void;
-  defaultPlan?: string;
-}
-
-export default function PricingModal({ onClose }: PricingModalProps) {
+export default function PricingModal({ onClose }: { onClose?: () => void }) {
   // Mock current subscription logic
   // 0 = 未登录/未订阅, 1 = 基础包月, 2 = 连续包月, 3 = 连续包年
   const currentPlan = 0;
@@ -45,24 +40,22 @@ export default function PricingModal({ onClose }: PricingModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 min-h-screen w-full bg-black/60 backdrop-blur-md flex flex-col items-center justify-center p-6 text-white font-sans overflow-y-auto">
-      
-      {/* Close Button */}
+    <div className="relative w-full max-w-6xl mx-auto bg-[#0b0d13] rounded-2xl p-8 border border-white/10 shadow-2xl overflow-hidden font-sans">
       {onClose && (
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-full transition-colors z-10"
+          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
         >
           <X className="w-6 h-6 stroke-[1.5]" />
         </button>
       )}
       
-      <div className="text-center mb-8 mt-auto pt-8">
+      <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-white">会员超市</h2>
       </div>
 
       {/* 3 Cards Container */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl w-full mb-auto">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
         
         {/* Card 1: 基础包月 */}
         <div
@@ -251,7 +244,7 @@ export default function PricingModal({ onClose }: PricingModalProps) {
       </div>
 
       {/* Footer Info */}
-      <div className="max-w-6xl w-full mt-10 mb-4 text-left text-xs text-gray-500 leading-relaxed border-t border-white/10 pt-4">
+      <div className="w-full mt-10 text-left text-xs text-gray-500 leading-relaxed border-t border-white/10 pt-4">
         <p className="flex items-start gap-1">
           <span className="text-sm mt-[-1px]">✨</span>
           <span>积分使用说明：免费用户登录每日赠送 20 积分，每日赠送 2 次 5 折生成特权；云端存储空间保留 30 天；订阅积分每 31 天进行重置，过期作废。本平台实行单一积分制。</span>
