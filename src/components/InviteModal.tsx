@@ -38,18 +38,33 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
         </div>
 
         {/* Copy Link Section */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-10">
-          <div className="flex-1 bg-[#1a1a1a] rounded-xl flex items-center px-4 py-3 border border-white/5 focus-within:border-white/20 transition-colors">
-            <input
-              type="text"
-              readOnly
-              value="https://papagaga.com/invite/awesomemaker"
-              className="w-full bg-transparent text-gray-300 outline-none text-sm"
-            />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+          {/* Left Card: Invite Code */}
+          <div className="flex flex-col rounded-2xl border border-white/10 bg-[#111111] p-6 hover:border-white/20 transition-all duration-300">
+            <div className="flex items-center justify-between mb-6">
+              <span className="text-gray-400 font-medium">我的邀请码</span>
+              <span className="text-green-500/70 text-sm">已绑定 rh-v1543</span>
+            </div>
+            <div className="flex items-center justify-between mt-auto">
+              <span className="text-4xl font-bold text-white tracking-widest">c19wfslk</span>
+              <Button variant="outline" className="rounded-full border-white/20 text-white bg-transparent hover:bg-white/10 hover:text-white px-6">
+                复制
+              </Button>
+            </div>
           </div>
-          <Button className="bg-[#a855f7] hover:bg-[#9333ea] text-white px-8 py-3 h-auto rounded-xl font-medium transition-colors shadow-lg shadow-purple-500/20">
-            复制专属链接
-          </Button>
+
+          {/* Right Card: Invite Link */}
+          <div className="flex flex-col rounded-2xl border border-white/10 bg-[#111111] p-6 hover:border-white/20 transition-all duration-300">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+              <span className="text-white font-medium">邀请好友链接</span>
+              <Button className="bg-[#a855f7] hover:bg-[#9333ea] text-white rounded-full h-8 px-4 text-xs font-medium transition-colors shadow-lg shadow-purple-500/20">
+                复制分享链接 ➔
+              </Button>
+            </div>
+            <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/5 text-sm text-gray-400 leading-relaxed mt-auto">
+              宝子们，我发现一个AI视频宝藏产品 Papagaga！每天发布数百个超有趣好用的AI工作流。打开链接：https://papagaga.com?inviteCode=c19wfslk 注册即可领取 10,000 积分免费生成视频！
+            </div>
+          </div>
         </div>
 
         {/* Reward Cards Grid */}
