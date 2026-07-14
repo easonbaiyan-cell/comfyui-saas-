@@ -5,7 +5,7 @@ import PricingModal from "./PricingModal";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
-import { Bell, HeadphonesIcon, LogOut, User as UserIcon } from "lucide-react";
+import { Bell, HeadphonesIcon, LogOut, User as UserIcon, Zap, Home } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { AuthModal } from "./AuthModal";
 import {
@@ -93,18 +93,13 @@ export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?
             <nav className="hidden md:flex gap-6 items-center">
               
               {/* 新增的 About 按钮，点击唤起收费弹窗 */}
-              <button
-                onClick={() => setIsPricingOpen(true)}
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-              >
-                关于 (About)
-              </button>
+
 
               <Link
                 href="/invite"
-                className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
+                className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors"
               >
-                Invite & Earn
+                邀请获取积分
               </Link>
               
               {navLinks.map((link, i) => (
@@ -132,7 +127,10 @@ export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?
               {user ? (
                 <>
                   <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-                    <Bell className="h-5 w-5" />
+                    <div className="relative">
+                      <Bell className="h-5 w-5" />
+                      <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-yellow-400 ring-2 ring-background"></span>
+                    </div>
                   </Button>
                   <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
                     <HeadphonesIcon className="h-5 w-5" />
@@ -141,22 +139,30 @@ export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?
                   {/* 会员超市 按钮也绑定了唤起收费弹窗 */}
                   <Button 
                     size="sm" 
-                    variant="outline" 
-                    className="hidden sm:flex border-purple-500/30 hover:bg-purple-500/10 hover:text-purple-400 text-purple-500"
+                    className="hidden sm:flex bg-primary text-primary-foreground hover:bg-primary/90"
                     onClick={() => setIsPricingOpen(true)}
                   >
+                    <Home className="mr-2 h-4 w-4" />
                     会员超市
                   </Button>
                   
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="relative h-8 w-8 rounded-full ml-2">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src="/placeholder-user.jpg" alt={user.phone || "User"} />
-                          <AvatarFallback><UserIcon className="h-4 w-4" /></AvatarFallback>
-                        </Avatar>
-                      </Button>
-                    </DropdownMenuTrigger>
+                  <div className="flex items-center gap-3 ml-2 border-l pl-4">
+                    <div className="hidden md:flex flex-col items-end">
+                      <span className="text-xs font-semibold text-muted-foreground">会员中心</span>
+                      <div className="flex items-center text-sm font-bold text-yellow-500">
+                        <Zap className="h-3.5 w-3.5 mr-0.5 fill-current" />
+                        <span>120</span>
+                      </div>
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                          <Avatar className="h-10 w-10 border-2 border-primary/10">
+                            <AvatarImage src="/placeholder-user.jpg" alt={user.phone || "User"} />
+                            <AvatarFallback><UserIcon className="h-5 w-5" /></AvatarFallback>
+                          </Avatar>
+                        </Button>
+                      </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56" align="end">
                       <DropdownMenuLabel className="font-normal">
                         <div className="flex flex-col space-y-1">
@@ -177,6 +183,7 @@ export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
+                  </div>
                 </>
               ) : (
                 <Button size="sm" onClick={() => setAuthModalOpen(true)}>
@@ -213,7 +220,7 @@ export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?
             className="relative max-h-screen overflow-y-auto w-full flex justify-center p-4" 
             onClick={(e) => e.stopPropagation()}
           >
-            <PricingModal />
+            <PricingModal onClose={() => setIsPricingOpen(false)} />
           </div>
         </div>
       )}

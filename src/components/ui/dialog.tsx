@@ -70,8 +70,7 @@ function DialogContent({
               />
             }
           >
-            <XIcon
-            />
+            <XIcon className="w-6 h-6 stroke-[1.5]" />
             <span className="sr-only">Close</span>
           </DialogPrimitive.Close>
         )}
