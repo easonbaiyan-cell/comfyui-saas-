@@ -6,10 +6,8 @@ import {
   CardTitle,
 } from "./ui/card";
 import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
 import Image from "next/image";
 import Link from "next/link";
-import { Play } from "lucide-react";
 
 interface Workflow {
   id: string;
@@ -34,8 +32,9 @@ export function WorkflowGrid({ workflows }: { workflows: Workflow[] }) {
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {workflows.map((workflow) => (
-        <Card key={workflow.id} className="group overflow-hidden transition-all hover:shadow-lg">
-          <div className="aspect-video relative overflow-hidden bg-muted">
+        <Link key={workflow.id} href={`/workflow/${workflow.id}`} className="block">
+          <Card className="group overflow-hidden transition-all hover:shadow-lg">
+            <div className="aspect-video relative overflow-hidden bg-muted">
             {workflow.coverImageUrl ? (
               <Image
                 src={workflow.coverImageUrl}
@@ -48,13 +47,6 @@ export function WorkflowGrid({ workflows }: { workflows: Workflow[] }) {
                 暂无封面
               </div>
             )}
-            <div className="absolute inset-0 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100 flex items-center justify-center">
-               <Link href={`/w/${workflow.runninghubId}`}>
-                 <Button size="icon" className="h-12 w-12 rounded-full" variant="secondary">
-                   <Play className="h-5 w-5 ml-1" />
-                 </Button>
-               </Link>
-            </div>
             {workflow.category && (
               <Badge className="absolute right-3 top-3 bg-black/60 hover:bg-black/80 text-white border-none backdrop-blur-md">
                 {workflow.category}
@@ -69,15 +61,16 @@ export function WorkflowGrid({ workflows }: { workflows: Workflow[] }) {
               {workflow.description || "暂无描述。"}
             </CardDescription>
           </CardHeader>
-          <CardFooter className="p-4 pt-2 flex items-center justify-between border-t mt-4">
-            <div className="flex items-center gap-1.5 text-sm font-medium">
-              <span className="text-primary">{Number(workflow.creditCost).toString()} 积分</span>
-            </div>
-            <Link href={`/w/${workflow.runninghubId}`}>
-              <Button size="sm" variant="ghost">详情 →</Button>
-            </Link>
-          </CardFooter>
-        </Card>
+            <CardFooter className="p-4 pt-2 flex items-center justify-between border-t mt-4">
+              <div className="flex items-center gap-1.5 text-sm font-medium">
+                <span className="text-primary">{Number(workflow.creditCost).toString()} 积分</span>
+              </div>
+              <div className="text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground px-3 py-1.5 rounded-md transition-colors">
+                详情 →
+              </div>
+            </CardFooter>
+          </Card>
+        </Link>
       ))}
     </div>
   );
