@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import PricingModal from "./PricingModal";
+import { InviteModal } from "./InviteModal";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
@@ -27,6 +28,8 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   // 新增：控制定价页面弹窗的开关
   const [isPricingOpen, setIsPricingOpen] = useState(false); 
+  // 新增：控制邀请页面弹窗的开关
+  const [isInviteOpen, setIsInviteOpen] = useState(false);
   
   const [user, setUser] = useState<User | null>(null);
 
@@ -71,12 +74,12 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
           {/* Right: Navigation and Actions */}
           <div className="flex items-center gap-4 ml-auto">
             {/* 1. 常驻展示区：放在鉴权判断的外部，永远显示 */}
-            <Link
-              href="/invite"
+            <button
+              onClick={() => setIsInviteOpen(true)}
               className="hidden sm:flex items-center bg-[#1a1a1a] hover:bg-[#2a2a2a] text-[#d4af37] px-4 py-2 rounded-full text-sm font-medium transition-colors border border-[#d4af37]/30 h-10 mr-2"
             >
               邀请获取积分
-            </Link>
+            </button>
             <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-white bg-[#1a1a1a] rounded-xl h-10 w-10 relative">
               <Bell className="h-5 w-5" />
               <span className="absolute top-2 right-2 block h-2.5 w-2.5 rounded-full bg-yellow-400 ring-2 ring-[#1a1a1a]"></span>
@@ -169,6 +172,9 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
       {isPricingOpen && (
         <PricingModal onClose={() => setIsPricingOpen(false)} />
       )}
+
+      {/* 新增：Invite Modal (邀请弹窗) */}
+      <InviteModal isOpen={isInviteOpen} onClose={() => setIsInviteOpen(false)} />
     </>
   );
 }
