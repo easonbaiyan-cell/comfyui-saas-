@@ -1,80 +1,33 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogHeader } from "@/components/ui/dialog";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/lib/supabase";
+import { XIcon } from "lucide-react";
 
 interface AuthModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-export function AuthModal({ open, onOpenChange }: AuthModalProps) {
+export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [phone, setPhone] = useState("");
-  const [code, setCode] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [countdown, setCountdown] = useState(0);
-  const [agreed, setAgreed] = useState(false);
 
-  useEffect(() => {
-    if (countdown <= 0) return;
-    const timer = setInterval(() => setCountdown(prev => prev - 1), 1000);
-    return () => clearInterval(timer);
-  }, [countdown]);
-
-  useEffect(() => {
-    if (!open) {
-      setPhone("");
-      setCode("");
-      setError(null);
-      setCountdown(0);
-      setAgreed(false);
-    }
-  }, [open]);
-
-  const handleSendOtp = async () => {
-    if (!phone) {
-      setError("请输入手机号码");
-      return;
-    }
-    
-    setError(null);
-    setLoading(true);
-    
-    const formattedPhone = phone.startsWith("+") ? phone : `+86${phone}`;
-    
-    try {
-      const { error } = await supabase.auth.signInWithOtp({
-        phone: formattedPhone,
-      });
-
-      if (error) throw error;
-      
-      setCountdown(60);
-    } catch (err: unknown) {
-      const e = err as Error;
-      setError(e.message || "获取验证码失败");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (!agreed) {
-      setError("请先阅读并同意服务协议及隐私权政策");
+    if (!phone) {
+      setError("请输入手机号码");
       return;
     }
 
-    if (!code) {
-      setError("请输入验证码");
+    if (!password) {
+      setError("请输入密码");
       return;
     }
 
@@ -83,15 +36,18 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
     const formattedPhone = phone.startsWith("+") ? phone : `+86${phone}`;
 
     try {
-      const { error } = await supabase.auth.verifyOtp({
+      const { error } = await supabase.auth.signInWithPassword({
         phone: formattedPhone,
-        token: code,
-        type: 'sms',
+        password: password,
       });
       
       if (error) throw error;
 
-      onOpenChange(false); // Close modal on success
+      // Reset state on successful login before closing
+      setPhone("");
+      setPassword("");
+      setError(null);
+      onClose();
     } catch (err: unknown) {
       const e = err as Error;
       setError(e.message || "登录失败");
@@ -100,88 +56,88 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
     }
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[400px] bg-[#1C1C1E] text-white border-white/10 p-0 overflow-hidden">
-        <div className="h-1 bg-gradient-to-r from-yellow-400 to-yellow-600 w-full" />
-        <div className="p-8">
-          <DialogHeader className="mb-6">
-            <DialogTitle className="text-2xl font-semibold">
-              Hello, 欢迎来到平台
-            </DialogTitle>
-            <DialogDescription className="text-gray-400">
-              未注册的手机号验证后将自动注册
-            </DialogDescription>
-          </DialogHeader>
+  if (!isOpen) return null;
 
-          <form onSubmit={handleLogin} className="space-y-6">
-            {error && (
-              <div className="bg-red-500/10 text-red-500 text-sm p-3 rounded-md border border-red-500/20">
-                {error}
-              </div>
-            )}
-            
-            <div className="space-y-4">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 text-sm">
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div className="bg-[#0a0a0a] max-w-md w-full mx-4 rounded-2xl border border-white/10 p-8 relative">
+        <button
+          onClick={() => {
+            // Optional: reset state on close if desired,
+            // but closing means the next time it's opened it'll have the old state
+            // unless we reset it. Let's just reset when they close.
+            setPhone("");
+            setPassword("");
+            setError(null);
+            onClose();
+          }}
+          className="absolute top-4 right-4 text-gray-500 hover:text-white"
+        >
+          <XIcon className="w-6 h-6 stroke-[1.5]" />
+          <span className="sr-only">Close</span>
+        </button>
+
+        <div className="mb-6">
+          <div className="w-8 h-[3px] bg-yellow-500 mb-6"></div>
+          <h2 className="text-3xl font-bold text-white">登录</h2>
+          <p className="text-gray-400 text-sm mt-2 mb-8">连接灵感，驱动生成</p>
+        </div>
+
+        <form onSubmit={handleLogin} className="space-y-6">
+          {error && (
+            <div className="bg-red-500/10 text-red-500 text-sm p-3 rounded-md border border-red-500/20">
+              {error}
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <div>
+              <div className="text-xs text-gray-400 mb-2">账号</div>
+              <div className="flex bg-[#1a1a1a] rounded-lg h-12 focus-within:bg-[#2a2a2a] transition-colors">
+                <div className="flex items-center pl-4 pr-2 text-gray-500 text-sm">
                   +86
                 </div>
-                <Input 
+                <input
                   type="tel" 
                   placeholder="请输入手机号" 
                   value={phone}
                   onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))}
-                  className="pl-12 bg-[#2C2C2E] border-none text-white h-12 focus-visible:ring-1 focus-visible:ring-purple-500"
+                  className="flex-1 bg-transparent border-none text-white outline-none px-2"
                   required
                 />
               </div>
+            </div>
 
-              <div className="flex gap-2">
-                <Input 
-                  type="text" 
-                  placeholder="请输入验证码" 
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  className="flex-1 bg-[#2C2C2E] border-none text-white h-12 focus-visible:ring-1 focus-visible:ring-purple-500"
+            <div>
+              <div className="text-xs text-gray-400 mb-2">密码</div>
+              <div className="flex bg-[#1a1a1a] rounded-lg h-12 focus-within:bg-[#2a2a2a] transition-colors">
+                <input
+                  type="password"
+                  placeholder="请输入密码"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="flex-1 bg-transparent border-none text-white outline-none px-4"
                   required
                 />
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  onClick={handleSendOtp}
-                  disabled={loading || countdown > 0 || phone.length < 11}
-                  className="h-12 w-[120px] bg-[#2C2C2E] hover:bg-[#3C3C3E] text-purple-400 hover:text-purple-300 transition-colors"
-                >
-                  {countdown > 0 ? `${countdown}s 后重新获取` : "获取验证码"}
-                </Button>
               </div>
+            </div>
+          </div>
+
+          <div className="pt-2">
+            <div className="text-xs text-gray-500 mb-4 text-center">
+              登录即代表同意 <a href="#" className="text-gray-300 hover:text-white">用户服务协议</a> 和 <a href="#" className="text-gray-300 hover:text-white">隐私政策</a>
             </div>
 
             <Button 
               type="submit" 
-              className="w-full h-12 bg-[#6B46C1] hover:bg-[#553C9A] text-white text-base font-medium rounded-md transition-colors" 
+              className="w-full h-12 bg-[#a855f7] hover:bg-[#9333ea] text-white text-base rounded-lg transition-colors"
               disabled={loading}
             >
-              {loading ? "登录中..." : "登录/注册"}
+              {loading ? "登录中..." : "登陆"}
             </Button>
-
-            <div className="flex items-start space-x-2 mt-4">
-              <Checkbox 
-                id="terms" 
-                checked={agreed}
-                onCheckedChange={(checked) => setAgreed(checked as boolean)}
-                className="mt-1 border-gray-500 data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
-              />
-              <Label htmlFor="terms" className="text-xs text-gray-400 leading-relaxed font-normal cursor-pointer">
-                我已经阅读并同意
-                <a href="#" className="text-purple-400 hover:underline mx-1">《服务协议》</a>
-                和
-                <a href="#" className="text-purple-400 hover:underline mx-1">《隐私权政策》</a>
-              </Label>
-            </div>
-          </form>
-        </div>
-      </DialogContent>
-    </Dialog>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }

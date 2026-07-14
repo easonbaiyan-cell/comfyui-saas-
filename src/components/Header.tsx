@@ -9,12 +9,6 @@ import { Bell, HeadphonesIcon, LogOut, User as UserIcon, Zap, Home } from "lucid
 import { supabase } from "@/lib/supabase";
 import { AuthModal } from "./AuthModal";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "./ui/dialog";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -32,8 +26,8 @@ interface NavLink {
   content?: string;
 }
 
-export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?: NavLink[] }) {
-  const [authModalOpen, setAuthModalOpen] = useState(false);
+export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) {
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
   // 新增：控制定价页面弹窗的开关
   const [isPricingOpen, setIsPricingOpen] = useState(false); 
   
@@ -49,7 +43,7 @@ export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user || null);
       if (session?.user) {
-        setAuthModalOpen(false); // Close auth modal if user logs in
+        setIsAuthOpen(false); // Close auth modal if user logs in
       }
     });
 
@@ -79,7 +73,7 @@ export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?
 
           {/* Right: Navigation and Actions */}
           <div className="flex items-center gap-3 ml-auto">
-              {true || user ? (
+              {user ? (
                 <>
                   <Link
                     href="/invite"
@@ -145,7 +139,10 @@ export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?
                   </div>
                 </>
               ) : (
-                <Button size="sm" onClick={() => setAuthModalOpen(true)}>
+                <Button
+                  className="bg-white text-black hover:bg-gray-100 rounded-full font-medium"
+                  onClick={() => setIsAuthOpen(true)}
+                >
                   登录 / 注册
                 </Button>
               )}
@@ -154,7 +151,7 @@ export function Header({ logoUrl, navLinks = [] }: { logoUrl?: string, navLinks?
       </header>
       
       {/* Global Auth Modal */}
-      <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
+      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
 
       {/* 新增：Pricing Modal (收费弹窗) */}
       {isPricingOpen && (
