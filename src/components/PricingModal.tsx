@@ -90,12 +90,12 @@ export default function PricingModal({ onClose, currentPlan = 0 }: PricingModalP
           onClick={() => setSelectedPlan(1)}
           className={`relative flex flex-col rounded-2xl border transition-all duration-300 cursor-pointer p-6 backdrop-blur-sm
             ${selectedPlan === 1 
-              ? 'border-gray-400 shadow-[0_0_20px_rgba(156,163,175,0.3)] scale-[1.02] bg-gradient-to-b from-gray-800/80 to-black' 
-              : 'border-gray-800 bg-gradient-to-b from-gray-900/50 to-black hover:border-gray-700'}
+              ? 'border-gray-400 shadow-[0_0_20px_rgba(156,163,175,0.3)] scale-[1.05] bg-gradient-to-b from-gray-800/80 to-black'
+              : 'border-gray-800 bg-gradient-to-b from-gray-900/50 to-black hover:border-gray-700 hover:scale-[1.05]'}
           `}
         >
           <div className="absolute top-0 right-6 -translate-y-1/2 px-3 py-1 bg-gradient-to-r from-gray-600 to-gray-800 rounded-full text-xs font-bold text-white shadow-lg">
-            限时 7.5 折
+            7.5折
           </div>
           <div className="mb-4">
             <h3 className="text-xl font-semibold text-gray-200">基础包月</h3>
@@ -148,22 +148,24 @@ export default function PricingModal({ onClose, currentPlan = 0 }: PricingModalP
         {/* Card 2: 连续包月 (Main highlight) */}
         <div 
           onClick={() => setSelectedPlan(2)}
-          className={`relative flex flex-col rounded-2xl border-2 transition-all duration-300 cursor-pointer p-6 transform md:-translate-y-4
+          className={`relative flex flex-col rounded-2xl border transition-all duration-300 cursor-pointer p-6
             ${selectedPlan === 2 
               ? 'border-indigo-400 shadow-[0_0_35px_rgba(99,102,241,0.5)] scale-[1.05] bg-gradient-to-b from-indigo-900/60 to-black' 
-              : 'border-indigo-500/80 bg-gradient-to-b from-indigo-950/40 to-black shadow-[0_0_20px_-5px_rgba(99,102,241,0.2)] hover:border-indigo-400/80'}
+              : 'border-indigo-500/80 bg-gradient-to-b from-indigo-950/40 to-black shadow-[0_0_20px_-5px_rgba(99,102,241,0.2)] hover:border-indigo-400/80 hover:scale-[1.05]'}
           `}
         >
-          <div className="absolute top-0 right-6 -translate-y-1/2 px-3 py-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full text-xs font-bold text-white shadow-lg">
-            限时 4 折
+          <div className="absolute top-0 right-6 -translate-y-1/2 px-3 py-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full text-xs font-bold text-white shadow-lg flex items-center justify-center">
+            限时 4折<span className="text-[10px] ml-1 opacity-80 font-normal">剩余 02:15:30</span>
           </div>
           <div className="mb-4">
             <h3 className="text-xl font-semibold text-indigo-300">连续包月</h3>
           </div>
           <div className="mb-1 flex items-baseline gap-2">
             <span className="text-4xl font-bold text-white">¥680</span>
-            <span className="text-sm text-gray-500 line-through">¥1680</span>
-            <span className="text-sm text-gray-400">/月</span>
+            <div className="flex flex-col ml-2 justify-center leading-tight">
+              <span className="text-gray-600 line-through text-[10px]">原价 ¥3400/月</span>
+              <span className="text-gray-400 line-through text-xs">日常价 ¥1280/月</span>
+            </div>
           </div>
           <p className="text-sm text-indigo-300/70 mb-4">次月续费 ¥680（可随时取消）</p>
           <p className="text-sm text-gray-400 mb-6">1积分=0.0095元</p>
@@ -212,20 +214,22 @@ export default function PricingModal({ onClose, currentPlan = 0 }: PricingModalP
           onClick={() => setSelectedPlan(3)}
           className={`relative flex flex-col rounded-2xl border transition-all duration-300 cursor-pointer p-6
             ${selectedPlan === 3
-              ? 'border-yellow-500 shadow-[0_0_25px_rgba(234,179,8,0.3)] scale-[1.02] bg-gradient-to-b from-yellow-900/40 to-black'
-              : 'border-yellow-700/50 bg-gradient-to-b from-yellow-950/30 to-black hover:border-yellow-600/70'}
+              ? 'border-yellow-500 shadow-[0_0_25px_rgba(234,179,8,0.3)] scale-[1.05] bg-gradient-to-b from-yellow-900/40 to-black'
+              : 'border-yellow-700/50 bg-gradient-to-b from-yellow-950/30 to-black hover:border-yellow-600/70 hover:scale-[1.05]'}
           `}
         >
-          <div className="absolute top-0 right-6 -translate-y-1/2 px-3 py-1 bg-gradient-to-r from-yellow-500 to-yellow-700 rounded-full text-xs font-bold text-yellow-950 shadow-lg">
-            限时 3 折
+          <div className="absolute top-0 right-6 -translate-y-1/2 px-3 py-1 bg-gradient-to-r from-yellow-500 to-yellow-700 rounded-full text-xs font-bold text-yellow-950 shadow-lg flex items-center justify-center">
+            限时 3折<span className="text-[10px] ml-1 opacity-80 font-normal">剩余 02:15:30</span>
           </div>
           <div className="mb-4">
             <h3 className="text-xl font-semibold text-yellow-500/90">连续包年</h3>
           </div>
           <div className="mb-1 flex items-baseline gap-2">
             <span className="text-4xl font-bold text-white">¥6800</span>
-            <span className="text-sm text-gray-500 line-through">¥20160</span>
-            <span className="text-sm text-gray-400">/年</span>
+            <div className="flex flex-col ml-2 justify-center leading-tight">
+              <span className="text-gray-600 line-through text-[10px]">原价 ¥40800/年</span>
+              <span className="text-gray-400 line-through text-xs">日常价 ¥15360/年</span>
+            </div>
           </div>
           <p className="text-sm text-gray-500 mb-4">无自动续费</p>
           <p className="text-sm text-gray-400 mb-6">1积分=0.0078元</p>
