@@ -5,10 +5,8 @@
 ▲ Next.js 16.2.10 (Turbopack)
 - Local:         http://localhost:3000
 - Network:       http://192.168.0.2:3000
-✓ Ready in 568ms
+✓ Ready in 534ms
 
-○ Compiling /settings ...
- GET /settings 200 in 6.7s (next.js: 6.2s, application-code: 416ms)
-[browser] Image with src "https://picsum.photos/160/160?random=1" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
-Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
-[browser] Image with src "https://picsum.photos/160/160?random=1" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+○ Compiling /points ...
+ GET /points 200 in 4.7s (next.js: 4.4s, application-code: 359ms)
+ GET /points 200 in 84ms (next.js: 5ms, application-code: 79ms)
