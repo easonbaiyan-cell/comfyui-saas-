@@ -89,7 +89,7 @@ export default async function Home() {
         runninghubId: "123",
         title: "FLUX.1 Pro Generator",
         description: "使用 FLUX.1 Pro 模型生成高质量图像。",
-        coverImageUrl: "https://images.unsplash.com/photo-1698428800057-0a373b53a067?q=80&w=600&auto=format&fit=crop",
+        coverImageUrl: "https://picsum.photos/600/800?random=1",
         category: "Image",
         creditCost: 15
       },
@@ -98,7 +98,7 @@ export default async function Home() {
         runninghubId: "456",
         title: "Video Upscaler 4K",
         description: "使用 AI 将您的视频提升至 4K 分辨率。",
-        coverImageUrl: "https://images.unsplash.com/photo-1695653422960-4c3112bd22fa?q=80&w=600&auto=format&fit=crop",
+        coverImageUrl: "https://picsum.photos/600/800?random=2",
         category: "Video",
         creditCost: 45
       }

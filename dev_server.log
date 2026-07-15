@@ -5,9 +5,26 @@
 ▲ Next.js 16.2.10 (Turbopack)
 - Local:         http://localhost:3000
 - Network:       http://192.168.0.2:3000
-✓ Ready in 545ms
+✓ Ready in 538ms
 
-○ Compiling / ...
- GET / 200 in 20.7s (next.js: 6.1s, application-code: 14.6s)
- GET /logo.png 404 in 786ms (next.js: 678ms, application-code: 108ms)
+○ Compiling /workspace ...
+ GET /workspace 200 in 6.3s (next.js: 5.7s, application-code: 612ms)
+ GET /logo.png 404 in 1199ms (next.js: 1096ms, application-code: 104ms)
 ⨯ The requested resource isn't a valid image for /logo.png received null
+⨯ upstream image response failed for https://images.unsplash.com/photo-1682687220199-d0124f48f15b?q=80&w=600&auto=format&fit=crop 404
+⨯ upstream image response failed for https://images.unsplash.com/photo-1682687982501-1e58ea813b19?q=80&w=600&auto=format&fit=crop 404
+⨯ upstream image response failed for https://images.unsplash.com/photo-1695653422960-4c3112bd22fa?q=80&w=600&auto=format&fit=crop 404
+⨯ upstream image response failed for https://images.unsplash.com/photo-1698428800057-0a373b53a067?q=80&w=600&auto=format&fit=crop 404
+[browser] Image with src "https://images.unsplash.com/photo-1682695794816-7b9da18ed470?q=80&w=600&auto=format&fit=crop" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+⚠ Found a change in next.config.ts. Restarting the server to apply the changes...
+▲ Next.js 16.2.10 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.2:3000
+✓ Ready in 424ms
+
+ GET /workspace 200 in 671ms (next.js: 282ms, application-code: 388ms)
+ GET /logo.png 404 in 107ms (next.js: 35ms, application-code: 72ms)
+⨯ The requested resource isn't a valid image for /logo.png received null
+[browser] Image with src "https://picsum.photos/600/800?random=2" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
