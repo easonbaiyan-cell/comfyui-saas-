@@ -89,14 +89,7 @@ export default async function Home() {
       <Header logoUrl={logoUrl} navLinks={navLinks} />
 
       <main className="flex-1">
-        <section className="container mx-auto px-4 py-12">
-          <div className="mb-8 flex flex-col gap-2">
-            <h1 className="text-3xl font-bold tracking-tight" id="workflows">Featured 工作流</h1>
-            <p className="text-muted-foreground">
-              发现并运行最新的 AI 工作流。
-            </p>
-          </div>
-          
+        <section className="container mx-auto px-4 py-6" id="workflows">
           <WorkflowGrid workflows={workflows} />
         </section>
       </main>
