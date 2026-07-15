@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Play, UploadCloud, HelpCircle, Minus, Plus, Zap, Heart, MessageCircle } from 'lucide-react';
+import { Play, UploadCloud, HelpCircle, Minus, Plus, Zap, Heart, MessageCircle, Download, Trash2, Share2, RefreshCw } from 'lucide-react';
 
 export default function WorkflowDetailPage() {
   const [isMaskMode, setIsMaskMode] = useState(false);
@@ -16,11 +16,13 @@ export default function WorkflowDetailPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-64px)] bg-[#0a0a0a] text-white">
-      <div className="grid grid-cols-1 lg:grid-cols-12 h-full w-full">
-        {/* Left Column: Showcase Video (col-span-5) */}
-        <div className="lg:col-span-5 border-r border-white/5 p-6 flex flex-col items-center justify-center">
-          <div className="w-full max-w-sm flex flex-col gap-4">
+    <div className="h-[calc(100vh-64px)] bg-[#0a0a0a] text-white overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-3 h-full w-full">
+        {/* Left Column: Showcase Video */}
+        <div className="border-r border-white/5 p-6 flex flex-col items-center justify-start overflow-y-auto">
+          <div className="w-full max-w-sm flex flex-col">
+            <h1 className="text-lg font-semibold text-white mb-6 text-center">参考视频</h1>
+
             {/* Video Placeholder */}
             <div className="bg-[#131622] rounded-2xl aspect-[9/16] w-full relative flex items-center justify-center shadow-xl overflow-hidden group">
               <button className="h-16 w-16 bg-black/50 rounded-full flex items-center justify-center group-hover:bg-[#a855f7]/80 transition-all backdrop-blur-md border border-white/10">
@@ -44,16 +46,24 @@ export default function WorkflowDetailPage() {
                 </div>
               </div>
             </div>
+
+            {/* Invisible Spacer to align with right column's action buttons */}
+            <div className="h-9 mt-4"></div>
+
+            {/* Traffic Analysis Text */}
+            <p className="text-xs text-gray-500 leading-relaxed mt-4">
+              参考作品来源小红书平台，它的点赞达到了 12.5 W，评论达到 1.2 W，具备非常好的引流能力。
+            </p>
           </div>
         </div>
 
-        {/* Right Column: Parameters and Actions (col-span-7) */}
-        <div className="lg:col-span-7 overflow-y-auto h-[calc(100vh-64px)] relative flex flex-col">
-          <div className="p-6 md:p-10 flex-1 w-full max-w-3xl mx-auto">
-            <h1 className="text-2xl font-bold mb-8 tracking-tight">工作流详情与操作</h1>
+        {/* Middle Column: Parameters and Actions */}
+        <div className="border-r border-white/5 overflow-y-auto h-full relative flex flex-col">
+          <div className="p-6 flex-1 w-full max-w-sm mx-auto flex flex-col">
+            <h1 className="text-lg font-semibold text-white mb-6 text-center">工作流详情与操作</h1>
 
             {/* Upload Zone */}
-            <div className="mb-10">
+            <div className="mb-10 w-full">
               <h2 className="text-sm font-medium text-gray-400 mb-3 uppercase tracking-wider">参考图片上传</h2>
               <div className="border-2 border-dashed border-white/10 bg-white/5 hover:bg-white/10 rounded-xl p-10 text-center cursor-pointer transition-colors flex flex-col items-center justify-center gap-4">
                 <div className="h-16 w-16 bg-black/40 rounded-full flex items-center justify-center border border-white/5">
@@ -121,8 +131,8 @@ export default function WorkflowDetailPage() {
           </div>
 
           {/* Sticky Bottom Action Bar */}
-          <div className="sticky bottom-0 left-0 right-0 z-10 bg-[#0a0a0a]/90 backdrop-blur-md border-t border-white/10 p-4 px-6 md:px-10">
-            <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="sticky bottom-0 left-0 right-0 z-10 bg-[#0a0a0a]/90 backdrop-blur-md border-t border-white/10 p-4 px-6">
+            <div className="w-full mx-auto flex flex-col items-center justify-between gap-4">
               {/* Cost Estimation */}
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-400">预估</span>
@@ -140,12 +150,48 @@ export default function WorkflowDetailPage() {
               </div>
 
               {/* Generate Button */}
-              <button className="w-full sm:w-auto bg-[#a855f7] hover:bg-purple-600 text-white font-bold text-lg h-14 px-12 rounded-xl transition-all shadow-[0_0_20px_rgba(168,85,247,0.3)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center">
+              <button className="w-full bg-[#a855f7] hover:bg-purple-600 text-white font-bold text-lg h-14 px-12 rounded-xl transition-all shadow-[0_0_20px_rgba(168,85,247,0.3)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center">
                 立即运行
               </button>
             </div>
           </div>
         </div>
+
+        {/* Right Column: Generated Video and Actions */}
+        <div className="p-6 flex flex-col items-center justify-start overflow-y-auto h-full">
+          <div className="w-full max-w-sm flex flex-col">
+            <h1 className="text-lg font-semibold text-white mb-6 text-center">生成视频</h1>
+
+            {/* Video Placeholder */}
+            <div className="bg-[#131622] rounded-2xl aspect-[9/16] w-full relative flex items-center justify-center shadow-xl overflow-hidden">
+              <span className="text-gray-600 text-sm">暂无生成视频</span>
+            </div>
+
+            {/* Action Buttons (aligned with left column spacer) */}
+            <div className="flex justify-center gap-4 mt-4 h-9 items-center">
+              <button className="text-gray-400 hover:text-white p-2 transition-colors">
+                <Download className="h-5 w-5" />
+              </button>
+              <button className="text-gray-400 hover:text-white p-2 transition-colors">
+                <Trash2 className="h-5 w-5" />
+              </button>
+              <button className="text-gray-400 hover:text-white p-2 transition-colors">
+                <Share2 className="h-5 w-5" />
+              </button>
+              <button className="text-gray-400 hover:text-white p-2 transition-colors">
+                <RefreshCw className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Data Records Text (aligned with left column analysis text) */}
+            <div className="text-xs text-gray-500 flex flex-col gap-1 mt-4">
+              <span>生成时间：2026.07.15-14:30:17</span>
+              <span>运行时长：12:35</span>
+              <span>有效期：<span className="text-yellow-500/80">9</span>天后过期</span>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   );
