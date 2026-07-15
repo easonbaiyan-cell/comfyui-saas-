@@ -84,12 +84,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
-          {error && (
-            <div className="bg-red-500/10 text-red-500 text-sm p-3 rounded-md border border-red-500/20">
-              {error}
-            </div>
-          )}
-
           <div className="space-y-4">
             <div>
               <div className="text-xs text-gray-400 mb-2">账号</div>
@@ -120,6 +114,11 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   required
                 />
               </div>
+              {error && (
+                <div className="text-xs text-red-500 mt-2">
+                  {error}
+                </div>
+              )}
             </div>
           </div>
 

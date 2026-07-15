@@ -9,12 +9,6 @@ import { Button } from "./ui/button";
 import { Bell, HeadphonesIcon, LogOut, User as UserIcon, Zap, Home, Video, CreditCard, Settings, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { AuthModal } from "./AuthModal";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
 import type { User } from "@supabase/supabase-js";
 
 interface NavLink {
@@ -35,6 +29,7 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
   // 新增：控制消息抽屉
   const [isMessageOpen, setIsMessageOpen] = useState(false);
   
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
@@ -129,59 +124,58 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
 
             {/* 2. 鉴权状态区：根据用户状态切换 */}
             {user ? (
-              <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <div className="flex items-center gap-3 bg-[#131622] hover:bg-[#1a1f33] border border-white/5 px-4 py-1.5 rounded-full transition-all cursor-pointer select-none">
-                        <span className="text-xs text-gray-400 font-medium">会员中心</span>
-                        <div className="flex items-center gap-1">
-                          <Zap className="h-4 w-4 text-yellow-500 fill-current" />
-                          <span className="text-sm font-bold text-white">6,525</span>
-                        </div>
-                        <div className="w-6 h-6 rounded-full border border-white/20 overflow-hidden flex items-center justify-center bg-gray-800">
-                          <UserIcon className="h-3 w-3 text-gray-400" />
-                        </div>
+              <div
+                className="relative"
+                onMouseEnter={() => setIsUserMenuOpen(true)}
+                onMouseLeave={() => setIsUserMenuOpen(false)}
+              >
+                <div className="flex items-center gap-3 bg-[#131622] hover:bg-[#1a1f33] border border-white/5 px-4 py-1.5 rounded-full transition-all cursor-pointer select-none">
+                  <span className="text-xs text-gray-400 font-medium">会员中心</span>
+                  <div className="flex items-center gap-1">
+                    <Zap className="h-4 w-4 text-yellow-500 fill-current" />
+                    <span className="text-sm font-bold text-white">6,525</span>
+                  </div>
+                  <div className="w-6 h-6 rounded-full border border-white/20 overflow-hidden flex items-center justify-center bg-gray-800">
+                    <UserIcon className="h-3 w-3 text-gray-400" />
+                  </div>
+                </div>
+
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-[#0a0a0a] rounded-xl border border-white/10 shadow-2xl p-2 z-50">
+                    <div className="px-3 py-3 mb-1 border-b border-white/5 flex flex-col gap-1">
+                      <p className="text-sm font-semibold text-white">
+                        {user?.phone || user?.email || "Guest"}
+                      </p>
+                      <div className="flex items-center gap-1 text-xs text-yellow-500/90">
+                        <Zap className="h-3 w-3 fill-current" />
+                        <span>6,525 积分</span>
                       </div>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56 bg-[#0a0a0a] rounded-xl border border-white/10 shadow-2xl p-2 z-50">
-                      <div className="px-3 py-3 mb-1 border-b border-white/5 flex flex-col gap-1">
-                        <p className="text-sm font-semibold text-white">
-                          {user?.phone || user?.email || "Guest"}
-                        </p>
-                        <div className="flex items-center gap-1 text-xs text-yellow-500/90">
-                          <Zap className="h-3 w-3 fill-current" />
-                          <span>6,525 积分</span>
-                        </div>
-                      </div>
+                    </div>
 
-                      <DropdownMenuItem render={
-                        <Link href="/dashboard?tab=creations" className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors cursor-pointer focus:bg-white/5 focus:text-white w-full">
-                          <Video className="h-4 w-4" />
-                          <span>我的创作</span>
-                        </Link>
-                      } />
+                    <Link href="/dashboard?tab=creations" className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors cursor-pointer focus:bg-white/5 focus:text-white w-full">
+                      <Video className="h-4 w-4" />
+                      <span>我的创作</span>
+                    </Link>
 
-                      <DropdownMenuItem render={
-                        <Link href="/dashboard?tab=billing" className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors cursor-pointer focus:bg-white/5 focus:text-white w-full">
-                          <CreditCard className="h-4 w-4" />
-                          <span>积分与账单</span>
-                        </Link>
-                      } />
+                    <Link href="/dashboard?tab=billing" className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors cursor-pointer focus:bg-white/5 focus:text-white w-full">
+                      <CreditCard className="h-4 w-4" />
+                      <span>积分与账单</span>
+                    </Link>
 
-                      <DropdownMenuItem render={
-                        <Link href="/dashboard?tab=settings" className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors cursor-pointer focus:bg-white/5 focus:text-white w-full">
-                          <Settings className="h-4 w-4" />
-                          <span>个人设置</span>
-                        </Link>
-                      } />
+                    <Link href="/dashboard?tab=settings" className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors cursor-pointer focus:bg-white/5 focus:text-white w-full">
+                      <Settings className="h-4 w-4" />
+                      <span>个人设置</span>
+                    </Link>
 
-                      <hr className="border-white/5 my-1" />
+                    <hr className="border-white/5 my-1" />
 
-                      <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-3 px-3 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 focus:bg-red-500/10 focus:text-red-300 rounded-lg transition-colors cursor-pointer">
-                        <LogOut className="h-4 w-4" />
-                        <span>退出登录</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                    <div onClick={handleSignOut} className="flex items-center gap-3 px-3 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 focus:bg-red-500/10 focus:text-red-300 rounded-lg transition-colors cursor-pointer">
+                      <LogOut className="h-4 w-4" />
+                      <span>退出登录</span>
+                    </div>
+                  </div>
+                )}
+              </div>
             ) : (
               <Button
                   className="bg-white text-black hover:bg-gray-100 rounded-full font-medium"
