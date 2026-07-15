@@ -1,9 +1,13 @@
 
-> temp_app@0.1.0 start
-> next start
+> temp_app@0.1.0 dev
+> next dev
 
-▲ Next.js 16.2.10
+▲ Next.js 16.2.10 (Turbopack)
 - Local:         http://localhost:3000
 - Network:       http://192.168.0.2:3000
-✓ Ready in 194ms
+✓ Ready in 545ms
+
+○ Compiling / ...
+ GET / 200 in 20.7s (next.js: 6.1s, application-code: 14.6s)
+ GET /logo.png 404 in 786ms (next.js: 678ms, application-code: 108ms)
 ⨯ The requested resource isn't a valid image for /logo.png received null
