@@ -62,7 +62,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     setLoading(true);
 
     try {
-      let authError;
       const formattedAccount = loginMode === "email-password"
         ? account
         : (account.startsWith("+") ? account : `+86${account}`);
@@ -71,8 +70,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         ? { email: account, password }
         : { phone: formattedAccount, password };
 
-      const { error } = await supabase.auth.signInWithPassword(signInOptions);
-      authError = error;
+      const { error: authError } = await supabase.auth.signInWithPassword(signInOptions);
       
       if (authError) {
         if (authError.message.includes("Invalid login credentials") || authError.message.includes("not found") || authError.message.includes("Invalid")) {
