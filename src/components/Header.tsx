@@ -6,7 +6,7 @@ import { InviteModal } from "./InviteModal";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
-import { Bell, HeadphonesIcon, LogOut, User as UserIcon, Zap, Home, Video, CreditCard, Settings, X } from "lucide-react";
+import { Bell, HeadphonesIcon, LogOut, User as UserIcon, Zap, Home, Video, CreditCard, Settings, X, Crown, Coins } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { AuthModal } from "./AuthModal";
 import type { User } from "@supabase/supabase-js";
@@ -56,7 +56,7 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
 
   return (
     <>
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="relative z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           {/* Left: Logo Only */}
           <div className="flex items-center">
@@ -146,44 +146,80 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
                       className="fixed inset-0 z-40"
                       onClick={() => setIsProfileDropdownOpen(false)}
                     />
-                    <div className="absolute right-0 mt-2 w-56 bg-[#0a0a0a] rounded-xl border border-white/10 shadow-2xl p-2 z-50">
-                      <div className="px-3 py-3 mb-1 border-b border-white/5 flex flex-col gap-1">
-                        <p className="text-sm font-semibold text-white">
+                    <div className="absolute right-0 mt-2 w-80 bg-[#0a0a0a] rounded-xl border border-white/10 shadow-2xl p-3 z-[100]">
+                      {/* 1. 基础账号信息 */}
+                      <div className="px-2 pb-3 mb-3 border-b border-white/10">
+                        <p className="text-sm font-semibold text-white truncate">
                           {user?.phone || user?.email || "Guest"}
                         </p>
-                        <div className="flex items-center gap-1 text-xs text-yellow-500/90">
-                          <Zap className="h-3 w-3 fill-current" />
-                          <span>6,525 积分</span>
+                      </div>
+
+                      {/* 2. 会员状态卡片 */}
+                      <div className="bg-lime-300 rounded-xl p-3 flex items-center justify-between mb-3">
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-1.5 text-black font-bold text-sm">
+                            <Crown className="h-4 w-4" />
+                            <span>专业版 Plus会员</span>
+                          </div>
+                          <span className="text-black/70 text-xs mt-0.5">2026/08/03到期</span>
+                        </div>
+                        <Link
+                          href="/pricing"
+                          onClick={() => setIsProfileDropdownOpen(false)}
+                          className="bg-black text-white text-xs font-medium px-3 py-1.5 rounded-full hover:bg-black/80 transition-colors"
+                        >
+                          升级
+                        </Link>
+                      </div>
+
+                      {/* 3. 积分状态与充值区 */}
+                      <div className="bg-[#1a1a1a] rounded-xl p-3 flex items-center justify-between mb-3 border border-white/5">
+                        <div className="flex items-center gap-1.5 text-gray-400">
+                          <Coins className="h-4 w-4" />
+                          <span className="text-xs">剩余积分</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-lime-300 font-bold text-lg font-mono tracking-tight">56,435</span>
+                          <Link
+                            href="/points"
+                            onClick={() => setIsProfileDropdownOpen(false)}
+                            className="bg-[#2a2a2a] text-white text-xs font-medium px-3 py-1.5 rounded-full hover:bg-[#3a3a3a] transition-colors"
+                          >
+                            充值
+                          </Link>
                         </div>
                       </div>
 
-                      <Link href="/workspace" onClick={() => setIsProfileDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors cursor-pointer focus:bg-white/5 focus:text-white w-full">
-                        <Video className="h-4 w-4" />
-                        <span>我的创作</span>
-                      </Link>
+                      {/* 4. 常规功能导航菜单 */}
+                      <div className="flex flex-col gap-0.5">
+                        <Link href="/workspace" onClick={() => setIsProfileDropdownOpen(false)} className="flex items-center gap-3 px-2 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors cursor-pointer focus:bg-white/5 focus:text-white w-full">
+                          <Video className="h-4 w-4" />
+                          <span>我的创作</span>
+                        </Link>
 
-                      <Link href="/billing" onClick={() => setIsProfileDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors cursor-pointer focus:bg-white/5 focus:text-white w-full">
-                        <CreditCard className="h-4 w-4" />
-                        <span>积分与账单</span>
-                      </Link>
+                        <Link href="/billing" onClick={() => setIsProfileDropdownOpen(false)} className="flex items-center gap-3 px-2 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors cursor-pointer focus:bg-white/5 focus:text-white w-full">
+                          <CreditCard className="h-4 w-4" />
+                          <span>积分与账单</span>
+                        </Link>
 
-                      <Link href="/settings" onClick={() => setIsProfileDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors cursor-pointer focus:bg-white/5 focus:text-white w-full">
-                        <Settings className="h-4 w-4" />
-                        <span>个人设置</span>
-                      </Link>
+                        <Link href="/settings" onClick={() => setIsProfileDropdownOpen(false)} className="flex items-center gap-3 px-2 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors cursor-pointer focus:bg-white/5 focus:text-white w-full">
+                          <Settings className="h-4 w-4" />
+                          <span>个人设置</span>
+                        </Link>
 
-                      <hr className="border-white/5 my-1" />
+                        <hr className="border-white/5 my-1" />
 
-                      <button
-                        onClick={() => {
-                          setIsProfileDropdownOpen(false);
-                          handleSignOut();
-                        }}
-                        className="flex items-center w-full gap-3 px-3 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 focus:bg-red-500/10 focus:text-red-300 rounded-lg transition-colors cursor-pointer"
-                      >
-                        <LogOut className="h-4 w-4" />
-                        <span>退出登录</span>
-                      </button>
+                        <button
+                          onClick={() => {
+                            setIsProfileDropdownOpen(false);
+                            handleSignOut();
+                          }}
+                          className="flex items-center w-full gap-3 px-2 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 focus:bg-red-500/10 focus:text-red-300 rounded-lg transition-colors cursor-pointer"
+                        >
+                          <LogOut className="h-4 w-4" />
+                          <span>退出登录</span>
+                        </button>
+                      </div>
                     </div>
                   </>
                 )}
