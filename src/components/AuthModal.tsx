@@ -10,10 +10,11 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ isOpen, onClose }: AuthModalProps) {
+  type LoginMode = "phone-password" | "phone-otp" | "email-password";
   const [account, setAccount] = useState("");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
-  const [loginMode, setLoginMode] = useState<"password" | "otp">("password");
+  const [loginMode, setLoginMode] = useState<LoginMode>("phone-password");
   const [countdown, setCountdown] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +33,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
   const handleGetCode = () => {
     if (!account) {
-      setError("请输入手机号 / 邮箱");
+      setError("请输入手机号");
       return;
     }
     setError(null);
@@ -43,13 +44,13 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     e.preventDefault();
     setError(null);
 
-    if (loginMode === "otp") {
-      setError("短信服务尚未配置，请暂时使用密码登录");
+    if (loginMode === "phone-otp") {
+      setError("短信服务暂未配置，请使用密码或邮箱登录");
       return;
     }
 
     if (!account) {
-      setError("请输入手机号 / 邮箱");
+      setError(loginMode === "email-password" ? "请输入邮箱" : "请输入手机号");
       return;
     }
 
@@ -62,22 +63,28 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
     try {
       let authError;
-      if (account.includes("@")) {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: account,
-          password: password,
-        });
-        authError = error;
-      } else {
-        const formattedPhone = account.startsWith("+") ? account : `+86${account}`;
-        const { error } = await supabase.auth.signInWithPassword({
-          phone: formattedPhone,
-          password: password,
-        });
-        authError = error;
-      }
+      const formattedAccount = loginMode === "email-password"
+        ? account
+        : (account.startsWith("+") ? account : `+86${account}`);
+
+      const signInOptions = loginMode === "email-password"
+        ? { email: account, password }
+        : { phone: formattedAccount, password };
+
+      const { error } = await supabase.auth.signInWithPassword(signInOptions);
+      authError = error;
       
-      if (authError) throw authError;
+      if (authError) {
+        if (authError.message.includes("Invalid login credentials") || authError.message.includes("not found") || authError.message.includes("Invalid")) {
+          // Attempt sign up
+          const { error: signUpError } = await supabase.auth.signUp(signInOptions);
+          if (signUpError) {
+             throw signUpError;
+          }
+        } else {
+          throw authError;
+        }
+      }
 
       // Note: State reset and closing is handled by the global auth state change listener in Header
     } catch (err: unknown) {
@@ -98,7 +105,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             setAccount("");
             setPassword("");
             setCode("");
-            setLoginMode("password");
+            setLoginMode("phone-password");
             setCountdown(0);
             setError(null);
             onClose();
@@ -110,27 +117,33 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         </button>
 
         <div className="mb-6">
-          <div className="w-8 h-[3px] bg-yellow-500 mb-6"></div>
+          <div className="w-8 h-[3px] bg-lime-300 mb-6"></div>
           <h2 className="text-3xl font-bold text-white">登录</h2>
-          <p className="text-gray-400 text-sm mt-2 mb-8">连接灵感，驱动生成</p>
+          <p className="text-gray-400 text-sm mt-2 mb-8 text-left">连接灵感，驱动生成</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
-          {error && (
-            <div className="bg-red-500/10 text-red-500 text-sm p-3 rounded-md border border-red-500/20">
-              {error}
-            </div>
-          )}
-
           <div className="space-y-4">
             <div>
               <div className="text-xs text-gray-400 mb-2">账号</div>
-              <div className="flex bg-[#1a1a1a] rounded-lg h-12 focus-within:bg-[#2a2a2a] transition-colors">
+              <div className="flex bg-[#1a1a1a] rounded-lg h-12 focus-within:bg-[#2a2a2a] transition-colors overflow-hidden">
+                {loginMode !== "email-password" && (
+                  <div className="flex items-center px-4 text-gray-400 bg-[#222] border-r border-white/5">
+                    +86
+                  </div>
+                )}
                 <input
-                  type="text"
-                  placeholder="手机号 / 邮箱"
+                  type={loginMode === "email-password" ? "email" : "tel"}
+                  placeholder={loginMode === "email-password" ? "请输入邮箱" : "请输入手机号"}
                   value={account}
-                  onChange={(e) => setAccount(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (loginMode !== "email-password") {
+                      setAccount(val.replace(/[^0-9]/g, ""));
+                    } else {
+                      setAccount(val);
+                    }
+                  }}
                   className="flex-1 bg-transparent border-none text-white outline-none px-4"
                   required
                 />
@@ -138,24 +151,11 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </div>
 
             <div>
-              <div className="flex justify-between items-center mb-2">
-                <div className="text-xs text-gray-400">
-                  {loginMode === "password" ? "密码" : "验证码"}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLoginMode(loginMode === "password" ? "otp" : "password");
-                    setError(null);
-                  }}
-                  className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
-                >
-                  {loginMode === "password" ? "验证码登录" : "密码登录"}
-                </button>
+              <div className="text-xs text-gray-400 mb-2">
+                {loginMode === "phone-otp" ? "验证码" : "密码"}
               </div>
-
               <div className="flex bg-[#1a1a1a] rounded-lg h-12 focus-within:bg-[#2a2a2a] transition-colors overflow-hidden">
-                {loginMode === "password" ? (
+                {loginMode !== "phone-otp" ? (
                   <input
                     type="password"
                     placeholder="请输入密码"
@@ -178,7 +178,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                       type="button"
                       onClick={handleGetCode}
                       disabled={countdown > 0}
-                      className="px-4 text-sm text-gray-300 hover:text-white disabled:text-gray-600 disabled:cursor-not-allowed transition-colors font-medium border-l border-white/5 bg-[#222]"
+                      className="px-4 text-sm text-lime-300 hover:brightness-110 disabled:text-gray-600 disabled:cursor-not-allowed transition-colors font-medium border-l border-white/5 bg-[#222]"
                     >
                       {countdown > 0 ? `${countdown}s 后重试` : "获取验证码"}
                     </button>
@@ -189,17 +189,56 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           </div>
 
           <div className="pt-2">
+            {error && (
+              <div className="text-red-500 text-xs mb-4 text-center">
+                {error}
+              </div>
+            )}
+
             <div className="text-xs text-gray-500 mb-4 text-center">
-              登录即代表同意 <a href="#" className="text-gray-300 hover:text-white">用户服务协议</a> 和 <a href="#" className="text-gray-300 hover:text-white">隐私政策</a>
+              登录即代表同意 <a href="#" className="text-lime-300 hover:brightness-110">[用户服务协议]</a> 和 <a href="#" className="text-lime-300 hover:brightness-110">[隐私政策]</a>
             </div>
 
             <button
               type="submit" 
-              className="w-full h-12 bg-[#a855f7] hover:bg-[#9333ea] text-white text-base rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center font-medium"
+              className="w-full h-12 bg-lime-300 hover:brightness-110 text-black text-base rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center font-bold"
               disabled={loading}
             >
               {loading ? "登录中..." : "立即登录"}
             </button>
+
+            <div className="mt-6 flex items-center justify-center">
+              <span className="text-[#444] text-xs font-medium">—— OR ——</span>
+            </div>
+
+            <div className="mt-6 flex space-x-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setLoginMode(loginMode === "email-password" ? "phone-password" : "email-password");
+                  setError(null);
+                  setAccount("");
+                  setPassword("");
+                  setCode("");
+                }}
+                className="flex-1 h-10 border border-[#333] hover:border-lime-300/50 text-gray-400 hover:text-white rounded-lg text-sm transition-colors bg-transparent"
+              >
+                {loginMode === "email-password" ? "手机号登录" : "邮箱登录"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setLoginMode(loginMode === "phone-otp" ? "phone-password" : "phone-otp");
+                  setError(null);
+                  setPassword("");
+                  setCode("");
+                  if (loginMode === "email-password") setAccount("");
+                }}
+                className="flex-1 h-10 border border-[#333] hover:border-lime-300/50 text-gray-400 hover:text-white rounded-lg text-sm transition-colors bg-transparent"
+              >
+                {loginMode === "phone-otp" ? "密码登录" : "验证码登录"}
+              </button>
+            </div>
           </div>
         </form>
       </div>
