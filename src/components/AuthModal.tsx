@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { XIcon } from "lucide-react";
 
@@ -43,11 +42,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       
       if (error) throw error;
 
-      // Reset state on successful login before closing
-      setPhone("");
-      setPassword("");
-      setError(null);
-      onClose();
+      // Note: State reset and closing is handled by the global auth state change listener in Header
     } catch (err: unknown) {
       const e = err as Error;
       setError(e.message || "登录失败");
@@ -128,13 +123,13 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               登录即代表同意 <a href="#" className="text-gray-300 hover:text-white">用户服务协议</a> 和 <a href="#" className="text-gray-300 hover:text-white">隐私政策</a>
             </div>
 
-            <Button 
+            <button
               type="submit" 
-              className="w-full h-12 bg-[#a855f7] hover:bg-[#9333ea] text-white text-base rounded-lg transition-colors"
+              className="w-full h-12 bg-[#a855f7] hover:bg-[#9333ea] text-white text-base rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center font-medium"
               disabled={loading}
             >
               {loading ? "登录中..." : "登陆"}
-            </Button>
+            </button>
           </div>
         </form>
       </div>

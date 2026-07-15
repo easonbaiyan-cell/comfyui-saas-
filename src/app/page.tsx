@@ -1,7 +1,7 @@
 import { PromoBanner } from "@/components/PromoBanner";
 import { Header } from "@/components/Header";
 import { WorkflowGrid } from "@/components/WorkflowGrid";
-import prisma from "@/lib/prisma";
+import { createClient } from '@supabase/supabase-js';
 
 export const revalidate = 60; // Revalidate at most every 60 seconds
 
@@ -12,40 +12,62 @@ export default async function Home() {
   let workflows: any[] = [];
 
   try {
-    const settings = await prisma.siteSetting.findFirst({
-      orderBy: { createdAt: "desc" },
-    });
-    siteSettings = settings;
-    
-    const wfs = await prisma.workflow.findMany({
-      where: { isActive: true },
-      orderBy: { createdAt: "desc" },
-    });
-    // Transform Decimal to number for the UI component
-    workflows = wfs.map(w => ({
-      ...w,
-      creditCost: w.creditCost ? Number(w.creditCost) : 0
-    }));
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+    if (supabaseUrl && supabaseKey) {
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        const { data: settingsData } = await supabase
+          .from('site_settings')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        siteSettings = settingsData;
+
+        const { data: wfs } = await supabase
+          .from('workflows')
+          .select('*')
+          .eq('is_active', true)
+          .order('created_at', { ascending: false });
+
+        if (wfs) {
+            // Transform Decimal to number for the UI component
+            workflows = wfs.map(w => ({
+              id: w.id,
+              runninghubId: w.runninghub_id,
+              title: w.title,
+              description: w.description,
+              coverImageUrl: w.cover_image_url,
+              category: w.category,
+              creditCost: w.credit_cost ? Number(w.credit_cost) : 0,
+              isActive: w.is_active,
+              createdAt: w.created_at,
+              updatedAt: w.updated_at
+            }));
+        }
+    }
   } catch (error) {
-    console.error("Error fetching data:", error);
+    console.error("Error fetching data from Supabase:", error);
     // Continue with defaults if DB fails
   }
 
   // Fallbacks if nothing in DB yet
-  const bannerText = siteSettings?.topBannerText || "欢迎来到 papagaga.com！首发特惠：所有工作流 5 折。";
+  const bannerText = siteSettings?.top_banner_text || "欢迎来到 papagaga.com！首发特惠：所有工作流 5 折。";
   // Stable date if missing (prevent hydration mismatches and impure function errors)
   const defaultFutureDate = new Date();
   defaultFutureDate.setDate(defaultFutureDate.getDate() + 7);
-  const bannerCountdown = siteSettings?.topBannerCountdown || defaultFutureDate;
-  const logoUrl = siteSettings?.logoUrl || undefined;
+  const bannerCountdown = siteSettings?.top_banner_countdown ? new Date(siteSettings.top_banner_countdown) : defaultFutureDate;
+  const logoUrl = siteSettings?.logo_url || undefined;
   
   // Parse navLinks from JSONB
   let navLinks = [];
   try {
-    if (siteSettings?.navLinks) {
-      navLinks = typeof siteSettings.navLinks === 'string' 
-        ? JSON.parse(siteSettings.navLinks) 
-        : siteSettings.navLinks;
+    if (siteSettings?.nav_links) {
+      navLinks = typeof siteSettings.nav_links === 'string'
+        ? JSON.parse(siteSettings.nav_links)
+        : siteSettings.nav_links;
     }
   } catch (e) {
     console.error("Error parsing nav links", e);
