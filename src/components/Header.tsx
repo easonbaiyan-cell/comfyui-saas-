@@ -162,7 +162,7 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
                         <span>我的创作</span>
                       </Link>
 
-                      <Link href="/dashboard?tab=billing" onClick={() => setIsProfileDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors cursor-pointer focus:bg-white/5 focus:text-white w-full">
+                      <Link href="/billing" onClick={() => setIsProfileDropdownOpen(false)} className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors cursor-pointer focus:bg-white/5 focus:text-white w-full">
                         <CreditCard className="h-4 w-4" />
                         <span>积分与账单</span>
                       </Link>
