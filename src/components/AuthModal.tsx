@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { XIcon } from "lucide-react";
 
@@ -10,18 +10,46 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ isOpen, onClose }: AuthModalProps) {
-  const [phone, setPhone] = useState("");
+  const [account, setAccount] = useState("");
   const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
+  const [loginMode, setLoginMode] = useState<"password" | "otp">("password");
+  const [countdown, setCountdown] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [countdown]);
+
+  const handleGetCode = () => {
+    if (!account) {
+      setError("请输入手机号 / 邮箱");
+      return;
+    }
+    setError(null);
+    setCountdown(60);
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (!phone) {
-      setError("请输入手机号码");
+    if (loginMode === "otp") {
+      setError("短信服务尚未配置，请暂时使用密码登录");
+      return;
+    }
+
+    if (!account) {
+      setError("请输入手机号 / 邮箱");
       return;
     }
 
@@ -32,15 +60,24 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
     setLoading(true);
 
-    const formattedPhone = phone.startsWith("+") ? phone : `+86${phone}`;
-
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        phone: formattedPhone,
-        password: password,
-      });
+      let authError;
+      if (account.includes("@")) {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: account,
+          password: password,
+        });
+        authError = error;
+      } else {
+        const formattedPhone = account.startsWith("+") ? account : `+86${account}`;
+        const { error } = await supabase.auth.signInWithPassword({
+          phone: formattedPhone,
+          password: password,
+        });
+        authError = error;
+      }
       
-      if (error) throw error;
+      if (authError) throw authError;
 
       // Note: State reset and closing is handled by the global auth state change listener in Header
     } catch (err: unknown) {
@@ -54,15 +91,15 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
       <div className="bg-[#0a0a0a] max-w-md w-full mx-4 rounded-2xl border border-white/10 p-8 relative">
         <button
           onClick={() => {
-            // Optional: reset state on close if desired,
-            // but closing means the next time it's opened it'll have the old state
-            // unless we reset it. Let's just reset when they close.
-            setPhone("");
+            setAccount("");
             setPassword("");
+            setCode("");
+            setLoginMode("password");
+            setCountdown(0);
             setError(null);
             onClose();
           }}
@@ -89,31 +126,64 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             <div>
               <div className="text-xs text-gray-400 mb-2">账号</div>
               <div className="flex bg-[#1a1a1a] rounded-lg h-12 focus-within:bg-[#2a2a2a] transition-colors">
-                <div className="flex items-center pl-4 pr-2 text-gray-500 text-sm">
-                  +86
-                </div>
                 <input
-                  type="tel" 
-                  placeholder="请输入手机号" 
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))}
-                  className="flex-1 bg-transparent border-none text-white outline-none px-2"
+                  type="text"
+                  placeholder="手机号 / 邮箱"
+                  value={account}
+                  onChange={(e) => setAccount(e.target.value)}
+                  className="flex-1 bg-transparent border-none text-white outline-none px-4"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <div className="text-xs text-gray-400 mb-2">密码</div>
-              <div className="flex bg-[#1a1a1a] rounded-lg h-12 focus-within:bg-[#2a2a2a] transition-colors">
-                <input
-                  type="password"
-                  placeholder="请输入密码"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="flex-1 bg-transparent border-none text-white outline-none px-4"
-                  required
-                />
+              <div className="flex justify-between items-center mb-2">
+                <div className="text-xs text-gray-400">
+                  {loginMode === "password" ? "密码" : "验证码"}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLoginMode(loginMode === "password" ? "otp" : "password");
+                    setError(null);
+                  }}
+                  className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                >
+                  {loginMode === "password" ? "验证码登录" : "密码登录"}
+                </button>
+              </div>
+
+              <div className="flex bg-[#1a1a1a] rounded-lg h-12 focus-within:bg-[#2a2a2a] transition-colors overflow-hidden">
+                {loginMode === "password" ? (
+                  <input
+                    type="password"
+                    placeholder="请输入密码"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="flex-1 bg-transparent border-none text-white outline-none px-4"
+                    required
+                  />
+                ) : (
+                  <>
+                    <input
+                      type="text"
+                      placeholder="请输入验证码"
+                      value={code}
+                      onChange={(e) => setCode(e.target.value)}
+                      className="flex-1 bg-transparent border-none text-white outline-none px-4"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={handleGetCode}
+                      disabled={countdown > 0}
+                      className="px-4 text-sm text-gray-300 hover:text-white disabled:text-gray-600 disabled:cursor-not-allowed transition-colors font-medium border-l border-white/5 bg-[#222]"
+                    >
+                      {countdown > 0 ? `${countdown}s 后重试` : "获取验证码"}
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -128,7 +198,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               className="w-full h-12 bg-[#a855f7] hover:bg-[#9333ea] text-white text-base rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center font-medium"
               disabled={loading}
             >
-              {loading ? "登录中..." : "登陆"}
+              {loading ? "登录中..." : "立即登录"}
             </button>
           </div>
         </form>
