@@ -1,0 +1,42 @@
+--- src/app/settings/page.tsx
++++ src/app/settings/page.tsx
+@@ -1,13 +1,16 @@
+ "use client";
+
+ import { useState, useRef, ChangeEvent } from "react";
+ import Image from "next/image";
+ import { X } from "lucide-react";
+ import { BaseModal } from "../../components/BaseModal";
++import { useRouter } from "next/navigation";
+
+ export default function SettingsPage() {
++  const router = useRouter();
++
+   // Global Mock State
+   const [accountType, setAccountType] = useState<'phone' | 'email'>('phone');
+
+   // Profile Mock State
+   const [nickname, setNickname] = useState("Jules Explorer");
+@@ -79,12 +82,19 @@
+     <div className="min-h-screen bg-black text-white pt-24 pb-12 px-4 sm:px-6">
+       <div className="max-w-3xl mx-auto space-y-8">
+
+         {/* Header */}
+-        <div>
+-          <h1 className="text-3xl font-bold tracking-tight text-white mb-2">个人设置</h1>
+-          <p className="text-sm text-gray-400">管理您的基础信息和账号安全</p>
++        <div className="relative">
++          <div className="pr-12">
++            <h1 className="text-3xl font-bold tracking-tight text-white mb-2">个人设置</h1>
++            <p className="text-sm text-gray-400">管理您的基础信息和账号安全</p>
++          </div>
++          <button
++            onClick={() => router.back()}
++            className="absolute top-0 right-0 p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
++          >
++            <X className="w-6 h-6" />
++          </button>
+         </div>
+
+         {/* Section 1: Profile (基础信息) */}
+         <section className="bg-[#0a0a0a] border border-white/10 rounded-2xl p-6 sm:p-8">
