@@ -10,6 +10,8 @@ export default async function Home() {
   let siteSettings = null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let workflows: any[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let categories: any[] = [];
 
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -25,6 +27,18 @@ export default async function Home() {
           .single();
 
         siteSettings = settingsData;
+
+        const { data: catsData } = await supabase
+          .from('categories')
+          .select('*')
+          .order('sort_order', { ascending: true });
+        if (catsData) {
+            categories = catsData.map(c => ({
+              id: c.id,
+              name: c.name,
+              requiredTier: c.required_tier
+            }));
+        }
 
         const { data: wfs } = await supabase
           .from('workflows')
@@ -81,30 +95,6 @@ export default async function Home() {
     ];
   }
 
-  // Dummy fallback workflows if DB is totally empty
-  if (workflows.length === 0) {
-    workflows = [
-      {
-        id: "1",
-        runninghubId: "123",
-        title: "FLUX.1 Pro Generator",
-        description: "使用 FLUX.1 Pro 模型生成高质量图像。",
-        coverImageUrl: "https://picsum.photos/600/800?random=1",
-        category: "Image",
-        creditCost: 15
-      },
-      {
-        id: "2",
-        runninghubId: "456",
-        title: "Video Upscaler 4K",
-        description: "使用 AI 将您的视频提升至 4K 分辨率。",
-        coverImageUrl: "https://picsum.photos/600/800?random=2",
-        category: "Video",
-        creditCost: 45
-      }
-    ];
-  }
-
   return (
     <div className="flex min-h-screen flex-col">
       <PromoBanner text={bannerText} countdownUntil={bannerCountdown as Date} />
@@ -112,7 +102,7 @@ export default async function Home() {
 
       <main className="flex-1">
         <section className="container mx-auto px-4 py-6" id="workflows">
-          <WorkflowGrid workflows={workflows} />
+          <WorkflowGrid workflows={workflows} categories={categories} />
         </section>
       </main>
 

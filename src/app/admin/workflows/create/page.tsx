@@ -37,6 +37,22 @@ export default function CreateWorkflowPage() {
     return () => clearTimeout(timeoutId);
   }, [toastMessage]);
 
+  const fetchCategories = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const res = await getCategoriesAction(session.access_token);
+      if (res.success && res.categories) {
+        setCategories(res.categories);
+        if (res.categories.length > 0) {
+          setSelectedCategory((prev) => prev || res.categories![0].name);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     fetchCategories();
   }, []);
@@ -71,22 +87,6 @@ export default function CreateWorkflowPage() {
     return () => document.removeEventListener('click', handleAnchorClick, { capture: true });
   }, [isDirty]);
 
-  const fetchCategories = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-
-      const result = await getCategoriesAction(session.access_token);
-      if (result.success && result.categories) {
-        setCategories(result.categories);
-        if (result.categories.length > 0) {
-          setSelectedCategory((prev) => prev || result.categories![0].name);
-        }
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'cover' | 'video') => {
     const file = e.target.files?.[0];

@@ -4,6 +4,13 @@ import { useState, useRef } from "react";
 import Link from "next/link";
 import { Lock } from "lucide-react";
 
+
+interface Category {
+  id: string;
+  name: string;
+  requiredTier: string;
+}
+
 interface Workflow {
   id: string;
   runninghubId: string;
@@ -13,8 +20,6 @@ interface Workflow {
   category: string | null;
   creditCost: number;
 }
-
-const CATEGORIES = ["推荐", "服装", "首饰", "跳舞", "诱惑"];
 
 function VideoCard({ workflow }: { workflow: Workflow }) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -61,29 +66,33 @@ function VideoCard({ workflow }: { workflow: Workflow }) {
   );
 }
 
-export function WorkflowGrid({ workflows }: { workflows: Workflow[] }) {
-  const [activeCategory, setActiveCategory] = useState("推荐");
+export function WorkflowGrid({ workflows, categories }: { workflows: Workflow[], categories: Category[] }) {
+  const [activeCategory, setActiveCategory] = useState(categories.length > 0 ? categories[0].name : "");
+
+  const filteredWorkflows = activeCategory
+    ? workflows.filter(w => w.category === activeCategory)
+    : workflows;
 
   return (
     <div className="w-full flex flex-col gap-4">
       {/* Category Navigation */}
       <div className="flex w-full overflow-x-auto no-scrollbar gap-6 border-b border-white/5 pb-2">
-        {CATEGORIES.map((cat) => (
+        {categories.map((cat) => (
           <div
-            key={cat}
+            key={cat.id}
             className="relative cursor-pointer py-2 group flex-shrink-0"
-            onClick={() => setActiveCategory(cat)}
+            onClick={() => setActiveCategory(cat.name)}
           >
             <div className="flex items-center gap-1">
               <span className={`text-base font-medium transition-colors ${
-                activeCategory === cat ? 'text-white' : 'text-gray-400 group-hover:text-white'
+                activeCategory === cat.name ? 'text-white' : 'text-gray-400 group-hover:text-white'
               }`}>
-                {cat}
+                {cat.name}
               </span>
-              {cat === "诱惑" && (
+              {cat.requiredTier !== "free" && (
                 <div className="relative flex items-center">
                   <Lock className={`w-4 h-4 transition-colors ${
-                    activeCategory === cat ? 'text-white' : 'text-gray-400 group-hover:text-white'
+                    activeCategory === cat.name ? 'text-white' : 'text-gray-400 group-hover:text-white'
                   }`} />
                   <span className="absolute -top-3 -right-11 text-[8px] bg-gradient-to-r from-pink-400 to-yellow-300 text-black font-medium px-1 py-[1px] rounded-t-full rounded-br-full rounded-bl-none whitespace-nowrap">
                     包年专享
@@ -93,7 +102,7 @@ export function WorkflowGrid({ workflows }: { workflows: Workflow[] }) {
             </div>
 
             {/* Active Indicator */}
-            {activeCategory === cat && (
+            {activeCategory === cat.name && (
               <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-[3px] rounded-full bg-primary-green" />
             )}
           </div>
@@ -101,14 +110,14 @@ export function WorkflowGrid({ workflows }: { workflows: Workflow[] }) {
       </div>
 
       {/* Grid Layout */}
-      {!workflows.length ? (
+      {!filteredWorkflows.length ? (
         <div className="flex min-h-[400px] flex-col items-center justify-center rounded-xl border border-dashed border-white/10 text-center text-muted-foreground mt-4">
           <p>暂无可用工作流。</p>
           <p className="text-sm">请稍后再来看看，或在后台进行配置。</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-2">
-          {workflows.map((workflow) => (
+          {filteredWorkflows.map((workflow) => (
             <VideoCard key={workflow.id} workflow={workflow} />
           ))}
         </div>

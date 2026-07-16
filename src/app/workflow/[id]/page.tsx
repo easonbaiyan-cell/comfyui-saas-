@@ -17,6 +17,7 @@ export default function WorkflowDetailPage({ params }: { params: { id: string } 
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [elapsedTime, setElapsedTime] = useState(0);
   const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null);
   const [taskId, setTaskId] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -36,6 +37,19 @@ export default function WorkflowDetailPage({ params }: { params: { id: string } 
     setSkipFrames((prev) => prev + 1);
   };
 
+
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isGenerating) {
+      interval = setInterval(() => {
+        setElapsedTime(prev => prev + 1);
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isGenerating]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -65,6 +79,7 @@ export default function WorkflowDetailPage({ params }: { params: { id: string } 
   };
 
   const handleGenerate = async () => {
+    setElapsedTime(0);
     if (!imageUrl) {
       setErrorMsg("请先上传参考图片");
       return;
@@ -205,6 +220,7 @@ export default function WorkflowDetailPage({ params }: { params: { id: string } 
                       {isUploading ? "正在上传..." : "点击或拖拽图片至此"}
                     </p>
                     <p className="text-xs text-gray-500">支持 JPG, PNG, WEBP 等格式</p>
+                    <p className="text-xs text-primary-green/70 mt-1">建议尺寸 9:16，不超过 10MB</p>
                   </div>
                 </div>
               ) : (
@@ -333,7 +349,12 @@ export default function WorkflowDetailPage({ params }: { params: { id: string } 
               {isGenerating ? (
                 <div className="flex flex-col items-center justify-center text-primary-green">
                   <Loader2 className="h-10 w-10 animate-spin mb-4" />
-                  <p className="text-sm font-medium animate-pulse">正在生成，请耐心等待...</p>
+                  <div className="flex flex-col items-center gap-2">
+                    <p className="text-sm font-medium animate-pulse">正在生成，请耐心等待...</p>
+                    <div className="bg-primary-green/10 text-primary-green text-xs font-mono px-3 py-1 rounded-full border border-primary-green/20">
+                      已用时间: {elapsedTime} 秒
+                    </div>
+                  </div>
                   {taskId && <p className="text-xs text-primary-green/60 mt-2 font-mono">Task: {taskId}</p>}
                 </div>
               ) : generatedVideoUrl ? (

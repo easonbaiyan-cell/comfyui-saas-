@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import PricingModal from "./PricingModal";
+import { PointsModal } from "./PointsModal";
 import { InviteModal } from "./InviteModal";
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -11,6 +12,25 @@ import { supabase } from "@/lib/supabase";
 import { AuthModal } from "./AuthModal";
 import type { User } from "@supabase/supabase-js";
 
+function MockMessage({ title, date, content, isGreen }: { title: string, date: string, content: string, isGreen: boolean }) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div
+      className="bg-[#1a1a1a] rounded-lg p-3 mb-3 cursor-pointer hover:bg-[#2a2a2a] transition-colors"
+      onClick={() => setExpanded(!expanded)}
+    >
+      <div className="flex items-center gap-2 mb-2">
+        <span className={`h-2 w-2 rounded-full ${isGreen ? 'bg-primary-green' : 'bg-gray-500'}`}></span>
+        <h3 className="text-sm font-semibold text-white">{title}</h3>
+      </div>
+      <p className={`text-xs text-gray-400 mb-2 ${expanded ? '' : 'truncate'}`}>{content}</p>
+      <div className="text-[10px] text-gray-500">{date}</div>
+    </div>
+  );
+}
+
+import { useAuthStore } from "@/store/auth";
+
 interface NavLink {
   label: string;
   type: "redirect" | "modal";
@@ -19,9 +39,11 @@ interface NavLink {
 }
 
 export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) {
+  const points = useAuthStore(state => state.积分余额);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   // 新增：控制定价页面弹窗的开关
-  const [isPricingOpen, setIsPricingOpen] = useState(false); 
+  const [isPricingOpen, setIsPricingOpen] = useState(false);
+  const [isPointsOpen, setIsPointsOpen] = useState(false);
   // 新增：控制邀请页面弹窗的开关
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   // 新增：控制客服弹窗
@@ -30,8 +52,37 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
   const [isMessageOpen, setIsMessageOpen] = useState(false);
   // 新增：控制用户下拉菜单
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [unreadMessages, setUnreadMessages] = useState(true);
+  const [messageTab, setMessageTab] = useState<"official" | "tasks">("official");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [videoTasks, setVideoTasks] = useState<any[]>([]);
   
   const [user, setUser] = useState<User | null>(null);
+
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isMessageOpen && user) {
+      // initial fetch
+      const fetchTasks = async () => {
+        const { data } = await supabase
+          .from('video_tasks')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(10);
+        if (data) setVideoTasks(data);
+      };
+
+      fetchTasks();
+
+      interval = setInterval(fetchTasks, 5000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isMessageOpen, user]);
 
   useEffect(() => {
     // Initial fetch
@@ -84,10 +135,10 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
               variant="ghost"
               size="icon"
               className="text-muted-foreground hover:text-white bg-[#1a1a1a] rounded-xl h-10 w-10 relative"
-              onClick={() => setIsMessageOpen(true)}
+              onClick={() => { setIsMessageOpen(true); setUnreadMessages(false); }}
             >
               <Bell className="h-5 w-5" />
-              <span className="absolute top-2 right-2 block h-2.5 w-2.5 rounded-full bg-primary-green ring-2 ring-[#1a1a1a]"></span>
+              {unreadMessages && <span className="absolute top-2 right-2 block h-2.5 w-2.5 rounded-full bg-primary-green ring-2 ring-[#1a1a1a]"></span>}
             </Button>
             <div
               className="relative"
@@ -133,7 +184,7 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
                   <span className="text-xs text-gray-400 font-medium">会员中心</span>
                   <div className="flex items-center gap-1">
                     <Zap className="h-4 w-4 text-primary-green fill-current" />
-                    <span className="text-sm font-bold text-white">6,525</span>
+                    <span className="text-sm font-bold text-white">{points.toLocaleString()}</span>
                   </div>
                   <div className="w-6 h-6 rounded-full border border-white/20 overflow-hidden flex items-center justify-center bg-gray-800">
                     <UserIcon className="h-3 w-3 text-gray-400" />
@@ -163,13 +214,15 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
                           </div>
                           <span className="text-black/70 text-xs mt-0.5">2026/08/03到期</span>
                         </div>
-                        <Link
-                          href="/pricing"
-                          onClick={() => setIsProfileDropdownOpen(false)}
+                        <button
+                          onClick={() => {
+                            setIsPricingOpen(true);
+                            setIsProfileDropdownOpen(false);
+                          }}
                           className="bg-black text-white text-xs font-medium px-3 py-1.5 rounded-full hover:bg-black/80 transition-colors"
                         >
                           升级
-                        </Link>
+                        </button>
                       </div>
 
                       {/* 3. 积分状态与充值区 */}
@@ -179,14 +232,16 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
                           <span className="text-xs">剩余积分</span>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className="text-primary-green font-bold text-lg font-mono tracking-tight">56,435</span>
-                          <Link
-                            href="/points"
-                            onClick={() => setIsProfileDropdownOpen(false)}
+                          <span className="text-primary-green font-bold text-lg font-mono tracking-tight">{points.toLocaleString()}</span>
+                          <button
+                            onClick={() => {
+                              setIsPointsOpen(true);
+                              setIsProfileDropdownOpen(false);
+                            }}
                             className="bg-[#2a2a2a] text-white text-xs font-medium px-3 py-1.5 rounded-full hover:bg-[#3a3a3a] transition-colors"
                           >
                             充值
-                          </Link>
+                          </button>
                         </div>
                       </div>
 
@@ -236,6 +291,9 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
         </div>
       </header>
       
+      {/* 新增：Points Modal (积分充值弹窗) */}
+      <PointsModal isOpen={isPointsOpen} onClose={() => setIsPointsOpen(false)} />
+
       {/* Global Auth Modal */}
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
 
@@ -273,43 +331,52 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
           </div>
 
           {/* 分类 Tab */}
-          <div className="px-4 border-b border-white/5">
-            <div className="inline-block py-3 text-sm font-medium text-white border-b-2 border-primary-green">
+          <div className="px-4 border-b border-white/5 flex gap-4">
+            <div
+              className={`cursor-pointer inline-block py-3 text-sm font-medium transition-colors ${messageTab === 'official' ? 'text-white border-b-2 border-primary-green' : 'text-gray-400 hover:text-white border-b-2 border-transparent'}`}
+              onClick={() => setMessageTab('official')}
+            >
               官方消息
+            </div>
+            <div
+              className={`cursor-pointer inline-block py-3 text-sm font-medium transition-colors ${messageTab === 'tasks' ? 'text-white border-b-2 border-primary-green' : 'text-gray-400 hover:text-white border-b-2 border-transparent'}`}
+              onClick={() => setMessageTab('tasks')}
+            >
+              生成任务
             </div>
           </div>
 
           {/* 消息列表 */}
           <div className="flex-1 overflow-y-auto p-4">
-            {/* Mock Message 1 */}
-            <div className="bg-[#1a1a1a] rounded-lg p-3 mb-3">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="h-2 w-2 rounded-full bg-primary-green"></span>
-                <h3 className="text-sm font-semibold text-white">全新「控制台」上线</h3>
+            {messageTab === "official" ? (
+              <>
+                <MockMessage title="全新「控制台」上线" date="2026-05-15" content="原消费记录已全面升级，提供更清晰的账单明细和使用分析。" isGreen={true} />
+                <MockMessage title="充值优惠活动" date="2026-05-12" content="本月充值积分享受额外20%赠送，多充多送，活动限时进行中。" isGreen={true} />
+                <MockMessage title="系统维护通知" date="2026-05-01" content="预计于周日凌晨2点进行系统升级，期间可能出现短暂的访问波动。" isGreen={false} />
+              </>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {videoTasks.length === 0 ? (
+                  <div className="text-center text-gray-500 text-sm mt-10">暂无生成任务</div>
+                ) : (
+                  videoTasks.map(task => (
+                    <div key={task.id} className="bg-[#1a1a1a] rounded-lg p-3 border border-white/5">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs text-gray-400 font-mono truncate max-w-[140px]">{task.id}</span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                          task.status === 'success' ? 'bg-primary-green/20 text-primary-green' :
+                          task.status === 'failed' ? 'bg-danger-red/20 text-danger-red' :
+                          'bg-yellow-500/20 text-yellow-500 animate-pulse'
+                        }`}>
+                          {task.status === 'success' ? '已完成' : task.status === 'failed' ? '失败' : '生成中'}
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-gray-500">{new Date(task.created_at).toLocaleString()}</div>
+                    </div>
+                  ))
+                )}
               </div>
-              <p className="text-xs text-gray-400 mb-2 truncate">原消费记录已全面升级，提供更清晰的账单明细和使用分析。</p>
-              <div className="text-[10px] text-gray-500">2026-05-15</div>
-            </div>
-
-            {/* Mock Message 2 */}
-            <div className="bg-[#1a1a1a] rounded-lg p-3 mb-3">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="h-2 w-2 rounded-full bg-primary-green"></span>
-                <h3 className="text-sm font-semibold text-white">充值优惠活动</h3>
-              </div>
-              <p className="text-xs text-gray-400 mb-2 truncate">本月充值积分享受额外20%赠送，多充多送，活动限时进行中。</p>
-              <div className="text-[10px] text-gray-500">2026-05-12</div>
-            </div>
-
-            {/* Mock Message 3 */}
-            <div className="bg-[#1a1a1a] rounded-lg p-3 mb-3">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="h-2 w-2 rounded-full bg-gray-500"></span>
-                <h3 className="text-sm font-semibold text-white">系统维护通知</h3>
-              </div>
-              <p className="text-xs text-gray-400 mb-2 truncate">预计于周日凌晨2点进行系统升级，期间可能出现短暂的访问波动。</p>
-              <div className="text-[10px] text-gray-500">2026-05-01</div>
-            </div>
+            )}
           </div>
         </div>
       </div>

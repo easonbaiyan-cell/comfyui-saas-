@@ -2,6 +2,7 @@
 
 import { Button } from "./ui/button";
 import { BaseModal } from "./BaseModal";
+import { useState } from "react";
 
 interface InviteModalProps {
   isOpen: boolean;
@@ -9,6 +10,15 @@ interface InviteModalProps {
 }
 
 export function InviteModal({ isOpen, onClose }: InviteModalProps) {
+  const [copiedType, setCopiedType] = useState<"code" | "link" | null>(null);
+
+  const handleCopy = (text: string, type: "code" | "link") => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedType(type);
+      setTimeout(() => setCopiedType(null), 2000);
+    });
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -32,8 +42,12 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
             </div>
             <div className="flex items-center justify-between mt-auto">
               <span className="text-4xl font-bold text-white tracking-widest">c19wfslk</span>
-              <Button variant="outline" className="rounded-full border-white/20 text-white bg-transparent hover:bg-white/10 hover:text-white px-6">
-                复制
+              <Button
+                variant="outline"
+                className="rounded-full border-white/20 text-white bg-transparent hover:bg-white/10 hover:text-white px-6 transition-all"
+                onClick={() => handleCopy("c19wfslk", "code")}
+              >
+                {copiedType === "code" ? "已复制" : "复制"}
               </Button>
             </div>
           </div>
@@ -42,8 +56,11 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
           <div className="flex flex-col rounded-2xl border border-white/10 bg-[#111111] p-6 hover:border-white/20 transition-all duration-300">
             <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
               <span className="text-white font-medium">邀请好友链接</span>
-              <Button className="bg-primary-green hover:bg-primary-green/80 text-black rounded-full h-8 px-4 text-xs font-medium transition-colors shadow-lg shadow-primary-green/20">
-                复制分享链接 ➔
+              <Button
+                className="bg-primary-green hover:bg-primary-green/80 text-black rounded-full h-8 px-4 text-xs font-medium transition-colors shadow-lg shadow-primary-green/20"
+                onClick={() => handleCopy("宝子们，我发现一个AI视频宝藏产品 Papagaga！每天发布数百个超有趣好用的AI工作流。打开链接：https://papagaga.com?inviteCode=c19wfslk 注册即可领取 10,000 积分免费生成视频！", "link")}
+              >
+                {copiedType === "link" ? "已复制" : "复制分享链接 ➔"}
               </Button>
             </div>
             <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/5 text-sm text-gray-400 leading-relaxed mt-auto">

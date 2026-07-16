@@ -1,0 +1,824 @@
+import { PromoBanner } from "@/components/PromoBanner";
+import { Header } from "@/components/Header";
+import { WorkflowGrid } from "@/components/WorkflowGrid";
+import { createClient } from '@supabase/supabase-js';
+
+export const revalidate = 60; // Revalidate at most every 60 seconds
+
+export default async function Home() {
+  // Try to fetch settings, handle the case where DB is empty or fails gracefully
+  let siteSettings = null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let workflows: any[] = [];
+
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+    if (supabaseUrl && supabaseKey) {
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        const { data: settingsData } = await supabase
+          .from('site_settings')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        siteSettings = settingsData;
+
+        const { data: wfs } = await supabase
+          .from('workflows')
+          .select('*')
+          .eq('is_active', true)
+          .order('created_at', { ascending: false });
+
+        if (wfs) {
+            // Transform Decimal to number for the UI component
+            workflows = wfs.map(w => ({
+              id: w.id,
+              runninghubId: w.runninghub_id,
+              title: w.title,
+              description: w.description,
+              coverImageUrl: w.cover_image_url,
+              category: w.category,
+              creditCost: w.credit_cost ? Number(w.credit_cost) : 0,
+              isActive: w.is_active,
+              createdAt: w.created_at,
+              updatedAt: w.updated_at
+            }));
+        }
+    }
+  } catch (error) {
+    console.error("Error fetching data from Supabase:", error);
+    // Continue with defaults if DB fails
+  }
+
+  // Fallbacks if nothing in DB yet
+  const bannerText = siteSettings?.top_banner_text || "欢迎来到 papagaga.com！首发特惠：所有工作流 5 折。";
+  // Stable date if missing (prevent hydration mismatches and impure function errors)
+  const defaultFutureDate = new Date();
+  defaultFutureDate.setDate(defaultFutureDate.getDate() + 7);
+  const bannerCountdown = siteSettings?.top_banner_countdown ? new Date(siteSettings.top_banner_countdown) : defaultFutureDate;
+  const logoUrl = siteSettings?.logo_url || undefined;
+
+  // Parse navLinks from JSONB
+  let navLinks = [];
+  try {
+    if (siteSettings?.nav_links) {
+      navLinks = typeof siteSettings.nav_links === 'string'
+        ? JSON.parse(siteSettings.nav_links)
+        : siteSettings.nav_links;
+    }
+  } catch (e) {
+    console.error("Error parsing nav links", e);
+  }
+
+  if (navLinks.length === 0) {
+    navLinks = [
+      { label: "工作流", type: "redirect", url: "/#workflows" },
+      { label: "定价", type: "modal", content: "定价 modal content: 工作流 cost 1.5x base runninghub credits." },
+      { label: "关于", type: "redirect", url: "/about" },
+    ];
+  }
+
+  // Dummy fallback workflows if DB is totally empty
+  if (workflows.length === 0) {
+    workflows = [
+      {
+        id: "1",
+        runninghubId: "123",
+        title: "FLUX.1 Pro Generator",
+        description: "使用 FLUX.1 Pro 模型生成高质量图像。",
+        coverImageUrl: "https://picsum.photos/600/800?random=1",
+        category: "Image",
+        creditCost: 15
+      },
+      {
+        id: "2",
+        runninghubId: "456",
+        title: "Video Upscaler 4K",
+        description: "使用 AI 将您的视频提升至 4K 分辨率。",
+        coverImageUrl: "https://picsum.photos/600/800?random=2",
+        category: "Video",
+        creditCost: 45
+      }
+    ];
+  }
+
+  return (
+    <div className="flex min-h-screen flex-col">
+      <PromoBanner text={bannerText} countdownUntil={bannerCountdown as Date} />
+      <Header logoUrl={logoUrl} navLinks={navLinks} />
+
+      <main className="flex-1">
+        <section className="container mx-auto px-4 py-6" id="workflows">
+          <WorkflowGrid workflows={workflows} />
+        </section>
+      </main>
+
+      <footer className="border-t py-6 md:py-0">
+        <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-4 md:h-16 md:flex-row">
+          <p className="text-sm text-muted-foreground">
+            &copy; {new Date().getFullYear()} papagaga. 版权所有。
+          </p>
+        </div>
+      </footer>
+    </div>
+  );
+}
+"use client";
+
+import Image from "next/image";
+import PricingModal from "./PricingModal";
+import { InviteModal } from "./InviteModal";
+import Link from "next/link";
+import { useState, useEffect } from "react";
+import { Button } from "./ui/button";
+import { Bell, HeadphonesIcon, LogOut, User as UserIcon, Zap, Home, Video, CreditCard, Settings, X, Crown, Coins } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { AuthModal } from "./AuthModal";
+import type { User } from "@supabase/supabase-js";
+
+interface NavLink {
+  label: string;
+  type: "redirect" | "modal";
+  url?: string;
+  content?: string;
+}
+
+export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) {
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  // 新增：控制定价页面弹窗的开关
+  const [isPricingOpen, setIsPricingOpen] = useState(false);
+  // 新增：控制邀请页面弹窗的开关
+  const [isInviteOpen, setIsInviteOpen] = useState(false);
+  // 新增：控制客服弹窗
+  const [isCustomerServiceOpen, setIsCustomerServiceOpen] = useState(false);
+  // 新增：控制消息抽屉
+  const [isMessageOpen, setIsMessageOpen] = useState(false);
+  // 新增：控制用户下拉菜单
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    // Initial fetch
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user || null);
+    });
+
+    // Subscribe to auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+      if (session?.user) {
+        setIsAuthOpen(false); // Close auth modal if user logs in
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+  };
+
+  return (
+    <>
+      <header className="relative z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto flex h-16 items-center justify-between px-4">
+          {/* Left: Logo Only */}
+          <div className="flex items-center">
+            <Link href="/" className="flex items-center">
+              <Image
+                src={logoUrl || "/logo.png"}
+                alt="Logo"
+                width={120}
+                height={32}
+                className="h-8 w-auto object-contain"
+              />
+            </Link>
+          </div>
+
+          {/* Right: Navigation and Actions */}
+          <div className="flex items-center gap-4 ml-auto">
+            {/* 1. 常驻展示区：放在鉴权判断的外部，永远显示 */}
+            <button
+              onClick={() => setIsInviteOpen(true)}
+              className="hidden sm:flex items-center bg-[#1a1a1a] hover:bg-[#2a2a2a] text-primary-green px-4 py-2 rounded-full text-sm font-medium transition-colors border border-primary-green/30 h-10 mr-2"
+            >
+              邀请获取积分
+            </button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-muted-foreground hover:text-white bg-[#1a1a1a] rounded-xl h-10 w-10 relative"
+              onClick={() => setIsMessageOpen(true)}
+            >
+              <Bell className="h-5 w-5" />
+              <span className="absolute top-2 right-2 block h-2.5 w-2.5 rounded-full bg-primary-green ring-2 ring-[#1a1a1a]"></span>
+            </Button>
+            <div
+              className="relative"
+              onMouseEnter={() => setIsCustomerServiceOpen(true)}
+              onMouseLeave={() => setIsCustomerServiceOpen(false)}
+            >
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground hover:text-white bg-[#1a1a1a] rounded-xl h-10 w-10"
+                onClick={() => setIsCustomerServiceOpen(!isCustomerServiceOpen)}
+              >
+                <HeadphonesIcon className="h-5 w-5" />
+              </Button>
+
+              {isCustomerServiceOpen && (
+                <div className="absolute mt-2 right-0 z-50 bg-[#0a0a0a] border border-white/10 rounded-xl p-4 shadow-2xl w-48">
+                  <div className="text-center text-xs text-gray-400">扫码添加专属客服</div>
+                  <div className="w-32 h-32 bg-white rounded-md mx-auto mt-2 flex items-center justify-center text-black/50 text-xs">
+                    二维码占位
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 会员超市 按钮绑定了唤起收费弹窗 */}
+            <Button
+              size="sm"
+              className="hidden sm:flex bg-[#1a1a1a] hover:bg-[#2a2a2a] text-primary-green border border-transparent hover:border-primary-green/30 px-4 rounded-xl h-10"
+              onClick={() => setIsPricingOpen(true)}
+            >
+              <Home className="mr-2 h-4 w-4" />
+              会员超市
+            </Button>
+
+            {/* 2. 鉴权状态区：根据用户状态切换 */}
+            {user ? (
+              <div className="relative">
+                <div
+                  className="flex items-center gap-3 bg-[#131622] hover:bg-[#1a1f33] border border-white/5 px-4 py-1.5 rounded-full transition-all cursor-pointer select-none"
+                  onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                >
+                  <span className="text-xs text-gray-400 font-medium">会员中心</span>
+                  <div className="flex items-center gap-1">
+                    <Zap className="h-4 w-4 text-primary-green fill-current" />
+                    <span className="text-sm font-bold text-white">6,525</span>
+                  </div>
+                  <div className="w-6 h-6 rounded-full border border-white/20 overflow-hidden flex items-center justify-center bg-gray-800">
+                    <UserIcon className="h-3 w-3 text-gray-400" />
+                  </div>
+                </div>
+
+                {isProfileDropdownOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setIsProfileDropdownOpen(false)}
+                    />
+                    <div className="absolute right-0 mt-2 w-80 bg-[#0a0a0a] rounded-xl border border-white/10 shadow-2xl p-3 z-[100]">
+                      {/* 1. 基础账号信息 */}
+                      <div className="px-2 pb-3 mb-3 border-b border-white/10">
+                        <p className="text-sm font-semibold text-white truncate">
+                          {user?.phone || user?.email || "Guest"}
+                        </p>
+                      </div>
+
+                      {/* 2. 会员状态卡片 */}
+                      <div className="bg-primary-green rounded-xl p-3 flex items-center justify-between mb-3">
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-1.5 text-black font-bold text-sm">
+                            <Crown className="h-4 w-4" />
+                            <span>专业版 Plus会员</span>
+                          </div>
+                          <span className="text-black/70 text-xs mt-0.5">2026/08/03到期</span>
+                        </div>
+                        <Link
+                          href="/pricing"
+                          onClick={() => setIsProfileDropdownOpen(false)}
+                          className="bg-black text-white text-xs font-medium px-3 py-1.5 rounded-full hover:bg-black/80 transition-colors"
+                        >
+                          升级
+                        </Link>
+                      </div>
+
+                      {/* 3. 积分状态与充值区 */}
+                      <div className="bg-[#1a1a1a] rounded-xl p-3 flex items-center justify-between mb-3 border border-white/5">
+                        <div className="flex items-center gap-1.5 text-gray-400">
+                          <Coins className="h-4 w-4" />
+                          <span className="text-xs">剩余积分</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-primary-green font-bold text-lg font-mono tracking-tight">56,435</span>
+                          <Link
+                            href="/points"
+                            onClick={() => setIsProfileDropdownOpen(false)}
+                            className="bg-[#2a2a2a] text-white text-xs font-medium px-3 py-1.5 rounded-full hover:bg-[#3a3a3a] transition-colors"
+                          >
+                            充值
+                          </Link>
+                        </div>
+                      </div>
+
+                      {/* 4. 常规功能导航菜单 */}
+                      <div className="flex flex-col gap-0.5">
+                        <Link href="/workspace" onClick={() => setIsProfileDropdownOpen(false)} className="flex items-center gap-3 px-2 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors cursor-pointer focus:bg-white/5 focus:text-white w-full">
+                          <Video className="h-4 w-4" />
+                          <span>我的创作</span>
+                        </Link>
+
+                        <Link href="/billing" onClick={() => setIsProfileDropdownOpen(false)} className="flex items-center gap-3 px-2 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors cursor-pointer focus:bg-white/5 focus:text-white w-full">
+                          <CreditCard className="h-4 w-4" />
+                          <span>积分与账单</span>
+                        </Link>
+
+                        <Link href="/settings" onClick={() => setIsProfileDropdownOpen(false)} className="flex items-center gap-3 px-2 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors cursor-pointer focus:bg-white/5 focus:text-white w-full">
+                          <Settings className="h-4 w-4" />
+                          <span>个人设置</span>
+                        </Link>
+
+                        <hr className="border-white/5 my-1" />
+
+                        <button
+                          onClick={() => {
+                            setIsProfileDropdownOpen(false);
+                            handleSignOut();
+                          }}
+                          className="flex items-center w-full gap-3 px-2 py-2.5 text-sm text-danger-red hover:text-danger-red hover:bg-danger-red/10 focus:bg-danger-red/10 focus:text-danger-red rounded-lg transition-colors cursor-pointer"
+                        >
+                          <LogOut className="h-4 w-4" />
+                          <span>退出登录</span>
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <Button
+                  className="bg-white text-black hover:bg-gray-100 rounded-full font-medium"
+                  onClick={() => setIsAuthOpen(true)}
+                >
+                登录 / 注册
+              </Button>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Global Auth Modal */}
+      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
+
+      {/* 新增：Pricing Modal (收费弹窗) */}
+      {isPricingOpen && (
+        <PricingModal onClose={() => setIsPricingOpen(false)} />
+      )}
+
+      {/* 新增：Invite Modal (邀请弹窗) */}
+      <InviteModal isOpen={isInviteOpen} onClose={() => setIsInviteOpen(false)} />
+
+      {/* 消息侧边抽屉 */}
+      {isMessageOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 z-40"
+          onClick={() => setIsMessageOpen(false)}
+        />
+      )}
+
+      <div
+        className={`fixed top-0 right-0 h-full w-80 bg-[#0a0a0a] border-l border-white/10 z-50 transform transition-transform duration-300 ${
+          isMessageOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <div className="flex flex-col h-full">
+          {/* 头部 */}
+          <div className="flex items-center justify-between p-4 border-b border-white/10">
+            <h2 className="text-lg font-semibold text-white">消息中心</h2>
+            <button
+              onClick={() => setIsMessageOpen(false)}
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* 分类 Tab */}
+          <div className="px-4 border-b border-white/5">
+            <div className="inline-block py-3 text-sm font-medium text-white border-b-2 border-primary-green">
+              官方消息
+            </div>
+          </div>
+
+          {/* 消息列表 */}
+          <div className="flex-1 overflow-y-auto p-4">
+            {/* Mock Message 1 */}
+            <div className="bg-[#1a1a1a] rounded-lg p-3 mb-3">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="h-2 w-2 rounded-full bg-primary-green"></span>
+                <h3 className="text-sm font-semibold text-white">全新「控制台」上线</h3>
+              </div>
+              <p className="text-xs text-gray-400 mb-2 truncate">原消费记录已全面升级，提供更清晰的账单明细和使用分析。</p>
+              <div className="text-[10px] text-gray-500">2026-05-15</div>
+            </div>
+
+            {/* Mock Message 2 */}
+            <div className="bg-[#1a1a1a] rounded-lg p-3 mb-3">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="h-2 w-2 rounded-full bg-primary-green"></span>
+                <h3 className="text-sm font-semibold text-white">充值优惠活动</h3>
+              </div>
+              <p className="text-xs text-gray-400 mb-2 truncate">本月充值积分享受额外20%赠送，多充多送，活动限时进行中。</p>
+              <div className="text-[10px] text-gray-500">2026-05-12</div>
+            </div>
+
+            {/* Mock Message 3 */}
+            <div className="bg-[#1a1a1a] rounded-lg p-3 mb-3">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="h-2 w-2 rounded-full bg-gray-500"></span>
+                <h3 className="text-sm font-semibold text-white">系统维护通知</h3>
+              </div>
+              <p className="text-xs text-gray-400 mb-2 truncate">预计于周日凌晨2点进行系统升级，期间可能出现短暂的访问波动。</p>
+              <div className="text-[10px] text-gray-500">2026-05-01</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}"use client";
+
+import { useState } from "react";
+import { BaseModal } from "./BaseModal";
+
+// Check Icon Component (custom SVG based on your screenshot's style)
+function CheckIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
+interface PricingModalProps {
+  onClose?: () => void;
+  // currentPlan 模拟当前用户的订阅状态：
+  // 0 = 未订阅, 1 = 基础包月, 2 = 连续包月, 3 = 连续包年
+  currentPlan?: number;
+}
+
+export default function PricingModal({ onClose, currentPlan = 0 }: PricingModalProps) {
+  const [selectedPlan, setSelectedPlan] = useState<number>(2); // Default to the middle plan
+
+  const plans = [
+    { id: 1, price: 1280 },
+    { id: 2, price: 680 },
+    { id: 3, price: 6800 },
+  ];
+
+  const getButtonState = (planId: number, price: number) => {
+    // 状态 1：未订阅任何套餐
+    if (currentPlan === 0) {
+      return { text: "立即开通", disabled: false, highlight: true };
+    }
+
+    // 状态 2：当前就是这个套餐
+    if (currentPlan === planId) {
+      return { text: "当前套餐", disabled: true, highlight: false };
+    }
+
+    // 获取当前套餐的真实价格用于比较
+    const currentPlanPrice = plans.find(p => p.id === currentPlan)?.price || 0;
+
+    // 状态 3：用户当前套餐更高级（向下兼容/降级不可选）
+    if (price < currentPlanPrice) {
+      return { text: "不支持降级", disabled: true, highlight: false };
+    }
+
+    // 状态 4：用户当前套餐低，点击高级套餐显示差价
+    const diff = price - currentPlanPrice;
+    return { text: `仅需 ￥${diff} 即可升级`, disabled: false, highlight: true };
+  };
+
+  return (
+    <BaseModal isOpen={true} onClose={() => {
+        if (onClose) onClose();
+      }} className="max-w-6xl w-full mx-auto max-h-[90vh] overflow-y-auto p-8 font-sans">
+
+      <div className="text-center mb-8">
+        <h2 className="text-2xl font-bold text-white">会员超市</h2>
+      </div>
+
+      {/* 3 Cards Container */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+
+        {/* Card 1: 基础包月 */}
+        <div
+          onClick={() => setSelectedPlan(1)}
+          className={`relative flex flex-col rounded-2xl border transition-all duration-300 cursor-pointer p-6 backdrop-blur-sm
+            ${selectedPlan === 1
+              ? 'border-gray-400 shadow-[0_0_15px_var(--color-primary-green)] scale-[1.05] bg-gradient-to-b from-gray-800/80 to-black'
+              : 'border-gray-800 bg-gradient-to-b from-gray-900/50 to-black hover:border-gray-700 hover:scale-[1.05]'}
+          `}
+        >
+          <div className="absolute top-0 right-6 -translate-y-1/2 px-3 py-1 bg-gradient-to-r from-gray-600 to-gray-800 rounded-full text-xs font-bold text-white shadow-lg">
+            7.5折
+          </div>
+          <div className="mb-4">
+            <h3 className="text-xl font-semibold text-gray-200">基础包月</h3>
+          </div>
+          <div className="mb-1 flex items-baseline gap-2">
+            <span className="text-4xl font-bold text-white">¥1280</span>
+            <span className="text-sm text-gray-500 line-through">¥1680</span>
+            <span className="text-sm text-gray-400">/月</span>
+          </div>
+          <p className="text-sm text-gray-500 mb-4">无自动续费</p>
+          <p className="text-sm text-gray-400 mb-6">1积分=0.018元</p>
+
+          <div className="mt-auto mb-4 text-center">
+            <p className="text-lg font-bold text-gray-200">72000 积分/月</p>
+            <p className="text-xs text-gray-500 mt-1">每月生成约180个视频，每个视频约7元</p>
+          </div>
+
+          <button
+            disabled={getButtonState(1, 1280).disabled}
+            className={`w-full py-3 px-4 rounded-xl font-semibold transition-colors mb-6
+              ${getButtonState(1, 1280).disabled
+                ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                : 'bg-gray-700 hover:bg-gray-600 text-white shadow-lg'}`}
+          >
+            {getButtonState(1, 1280).text}
+          </button>
+
+          <hr className="border-gray-800 mb-6" />
+
+          <ul className="space-y-4 text-sm text-gray-300">
+            <li className="flex items-center gap-3">
+              <CheckIcon className="text-gray-500 w-5 h-5" />
+              不含水印
+            </li>
+            <li className="flex items-center gap-3">
+              <CheckIcon className="text-gray-500 w-5 h-5" />
+              单任务时长 20 分钟
+            </li>
+            <li className="flex items-center gap-3">
+              <CheckIcon className="text-gray-500 w-5 h-5" />
+              无插队权益
+            </li>
+            <li className="flex items-center gap-3">
+              <CheckIcon className="text-gray-500 w-5 h-5" />
+              并发数 2
+            </li>
+          </ul>
+        </div>
+
+        {/* Card 2: 连续包月 (Main highlight) */}
+        <div
+          onClick={() => setSelectedPlan(2)}
+          className={`relative flex flex-col rounded-2xl border transition-all duration-300 cursor-pointer p-6 backdrop-blur-sm
+            ${selectedPlan === 2
+              ? 'border-primary-green shadow-[0_0_15px_var(--color-primary-green)] scale-[1.05] bg-gradient-to-b from-gray-800/80 to-black'
+              : 'border-gray-800 bg-gradient-to-b from-gray-900/50 to-black hover:border-gray-700 hover:scale-[1.05]'}
+          `}
+        >
+          <div className="absolute top-0 right-6 -translate-y-1/2 px-2 py-0.5 bg-gradient-to-r from-orange-400 to-cyan-300 rounded-t-full rounded-br-full rounded-bl-none text-xs font-medium text-black shadow-lg flex items-center justify-center">
+            限时 4折<span className="text-[10px] ml-1 opacity-80 font-normal">剩余 02:15:30</span>
+          </div>
+          <div className="mb-4">
+            <h3 className="text-xl font-semibold text-primary-green">连续包月</h3>
+          </div>
+          <div className="mb-1 flex items-baseline gap-2">
+            <span className="text-4xl font-bold text-white">¥680</span>
+            <div className="flex flex-col ml-2 justify-center leading-tight">
+              <span className="text-gray-600 line-through text-[10px]">原价 ¥3400/月</span>
+              <span className="text-gray-400 line-through text-xs">日常价 ¥1280/月</span>
+            </div>
+          </div>
+          <p className="text-sm text-primary-green/70 mb-4">次月续费 ¥680（可随时取消）</p>
+          <p className="text-sm text-gray-400 mb-6">1积分=0.0095元</p>
+
+          <div className="mt-auto mb-4 text-center">
+            <div className="inline-block px-4 py-1.5 rounded-lg bg-primary-green/20 border border-primary-green/30 text-primary-green font-bold mb-1">
+              72000 积分/月
+            </div>
+            <p className="text-xs text-gray-400 mt-1">每月生成约180个视频，每个视频约3.5元</p>
+          </div>
+
+          <button
+            disabled={getButtonState(2, 680).disabled}
+            className={`w-full py-3 px-4 rounded-xl font-semibold transition-colors mb-6
+              ${getButtonState(2, 680).disabled
+                ? 'bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700'
+                : selectedPlan === 2
+                  ? 'bg-primary-green hover:bg-primary-green/90 text-black shadow-[0_0_15px_var(--color-primary-green)]'
+                  : 'bg-gray-700 hover:bg-gray-600 text-white shadow-lg'}`}
+          >
+            {getButtonState(2, 680).text}
+          </button>
+
+          <hr className="border-gray-800 mb-6" />
+
+          <ul className="space-y-4 text-sm text-gray-200">
+            <li className="flex items-center gap-3">
+              <CheckIcon className="text-primary-green w-5 h-5" />
+              不含水印
+            </li>
+            <li className="flex items-center gap-3">
+              <CheckIcon className="text-primary-green w-5 h-5" />
+              单任务时长 60 分钟
+            </li>
+            <li className="flex items-center gap-3">
+              <CheckIcon className="text-primary-green w-5 h-5" />
+              享受插队权益
+            </li>
+            <li className="flex items-center gap-3">
+              <CheckIcon className="text-primary-green w-5 h-5" />
+              并发数 5
+            </li>
+          </ul>
+        </div>
+
+        {/* Card 3: 连续包年 (Gold highlight) */}
+        <div
+          onClick={() => setSelectedPlan(3)}
+          className={`relative flex flex-col rounded-2xl border transition-all duration-300 cursor-pointer p-6 backdrop-blur-sm
+            ${selectedPlan === 3
+              ? 'border-primary-green shadow-[0_0_15px_var(--color-primary-green)] scale-[1.05] bg-gradient-to-b from-gray-800/80 to-black'
+              : 'border-gray-800 bg-gradient-to-b from-gray-900/50 to-black hover:border-gray-700 hover:scale-[1.05]'}
+          `}
+        >
+          <div className="absolute top-0 right-6 -translate-y-1/2 px-2 py-0.5 bg-gradient-to-r from-orange-400 to-cyan-300 rounded-t-full rounded-br-full rounded-bl-none text-xs font-medium text-black shadow-lg flex items-center justify-center">
+            限时 3折<span className="text-[10px] ml-1 opacity-80 font-normal">剩余 02:15:30</span>
+          </div>
+          <div className="mb-4">
+            <h3 className="text-xl font-semibold text-primary-green/90">连续包年</h3>
+          </div>
+          <div className="mb-1 flex items-baseline gap-2">
+            <span className="text-4xl font-bold text-white">¥6800</span>
+            <div className="flex flex-col ml-2 justify-center leading-tight">
+              <span className="text-gray-600 line-through text-[10px]">原价 ¥40800/年</span>
+              <span className="text-gray-400 line-through text-xs">日常价 ¥15360/年</span>
+            </div>
+          </div>
+          <p className="text-sm text-gray-500 mb-4">无自动续费</p>
+          <p className="text-sm text-gray-400 mb-6">1积分=0.0078元</p>
+
+          <div className="mt-auto mb-4 text-center">
+            <div className="inline-block px-4 py-1.5 rounded-lg bg-primary-green/10 border border-primary-green/30 text-primary-green font-bold mb-1">
+              72000 积分/月
+            </div>
+            <p className="text-xs text-gray-500 mt-1">每月生成约180个视频，每个视频约3元</p>
+          </div>
+
+          <button
+            disabled={getButtonState(3, 6800).disabled}
+            className={`w-full py-3 px-4 rounded-xl font-semibold transition-colors mb-6
+              ${getButtonState(3, 6800).disabled
+                ? 'bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700'
+                : selectedPlan === 3
+                  ? 'bg-primary-green hover:bg-primary-green/90 text-black shadow-[0_0_15px_var(--color-primary-green)]'
+                  : 'bg-gray-700 hover:bg-gray-600 text-white shadow-lg'}`}
+          >
+            {getButtonState(3, 6800).text}
+          </button>
+
+          <hr className="border-gray-800 mb-6" />
+
+          <ul className="space-y-4 text-sm text-gray-300">
+            <li className="flex items-center gap-3">
+              <CheckIcon className="text-primary-green w-5 h-5" />
+              不含水印
+            </li>
+            <li className="flex items-center gap-3">
+              <CheckIcon className="text-primary-green w-5 h-5" />
+              单任务时长 60 分钟
+            </li>
+            <li className="flex items-center gap-3">
+              <CheckIcon className="text-primary-green w-5 h-5" />
+              享受插队权益
+            </li>
+            <li className="flex items-center gap-3">
+              <CheckIcon className="text-primary-green w-5 h-5" />
+              并发数 5
+            </li>
+          </ul>
+        </div>
+
+      </div>
+
+      {/* Footer Info */}
+      <div className="w-full mt-10 text-left text-xs text-gray-500 leading-relaxed border-t border-white/10 pt-4">
+        <p className="flex items-start gap-1">
+          <span className="text-sm mt-[-1px]">✨</span>
+          <span>积分使用说明：免费用户登录每日赠送 20 积分，每日赠送 2 次 5 折生成特权；云端存储空间保留 30 天；订阅积分每 31 天进行重置，过期作废。本平台实行单一积分制。</span>
+        </p>
+      </div>
+
+          </BaseModal>
+  );
+}"use client";
+
+import { Button } from "./ui/button";
+import { BaseModal } from "./BaseModal";
+
+interface InviteModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export function InviteModal({ isOpen, onClose }: InviteModalProps) {
+  if (!isOpen) return null;
+
+  return (
+    <BaseModal isOpen={isOpen} onClose={onClose} className="max-w-4xl w-full mx-auto p-8 font-sans">
+        {/* Header Section */}
+        <div className="mb-8">
+          <div className="w-8 h-[3px] bg-primary-green mb-6"></div>
+          <h2 className="text-3xl font-bold text-white mb-2">邀请好友，获取丰厚现金与积分</h2>
+          <p className="text-sm text-gray-400">
+            好友通过你的链接注册，首月立享 9 折或获赠 10,000 积分。双向奔赴，轻松裂变。
+          </p>
+        </div>
+
+        {/* Copy Link Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+          {/* Left Card: Invite Code */}
+          <div className="flex flex-col rounded-2xl border border-white/10 bg-[#111111] p-6 hover:border-white/20 transition-all duration-300">
+            <div className="flex items-center justify-between mb-6">
+              <span className="text-gray-400 font-medium">我的邀请码</span>
+              <span className="text-primary-green/70 text-sm">已绑定 rh-v1543</span>
+            </div>
+            <div className="flex items-center justify-between mt-auto">
+              <span className="text-4xl font-bold text-white tracking-widest">c19wfslk</span>
+              <Button variant="outline" className="rounded-full border-white/20 text-white bg-transparent hover:bg-white/10 hover:text-white px-6">
+                复制
+              </Button>
+            </div>
+          </div>
+
+          {/* Right Card: Invite Link */}
+          <div className="flex flex-col rounded-2xl border border-white/10 bg-[#111111] p-6 hover:border-white/20 transition-all duration-300">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+              <span className="text-white font-medium">邀请好友链接</span>
+              <Button className="bg-primary-green hover:bg-primary-green/80 text-black rounded-full h-8 px-4 text-xs font-medium transition-colors shadow-lg shadow-primary-green/20">
+                复制分享链接 ➔
+              </Button>
+            </div>
+            <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/5 text-sm text-gray-400 leading-relaxed mt-auto">
+              宝子们，我发现一个AI视频宝藏产品 Papagaga！每天发布数百个超有趣好用的AI工作流。打开链接：https://papagaga.com?inviteCode=c19wfslk 注册即可领取 10,000 积分免费生成视频！
+            </div>
+          </div>
+        </div>
+
+        {/* Reward Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Card 1: 青铜推手 */}
+          <div className="relative flex flex-col rounded-2xl border border-white/10 bg-[#111111] p-6 hover:border-white/20 transition-all duration-300">
+            <div className="mb-4">
+              <h3 className="text-lg font-medium text-gray-300">累计拉新 1-4 人</h3>
+            </div>
+            <div className="mb-2">
+              <span className="text-3xl font-bold text-white">返现 20%</span>
+            </div>
+            <div className="mt-auto pt-4 text-sm text-gray-500">
+              每单赚 ¥136
+            </div>
+          </div>
+
+          {/* Card 2: 白银推手 */}
+          <div className="relative flex flex-col rounded-2xl border border-primary-green/30 bg-gradient-to-b from-[#1a1025] to-[#111111] p-6 hover:border-primary-green/60 hover:shadow-[0_0_15px_var(--color-primary-green)] transition-all duration-300">
+            <div className="mb-4">
+              <h3 className="text-lg font-medium text-primary-green">累计拉新 5-9 人</h3>
+            </div>
+            <div className="mb-2">
+              <span className="text-3xl font-bold text-white">返现 30%</span>
+            </div>
+            <div className="mt-auto pt-4 text-sm text-primary-green/70">
+              每单赚 ¥204
+            </div>
+          </div>
+
+          {/* Card 3: 黄金推手 */}
+          <div className="relative flex flex-col rounded-2xl border border-primary-green/40 bg-gradient-to-b from-[#251e0a] to-[#111111] p-6 hover:border-primary-green/80 hover:shadow-[0_0_15px_var(--color-primary-green)] transition-all duration-300 scale-[1.02]">
+            <div className="mb-4">
+              <h3 className="text-lg font-medium text-primary-green">累计拉新 10 人+</h3>
+            </div>
+            <div className="mb-2">
+              <span className="text-3xl font-bold text-white">返现 40%</span>
+            </div>
+            <div className="mt-auto pt-4 text-sm text-primary-green/80">
+              每单赚 ¥272 + 赠满配会员
+            </div>
+          </div>
+        </div>
+          </BaseModal>
+  );
+}
