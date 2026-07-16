@@ -14,6 +14,8 @@ export default function AdminFinancePage() {
   });
   const [commissions, setCommissions] = useState<Partial<Commission>[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [inviterSearch, setInviterSearch] = useState('');
+  const [inviteeSearch, setInviteeSearch] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -76,7 +78,25 @@ export default function AdminFinancePage() {
       <div className="flex flex-col">
         <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
           <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">分销账单明细</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900">分销账单明细</h3>
+              <div className="flex space-x-4">
+                <input
+                  type="text"
+                  placeholder="搜索邀请人 ID"
+                  value={inviterSearch}
+                  onChange={(e) => setInviterSearch(e.target.value)}
+                  className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                />
+                <input
+                  type="text"
+                  placeholder="搜索受邀人 ID"
+                  value={inviteeSearch}
+                  onChange={(e) => setInviteeSearch(e.target.value)}
+                  className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                />
+              </div>
+            </div>
             <div className="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -99,29 +119,41 @@ export default function AdminFinancePage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {commissions.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">暂无分销记录</td>
-                    </tr>
-                  ) : commissions.map((comm) => (
-                    <tr key={comm.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono text-xs">
-                        {comm.inviter_id}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono text-xs">
-                        {comm.invitee_id}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ¥ {Number(comm.order_amount).toFixed(2)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
-                        ¥ {Number(comm.commission_amount).toFixed(2)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(comm.created_at || '').toLocaleString()}
-                      </td>
-                    </tr>
-                  ))}
+                  {(() => {
+                    const filteredCommissions = commissions.filter((comm) => {
+                      const matchInviter = !inviterSearch || (comm.inviter_id && comm.inviter_id.includes(inviterSearch));
+                      const matchInvitee = !inviteeSearch || (comm.invitee_id && comm.invitee_id.includes(inviteeSearch));
+                      return matchInviter && matchInvitee;
+                    });
+
+                    if (filteredCommissions.length === 0) {
+                      return (
+                        <tr>
+                          <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">暂无分销记录</td>
+                        </tr>
+                      );
+                    }
+
+                    return filteredCommissions.map((comm) => (
+                      <tr key={comm.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono text-xs">
+                          {comm.inviter_id}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono text-xs">
+                          {comm.invitee_id}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          ¥ {Number(comm.order_amount).toFixed(2)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
+                          ¥ {Number(comm.commission_amount).toFixed(2)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(comm.created_at || '').toLocaleString()}
+                        </td>
+                      </tr>
+                    ));
+                  })()}
                 </tbody>
               </table>
             </div>
