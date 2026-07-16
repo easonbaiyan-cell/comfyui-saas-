@@ -3,7 +3,7 @@ import { Header } from "@/components/Header";
 import { WorkflowGrid } from "@/components/WorkflowGrid";
 import { createClient } from '@supabase/supabase-js';
 
-export const revalidate = 60; // Revalidate at most every 60 seconds
+export const dynamic = 'force-dynamic';
 
 export default async function Home() {
   // Try to fetch settings, handle the case where DB is empty or fails gracefully
@@ -43,7 +43,8 @@ export default async function Home() {
         const { data: wfs } = await supabase
           .from('workflows')
           .select('*')
-          .eq('is_active', true)
+          .eq('status', 'published')
+          .order('is_pinned', { ascending: false })
           .order('created_at', { ascending: false });
 
         if (wfs) {
