@@ -144,7 +144,7 @@ export default function PricingModal({ onClose, currentPlan = 0 }: PricingModalP
               : 'border-gray-800 bg-gradient-to-b from-gray-900/50 to-black hover:border-gray-700 hover:scale-[1.05]'}
           `}
         >
-          <div className="absolute top-0 right-6 -translate-y-1/2 px-3 py-1 bg-gradient-to-r from-purple-500 to-primary-green rounded-full text-xs font-bold text-white shadow-lg flex items-center justify-center">
+          <div className="absolute top-0 right-6 -translate-y-1/2 px-2 py-0.5 bg-gradient-to-r from-orange-400 to-cyan-300 rounded-t-full rounded-br-full rounded-bl-none text-xs font-medium text-black shadow-lg flex items-center justify-center">
             限时 4折<span className="text-[10px] ml-1 opacity-80 font-normal">剩余 02:15:30</span>
           </div>
           <div className="mb-4">
@@ -210,7 +210,7 @@ export default function PricingModal({ onClose, currentPlan = 0 }: PricingModalP
               : 'border-gray-800 bg-gradient-to-b from-gray-900/50 to-black hover:border-gray-700 hover:scale-[1.05]'}
           `}
         >
-          <div className="absolute top-0 right-6 -translate-y-1/2 px-3 py-1 bg-gradient-to-r from-purple-500 to-primary-green rounded-full text-xs font-bold text-white shadow-lg flex items-center justify-center">
+          <div className="absolute top-0 right-6 -translate-y-1/2 px-2 py-0.5 bg-gradient-to-r from-orange-400 to-cyan-300 rounded-t-full rounded-br-full rounded-bl-none text-xs font-medium text-black shadow-lg flex items-center justify-center">
             限时 3折<span className="text-[10px] ml-1 opacity-80 font-normal">剩余 02:15:30</span>
           </div>
           <div className="mb-4">
