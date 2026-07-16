@@ -12,23 +12,6 @@ import { supabase } from "@/lib/supabase";
 import { AuthModal } from "./AuthModal";
 import type { User } from "@supabase/supabase-js";
 
-function MockMessage({ title, date, content, isGreen }: { title: string, date: string, content: string, isGreen: boolean }) {
-  const [expanded, setExpanded] = useState(false);
-  return (
-    <div
-      className="bg-[#1a1a1a] rounded-lg p-3 mb-3 cursor-pointer hover:bg-[#2a2a2a] transition-colors"
-      onClick={() => setExpanded(!expanded)}
-    >
-      <div className="flex items-center gap-2 mb-2">
-        <span className={`h-2 w-2 rounded-full ${isGreen ? 'bg-primary-green' : 'bg-gray-500'}`}></span>
-        <h3 className="text-sm font-semibold text-white">{title}</h3>
-      </div>
-      <p className={`text-xs text-gray-400 mb-2 ${expanded ? '' : 'truncate'}`}>{content}</p>
-      <div className="text-[10px] text-gray-500">{date}</div>
-    </div>
-  );
-}
-
 import { useAuthStore } from "@/store/auth";
 
 interface NavLink {
@@ -53,7 +36,7 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
   // 新增：控制用户下拉菜单
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(true);
-  const [messageTab, setMessageTab] = useState<"official" | "tasks">("official");
+  const [messageTab, setMessageTab] = useState<"official" | "tasks">("tasks");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [videoTasks, setVideoTasks] = useState<any[]>([]);
   
@@ -333,27 +316,23 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
           {/* 分类 Tab */}
           <div className="px-4 border-b border-white/5 flex gap-4">
             <div
-              className={`cursor-pointer inline-block py-3 text-sm font-medium transition-colors ${messageTab === 'official' ? 'text-white border-b-2 border-primary-green' : 'text-gray-400 hover:text-white border-b-2 border-transparent'}`}
-              onClick={() => setMessageTab('official')}
-            >
-              官方消息
-            </div>
-            <div
               className={`cursor-pointer inline-block py-3 text-sm font-medium transition-colors ${messageTab === 'tasks' ? 'text-white border-b-2 border-primary-green' : 'text-gray-400 hover:text-white border-b-2 border-transparent'}`}
               onClick={() => setMessageTab('tasks')}
             >
               生成任务
+            </div>
+            <div
+              className={`cursor-pointer inline-block py-3 text-sm font-medium transition-colors ${messageTab === 'official' ? 'text-white border-b-2 border-primary-green' : 'text-gray-400 hover:text-white border-b-2 border-transparent'}`}
+              onClick={() => setMessageTab('official')}
+            >
+              官方消息
             </div>
           </div>
 
           {/* 消息列表 */}
           <div className="flex-1 overflow-y-auto p-4">
             {messageTab === "official" ? (
-              <>
-                <MockMessage title="全新「控制台」上线" date="2026-05-15" content="原消费记录已全面升级，提供更清晰的账单明细和使用分析。" isGreen={true} />
-                <MockMessage title="充值优惠活动" date="2026-05-12" content="本月充值积分享受额外20%赠送，多充多送，活动限时进行中。" isGreen={true} />
-                <MockMessage title="系统维护通知" date="2026-05-01" content="预计于周日凌晨2点进行系统升级，期间可能出现短暂的访问波动。" isGreen={false} />
-              </>
+              <div className="text-center text-gray-500 text-sm mt-10">暂无消息</div>
             ) : (
               <div className="flex flex-col gap-3">
                 {videoTasks.length === 0 ? (

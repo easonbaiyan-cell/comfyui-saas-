@@ -72,7 +72,7 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
         {/* Reward Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Card 1: 青铜推手 */}
-          <div className="relative flex flex-col rounded-2xl border border-white/10 bg-[#111111] p-6 hover:border-white/20 transition-all duration-300">
+          <div className="relative flex flex-col rounded-2xl border border-white/10 bg-[#111111] p-6">
             <div className="mb-4">
               <h3 className="text-lg font-medium text-gray-300">累计拉新 1-4 人</h3>
             </div>
@@ -85,7 +85,7 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
           </div>
 
           {/* Card 2: 白银推手 */}
-          <div className="relative flex flex-col rounded-2xl border border-primary-green/30 bg-gradient-to-b from-[#1a1025] to-[#111111] p-6 hover:border-primary-green/60 hover:shadow-[0_0_15px_var(--color-primary-green)] transition-all duration-300">
+          <div className="relative flex flex-col rounded-2xl border border-primary-green/30 bg-gradient-to-b from-[#1a1025] to-[#111111] p-6">
             <div className="mb-4">
               <h3 className="text-lg font-medium text-primary-green">累计拉新 5-9 人</h3>
             </div>
@@ -98,7 +98,7 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
           </div>
 
           {/* Card 3: 黄金推手 */}
-          <div className="relative flex flex-col rounded-2xl border border-primary-green/40 bg-gradient-to-b from-[#251e0a] to-[#111111] p-6 hover:border-primary-green/80 hover:shadow-[0_0_15px_var(--color-primary-green)] transition-all duration-300 scale-[1.02]">
+          <div className="relative flex flex-col rounded-2xl border border-primary-green/40 bg-gradient-to-b from-[#251e0a] to-[#111111] p-6">
             <div className="mb-4">
               <h3 className="text-lg font-medium text-primary-green">累计拉新 10 人+</h3>
             </div>
