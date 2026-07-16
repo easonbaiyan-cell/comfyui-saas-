@@ -85,7 +85,7 @@ export function WorkflowGrid({ workflows }: { workflows: Workflow[] }) {
                   <Lock className={`w-4 h-4 transition-colors ${
                     activeCategory === cat ? 'text-white' : 'text-gray-400 group-hover:text-white'
                   }`} />
-                  <span className="absolute -top-3 -right-11 text-[8px] bg-gradient-to-r from-purple-500 to-primary-green text-white px-1 py-[1px] rounded-sm whitespace-nowrap">
+                  <span className="absolute -top-3 -right-11 text-[8px] bg-gradient-to-r from-pink-400 to-yellow-300 text-black font-medium px-1 py-[1px] rounded-t-full rounded-br-full rounded-bl-none whitespace-nowrap">
                     包年专享
                   </span>
                 </div>
