@@ -138,13 +138,13 @@ export default function PricingModal({ onClose, currentPlan = 0 }: PricingModalP
         {/* Card 2: 连续包月 (Main highlight) */}
         <div 
           onClick={() => setSelectedPlan(2)}
-          className={`relative flex flex-col rounded-2xl border transition-all duration-300 cursor-pointer p-6
+          className={`relative flex flex-col rounded-2xl border transition-all duration-300 cursor-pointer p-6 backdrop-blur-sm
             ${selectedPlan === 2 
-              ? 'border-primary-green shadow-[0_0_15px_var(--color-primary-green)] scale-[1.05] bg-gradient-to-b from-primary-green/60 to-black'
-              : 'border-primary-green/80 bg-gradient-to-b from-primary-green/40 to-black shadow-[0_0_20px_-5px_var(--color-primary-green)] hover:border-primary-green/80 hover:scale-[1.05]'}
+              ? 'border-primary-green shadow-[0_0_15px_var(--color-primary-green)] scale-[1.05] bg-gradient-to-b from-gray-800/80 to-black'
+              : 'border-gray-800 bg-gradient-to-b from-gray-900/50 to-black hover:border-gray-700 hover:scale-[1.05]'}
           `}
         >
-          <div className="absolute top-0 right-6 -translate-y-1/2 px-3 py-1 bg-gradient-to-r from-primary-green to-primary-green rounded-full text-xs font-bold text-white shadow-lg flex items-center justify-center">
+          <div className="absolute top-0 right-6 -translate-y-1/2 px-3 py-1 bg-gradient-to-r from-purple-500 to-primary-green rounded-full text-xs font-bold text-white shadow-lg flex items-center justify-center">
             限时 4折<span className="text-[10px] ml-1 opacity-80 font-normal">剩余 02:15:30</span>
           </div>
           <div className="mb-4">
@@ -172,7 +172,9 @@ export default function PricingModal({ onClose, currentPlan = 0 }: PricingModalP
             className={`w-full py-3 px-4 rounded-xl font-semibold transition-colors mb-6 
               ${getButtonState(2, 680).disabled
                 ? 'bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700'
-                : 'bg-primary-green hover:bg-primary-green text-black shadow-[0_0_15px_var(--color-primary-green)]'}`}
+                : selectedPlan === 2
+                  ? 'bg-primary-green hover:bg-primary-green/90 text-black shadow-[0_0_15px_var(--color-primary-green)]'
+                  : 'bg-gray-700 hover:bg-gray-600 text-white shadow-lg'}`}
           >
             {getButtonState(2, 680).text}
           </button>
@@ -202,13 +204,13 @@ export default function PricingModal({ onClose, currentPlan = 0 }: PricingModalP
         {/* Card 3: 连续包年 (Gold highlight) */}
         <div 
           onClick={() => setSelectedPlan(3)}
-          className={`relative flex flex-col rounded-2xl border transition-all duration-300 cursor-pointer p-6
+          className={`relative flex flex-col rounded-2xl border transition-all duration-300 cursor-pointer p-6 backdrop-blur-sm
             ${selectedPlan === 3
-              ? 'border-primary-green shadow-[0_0_15px_var(--color-primary-green)] scale-[1.05] bg-gradient-to-b from-primary-green/40 to-black'
-              : 'border-primary-green/50 bg-gradient-to-b from-primary-green/30 to-black hover:border-primary-green/70 hover:scale-[1.05]'}
+              ? 'border-primary-green shadow-[0_0_15px_var(--color-primary-green)] scale-[1.05] bg-gradient-to-b from-gray-800/80 to-black'
+              : 'border-gray-800 bg-gradient-to-b from-gray-900/50 to-black hover:border-gray-700 hover:scale-[1.05]'}
           `}
         >
-          <div className="absolute top-0 right-6 -translate-y-1/2 px-3 py-1 bg-gradient-to-r from-primary-green to-primary-green rounded-full text-xs font-bold text-black shadow-lg flex items-center justify-center">
+          <div className="absolute top-0 right-6 -translate-y-1/2 px-3 py-1 bg-gradient-to-r from-purple-500 to-primary-green rounded-full text-xs font-bold text-white shadow-lg flex items-center justify-center">
             限时 3折<span className="text-[10px] ml-1 opacity-80 font-normal">剩余 02:15:30</span>
           </div>
           <div className="mb-4">
@@ -236,7 +238,9 @@ export default function PricingModal({ onClose, currentPlan = 0 }: PricingModalP
             className={`w-full py-3 px-4 rounded-xl font-semibold transition-colors mb-6
               ${getButtonState(3, 6800).disabled
                 ? 'bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700'
-                : 'bg-gradient-to-r from-primary-green/80 to-primary-green/80 border border-primary-green/50 hover:from-primary-green hover:to-primary-green text-black shadow-[0_0_15px_var(--color-primary-green)]'}`}
+                : selectedPlan === 3
+                  ? 'bg-primary-green hover:bg-primary-green/90 text-black shadow-[0_0_15px_var(--color-primary-green)]'
+                  : 'bg-gray-700 hover:bg-gray-600 text-white shadow-lg'}`}
           >
             {getButtonState(3, 6800).text}
           </button>
