@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS workflows (
   r_query_url TEXT,
   node_mapping JSONB DEFAULT '[]'::jsonb,
   status TEXT DEFAULT 'published',
+  is_pinned BOOLEAN DEFAULT false,
+  usage_count INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
