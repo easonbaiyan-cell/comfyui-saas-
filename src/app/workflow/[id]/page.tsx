@@ -42,7 +42,8 @@ function formatLikes(likes: number | null): string {
 }
 
 export default function WorkflowDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id: workflowId } = use(params);
+  const resolvedParams = use(params);
+  const { id: workflowId } = resolvedParams;
 
   // New Generation Pipeline States
   const [isGenerating, setIsGenerating] = useState(false);
