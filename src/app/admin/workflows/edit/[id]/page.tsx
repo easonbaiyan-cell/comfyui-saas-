@@ -1,12 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { createWorkflowAction, getCategoriesAction, createCategoryAction } from '../actions';
+import { updateWorkflowAction, getWorkflowAction, getCategoriesAction, createCategoryAction } from '../../actions';
 import { supabase } from '@/lib/supabase';
 
-export default function CreateWorkflowPage() {
+import { use } from 'react';
+
+export default function EditWorkflowPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
+  const workflowId = resolvedParams.id;
+
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
@@ -15,6 +20,8 @@ export default function CreateWorkflowPage() {
   const [newCategoryTier, setNewCategoryTier] = useState('free');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [isDirty, setIsDirty] = useState(false);
+  const [initialDataLoaded, setInitialDataLoaded] = useState(false);
+  const formRef = React.useRef<HTMLFormElement>(null);
 
   const [coverUrl, setCoverUrl] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
@@ -36,6 +43,42 @@ export default function CreateWorkflowPage() {
     return () => clearTimeout(timeoutId);
   }, [toastMessage]);
 
+
+  const fetchWorkflow = async () => {
+    try {
+      const sessionResult = await supabase.auth.getSession();
+      const token = sessionResult.data.session?.access_token;
+      if (token) {
+        const wfResult = await getWorkflowAction(workflowId, token);
+        if (wfResult.success && wfResult.workflow) {
+          const wf = wfResult.workflow;
+          setSelectedCategory(wf.category || '');
+          setCoverUrl(wf.cover_url || '');
+          setVideoUrl(wf.video_url || '');
+
+          const form = formRef.current;
+          if (form) {
+            (form.elements.namedItem('title') as HTMLInputElement).value = wf.title || '';
+            (form.elements.namedItem('subtitle') as HTMLInputElement).value = wf.description || '';
+            (form.elements.namedItem('points') as HTMLInputElement).value = wf.cost_points || '';
+            (form.elements.namedItem('appId') as HTMLInputElement).value = wf.r_app_id || '';
+            (form.elements.namedItem('platform') as HTMLSelectElement).value = wf.virtual_platform || '无';
+            (form.elements.namedItem('likes') as HTMLInputElement).value = wf.virtual_likes || '';
+
+            const rhPayload = typeof wf.rh_payload_template === 'string' ? wf.rh_payload_template : JSON.stringify(wf.rh_payload_template, null, 2);
+            (form.elements.namedItem('rh_payload_template') as HTMLTextAreaElement).value = rhPayload || '';
+          }
+        } else {
+          showToast('获取工作流信息失败: ' + (wfResult.error || 'Unknown error'), 'error');
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching workflow:', err);
+    } finally {
+      setInitialDataLoaded(true);
+    }
+  };
+
   const fetchCategories = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -54,7 +97,8 @@ export default function CreateWorkflowPage() {
 
   useEffect(() => {
     fetchCategories();
-  }, []);
+    fetchWorkflow();
+  }, [workflowId]);
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -185,7 +229,7 @@ export default function CreateWorkflowPage() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("No session found");
 
-      const result = await createWorkflowAction(payload, session.access_token);
+      const result = await updateWorkflowAction(workflowId, payload, session.access_token);
       if (result.success) {
         router.push('/admin/workflows');
       } else {
@@ -205,10 +249,10 @@ export default function CreateWorkflowPage() {
           {toastMessage.message}
         </div>
       )}
-      <form onSubmit={handleSubmit} onChange={() => setIsDirty(true)}>
+      <form ref={formRef} onSubmit={handleSubmit} onChange={() => setIsDirty(true)}>
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">发布新工作流</h2>
+            <h2 className="text-2xl font-bold text-gray-900">编辑工作流</h2>
             <p className="text-gray-500 mt-1">配置前台展示信息并映射底层算力节点。</p>
           </div>
           <div className="flex space-x-4">

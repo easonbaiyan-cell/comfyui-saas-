@@ -51,3 +51,7 @@ CREATE TRIGGER update_workflows_updated_at
 BEFORE UPDATE ON workflows
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
+
+-- Added virtual fields for workflow presentation
+ALTER TABLE workflows ADD COLUMN IF NOT EXISTS virtual_platform TEXT;
+ALTER TABLE workflows ADD COLUMN IF NOT EXISTS virtual_likes INTEGER DEFAULT 0;
