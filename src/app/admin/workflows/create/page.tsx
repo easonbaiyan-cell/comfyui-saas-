@@ -64,8 +64,8 @@ export default function CreateWorkflowPage() {
 
       if (type === 'cover') setCoverUrl(publicUrl);
       if (type === 'video') setVideoUrl(publicUrl);
-    } catch (error: any) {
-      alert(`上传失败: ${error.message}`);
+    } catch (error: unknown) {
+      alert(`上传失败: ${(error instanceof Error ? error.message : String(error))}`);
     } finally {
       if (type === 'cover') setIsUploadingCover(false);
       if (type === 'video') setIsUploadingVideo(false);
