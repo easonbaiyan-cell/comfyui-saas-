@@ -53,16 +53,16 @@ export function PromoBanner({ text, countdownUntil }: { text?: string, countdown
   };
 
   return (
-    <div className="relative bg-primary text-primary-foreground py-2 px-10 text-center text-sm font-medium flex items-center justify-center min-h-[40px]">
+    <div className="relative bg-fuchsia-600 text-white py-2 px-10 text-center text-sm font-medium flex items-center justify-center min-h-[40px]">
       <div className="flex-1 flex items-center justify-center flex-wrap gap-2">
         <span>{highlightKeywords(text)}</span>
         {countdownUntil && (
-          <span className="font-bold tabular-nums tracking-wider bg-black/20 px-2 py-0.5 rounded-md">{timeLeft}</span>
+          <span className="font-bold tabular-nums tracking-wider bg-black/20 px-2 py-0.5 rounded-md text-white">{timeLeft}</span>
         )}
       </div>
       <button 
         onClick={() => setIsVisible(false)}
-        className="absolute right-4 p-1 hover:bg-black/20 rounded-full transition-colors flex-shrink-0"
+        className="absolute right-4 p-1 hover:bg-black/20 rounded-full transition-colors flex-shrink-0 text-white"
         aria-label="Close banner"
       >
         <X size={16} />
