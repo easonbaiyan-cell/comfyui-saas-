@@ -1,7 +1,8 @@
-'use client';
+"use client";
 
 import React, { useState } from 'react';
 import { Zap } from 'lucide-react';
+import { BaseModal } from './BaseModal';
 
 interface PricingTier {
   id: string;
@@ -18,16 +19,22 @@ const pricingTiers: PricingTier[] = [
   { id: 'tier-6', points: 50000, price: 500 },
 ];
 
-export default function PointsPage() {
+interface PointsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export function PointsModal({ isOpen, onClose }: PointsModalProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
+
+  if (!isOpen) return null;
 
   const selectedTier = pricingTiers[selectedIndex];
 
   return (
-    <div className="min-h-screen bg-black text-white pt-20 pb-40 px-4 flex flex-col items-center">
-      {/* 页面主体 */}
-      <div className="w-full max-w-5xl">
-        <h1 className="text-3xl font-bold mb-8 text-center sm:text-left">积分充值</h1>
+    <BaseModal isOpen={isOpen} onClose={onClose} className="max-w-4xl w-full mx-auto p-8 font-sans">
+      <div className="flex flex-col text-white">
+        <h1 className="text-2xl font-bold mb-6">积分充值</h1>
 
         {/* 套餐网格区 */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -75,14 +82,12 @@ export default function PointsPage() {
         </div>
 
         {/* 底部提示 */}
-        <div className="text-gray-500 text-sm text-center sm:text-left leading-relaxed">
+        <div className="text-gray-500 text-sm mb-6 leading-relaxed">
           温馨提示：积分和钱包不可转赠与提现，购买后有效期为1年，不支持退换，也不能反向兑换成现金。
         </div>
-      </div>
 
-      {/* 悬浮结算栏 */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 pb-8 sm:pb-8 flex justify-center pointer-events-none z-50">
-        <div className="w-full max-w-5xl bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl p-4 flex items-center justify-end pointer-events-auto">
+        {/* 结算栏 */}
+        <div className="bg-zinc-900 border border-white/10 rounded-2xl p-4 flex items-center justify-end w-full">
           <div className="flex items-center space-x-6">
             <div className="flex items-baseline space-x-2">
               <span className="text-gray-400">实付款：</span>
@@ -96,6 +101,6 @@ export default function PointsPage() {
           </div>
         </div>
       </div>
-    </div>
+    </BaseModal>
   );
 }
