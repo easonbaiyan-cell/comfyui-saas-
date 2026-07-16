@@ -33,10 +33,9 @@ export async function createWorkflowAction(formData: any, accessToken: string) {
         description: formData.description,
         category: formData.category,
         cover_url: formData.cover_url,
+        video_url: formData.video_url,
         cost_points: parseInt(formData.cost_points) || 0,
         r_app_id: formData.r_app_id,
-        r_submit_url: formData.r_submit_url,
-        r_query_url: formData.r_query_url,
         node_mapping: formData.node_mapping || [],
         status: 'published'
       }
@@ -49,6 +48,58 @@ export async function createWorkflowAction(formData: any, accessToken: string) {
     return { success: true };
   } catch (error: any) {
     console.error('Error in createWorkflowAction:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function createCategoryAction(name: string, requiredTier: string, accessToken: string) {
+  try {
+    const supabase = getAuthenticatedClient(accessToken);
+    const { data: userData, error: userError } = await supabase.auth.getUser(accessToken);
+
+    if (userError || !userData.user || userData.user.id !== process.env.NEXT_PUBLIC_ADMIN_UUID) {
+      throw new Error('Unauthorized');
+    }
+
+    const { error } = await supabase.from('categories').insert([
+      {
+        name,
+        required_tier: requiredTier
+      }
+    ]);
+
+    if (error) {
+      throw error;
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error in createCategoryAction:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function getCategoriesAction(accessToken: string) {
+  try {
+    const supabase = getAuthenticatedClient(accessToken);
+    const { data: userData, error: userError } = await supabase.auth.getUser(accessToken);
+
+    if (userError || !userData.user || userData.user.id !== process.env.NEXT_PUBLIC_ADMIN_UUID) {
+      throw new Error('Unauthorized');
+    }
+
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    return { success: true, categories: data };
+  } catch (error: any) {
+    console.error('Error in getCategoriesAction:', error);
     return { success: false, error: error.message };
   }
 }
