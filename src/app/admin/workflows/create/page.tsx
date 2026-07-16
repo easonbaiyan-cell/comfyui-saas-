@@ -2,12 +2,53 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { createWorkflowAction } from '../actions';
+import { supabase } from '@/lib/supabase';
 
 export default function CreateWorkflowPage() {
+  const router = useRouter();
   const [mappings, setMappings] = useState([{ id: 1, uiName: '', jsonNode: '' }]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const addMapping = () => {
     setMappings([...mappings, { id: Date.now(), uiName: '', jsonNode: '' }]);
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
+    const payload = {
+      title: formData.get('title'),
+      description: formData.get('subtitle'),
+      category: formData.get('category'),
+      cover_url: '', // Note: Handle actual upload if needed
+      cost_points: formData.get('points'),
+      r_app_id: formData.get('appId'),
+      r_submit_url: formData.get('submitUrl'),
+      r_query_url: formData.get('queryUrl'),
+      node_mapping: mappings.map(m => ({ uiName: m.uiName, jsonNode: m.jsonNode })),
+    };
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("No session found");
+
+      const result = await createWorkflowAction(payload, session.access_token);
+      if (result.success) {
+        router.push('/admin/workflows');
+      } else {
+        alert('Failed to create workflow: ' + result.error);
+      }
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const removeMapping = (id: number) => {
@@ -22,30 +63,32 @@ export default function CreateWorkflowPage() {
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">发布新工作流</h2>
-          <p className="text-gray-500 mt-1">配置前台展示信息并映射底层算力节点。</p>
+      <form onSubmit={handleSubmit}>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">发布新工作流</h2>
+            <p className="text-gray-500 mt-1">配置前台展示信息并映射底层算力节点。</p>
+          </div>
+          <div className="flex space-x-4">
+            <Link
+              href="/admin/workflows"
+              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              取消
+            </Link>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+            >
+              {isSubmitting ? '保存中...' : '保存并发布'}
+            </button>
+          </div>
         </div>
-        <div className="flex space-x-4">
-          <Link
-            href="/admin/workflows"
-            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            取消
-          </Link>
-          <button
-            type="button"
-            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            保存并发布
-          </button>
-        </div>
-      </div>
 
-      <div className="space-y-8">
-        {/* Block A: Frontend Display */}
-        <div className="bg-white shadow sm:rounded-lg overflow-hidden border border-gray-200">
+        <div className="space-y-8">
+          {/* Block A: Frontend Display */}
+          <div className="bg-white shadow sm:rounded-lg overflow-hidden border border-gray-200">
           <div className="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200">
             <h3 className="text-lg leading-6 font-medium text-gray-900">区块 A：前台展示包装 (面向用户)</h3>
           </div>
@@ -214,7 +257,8 @@ export default function CreateWorkflowPage() {
             </div>
           </div>
         </div>
-      </div>
+        </div>
+      </form>
     </div>
   );
 }
