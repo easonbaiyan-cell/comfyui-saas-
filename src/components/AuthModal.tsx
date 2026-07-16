@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { XIcon } from "lucide-react";
+import { BaseModal } from "./BaseModal";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -96,26 +96,17 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-      <div className="bg-[#0a0a0a] max-w-md w-full mx-4 rounded-2xl border border-white/10 p-8 relative">
-        <button
-          onClick={() => {
-            setAccount("");
-            setPassword("");
-            setCode("");
-            setLoginMode("phone-password");
-            setCountdown(0);
-            setError(null);
-            onClose();
-          }}
-          className="absolute top-4 right-4 text-gray-500 hover:text-white"
-        >
-          <XIcon className="w-6 h-6 stroke-[1.5]" />
-          <span className="sr-only">Close</span>
-        </button>
-
-        <div className="mb-6">
-          <div className="w-8 h-[3px] bg-lime-300 mb-6"></div>
+    <BaseModal isOpen={isOpen} onClose={() => {
+      setAccount("");
+      setPassword("");
+      setCode("");
+      setLoginMode("phone-password");
+      setCountdown(0);
+      setError(null);
+      onClose();
+    }} className="max-w-md w-full mx-4 p-8">
+      <div className="mb-6">
+          <div className="w-8 h-[3px] bg-primary-green mb-6"></div>
           <h2 className="text-3xl font-bold text-white">登录</h2>
           <p className="text-gray-400 text-sm mt-2 mb-8 text-left">连接灵感，驱动生成</p>
         </div>
@@ -176,7 +167,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                       type="button"
                       onClick={handleGetCode}
                       disabled={countdown > 0}
-                      className="px-4 text-sm text-lime-300 hover:brightness-110 disabled:text-gray-600 disabled:cursor-not-allowed transition-colors font-medium border-l border-white/5 bg-[#222]"
+                      className="px-4 text-sm text-primary-green hover:brightness-110 disabled:text-gray-600 disabled:cursor-not-allowed transition-colors font-medium border-l border-white/5 bg-[#222]"
                     >
                       {countdown > 0 ? `${countdown}s 后重试` : "获取验证码"}
                     </button>
@@ -188,18 +179,18 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
           <div className="pt-2">
             {error && (
-              <div className="text-red-500 text-xs mb-4 text-center">
+              <div className="text-danger-red text-xs mb-4 text-center">
                 {error}
               </div>
             )}
 
             <div className="text-xs text-gray-500 mb-4 text-center">
-              登录即代表同意 <a href="#" className="text-lime-300 hover:brightness-110">[用户服务协议]</a> 和 <a href="#" className="text-lime-300 hover:brightness-110">[隐私政策]</a>
+              登录即代表同意 <a href="#" className="text-primary-green hover:brightness-110">[用户服务协议]</a> 和 <a href="#" className="text-primary-green hover:brightness-110">[隐私政策]</a>
             </div>
 
             <button
               type="submit" 
-              className="w-full h-12 bg-lime-300 hover:brightness-110 text-black text-base rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center font-bold"
+              className="w-full h-12 bg-primary-green hover:brightness-110 text-black text-base rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center font-bold"
               disabled={loading}
             >
               {loading ? "登录中..." : "立即登录"}
@@ -219,7 +210,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   setPassword("");
                   setCode("");
                 }}
-                className="flex-1 h-10 border border-[#333] hover:border-lime-300/50 text-gray-400 hover:text-white rounded-lg text-sm transition-colors bg-transparent"
+                className="flex-1 h-10 border border-[#333] hover:border-primary-green/50 text-gray-400 hover:text-white rounded-lg text-sm transition-colors bg-transparent"
               >
                 {loginMode === "email-password" ? "手机号登录" : "邮箱登录"}
               </button>
@@ -232,14 +223,13 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   setCode("");
                   if (loginMode === "email-password") setAccount("");
                 }}
-                className="flex-1 h-10 border border-[#333] hover:border-lime-300/50 text-gray-400 hover:text-white rounded-lg text-sm transition-colors bg-transparent"
+                className="flex-1 h-10 border border-[#333] hover:border-primary-green/50 text-gray-400 hover:text-white rounded-lg text-sm transition-colors bg-transparent"
               >
                 {loginMode === "phone-otp" ? "密码登录" : "验证码登录"}
               </button>
             </div>
           </div>
         </form>
-      </div>
-    </div>
+    </BaseModal>
   );
 }

@@ -82,9 +82,9 @@ export default function WorkspacePage() {
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-pulse flex space-x-2">
-              <div className="h-2 w-2 bg-lime-300 rounded-full"></div>
-              <div className="h-2 w-2 bg-lime-300 rounded-full animation-delay-200"></div>
-              <div className="h-2 w-2 bg-lime-300 rounded-full animation-delay-400"></div>
+              <div className="h-2 w-2 bg-primary-green rounded-full"></div>
+              <div className="h-2 w-2 bg-primary-green rounded-full animation-delay-200"></div>
+              <div className="h-2 w-2 bg-primary-green rounded-full animation-delay-400"></div>
             </div>
           </div>
         ) : creations.length > 0 ? (
@@ -117,14 +117,14 @@ export default function WorkspacePage() {
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-end p-3">
                   <div className="flex flex-col gap-2">
                     <button
-                      className="p-2 bg-white/10 hover:bg-lime-300 text-white hover:text-black rounded-full backdrop-blur-md transition-colors"
+                      className="p-2 bg-white/10 hover:bg-primary-green text-white hover:text-black rounded-full backdrop-blur-md transition-colors"
                       title="下载"
                     >
                       <Download className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => handleDelete(item.id)}
-                      className="p-2 bg-white/10 hover:bg-red-500 text-white rounded-full backdrop-blur-md transition-colors"
+                      className="p-2 bg-white/10 hover:bg-danger-red text-white rounded-full backdrop-blur-md transition-colors"
                       title="删除"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -152,7 +152,7 @@ export default function WorkspacePage() {
             </p>
             <Link
               href="/#workflows"
-              className="inline-flex items-center gap-2 bg-lime-300 hover:bg-lime-400 text-black px-6 py-3 rounded-full font-medium transition-colors"
+              className="inline-flex items-center gap-2 bg-primary-green hover:bg-primary-green text-white px-6 py-3 rounded-full font-medium transition-colors"
             >
               立即生成
               <ArrowRight className="h-4 w-4" />

@@ -3,6 +3,7 @@
 import { useState, useRef, ChangeEvent } from "react";
 import Image from "next/image";
 import { X } from "lucide-react";
+import { BaseModal } from "../../components/BaseModal";
 
 export default function SettingsPage() {
   // Global Mock State
@@ -112,7 +113,7 @@ export default function SettingsPage() {
                   onChange={handleFileChange}
                   className="hidden"
                 />
-                <button className="px-4 py-2 text-sm font-medium border border-transparent text-gray-400 hover:text-red-400 transition-colors">
+                <button className="px-4 py-2 text-sm font-medium border border-transparent text-gray-400 hover:text-danger-red transition-colors">
                   移除
                 </button>
               </div>
@@ -126,7 +127,7 @@ export default function SettingsPage() {
                   type="text"
                   value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
-                  className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-lime-300 focus:ring-1 focus:ring-lime-300 transition-all placeholder:text-gray-500"
+                  className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary-green focus:ring-1 focus:ring-primary-green transition-all placeholder:text-gray-500"
                   placeholder="请输入您的昵称"
                 />
               </div>
@@ -146,7 +147,7 @@ export default function SettingsPage() {
               <button
                 onClick={handleUpdateProfile}
                 disabled={isSavingProfile}
-                className="bg-lime-300 text-black px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-lime-400 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                className="bg-primary-green text-black px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-primary-green transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isSavingProfile ? "保存中..." : "保存更改"}
               </button>
@@ -172,7 +173,7 @@ export default function SettingsPage() {
                   )}
                   <input
                     type="text"
-                    className={`w-full bg-[#1a1a1a] border border-white/10 rounded-lg py-2.5 text-sm focus:outline-none focus:border-lime-300 focus:ring-1 focus:ring-lime-300 transition-all placeholder:text-gray-500 ${accountType === 'email' ? 'pl-12 pr-4' : 'px-4'}`}
+                    className={`w-full bg-[#1a1a1a] border border-white/10 rounded-lg py-2.5 text-sm focus:outline-none focus:border-primary-green focus:ring-1 focus:ring-primary-green transition-all placeholder:text-gray-500 ${accountType === 'email' ? 'pl-12 pr-4' : 'px-4'}`}
                     placeholder={accountType === "phone" ? "请输入新邮箱" : "请输入新手机号"}
                   />
                 </div>
@@ -183,7 +184,7 @@ export default function SettingsPage() {
                 <div className="flex gap-3">
                   <input
                     type="text"
-                    className="flex-1 bg-[#1a1a1a] border border-white/10 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-lime-300 focus:ring-1 focus:ring-lime-300 transition-all placeholder:text-gray-500"
+                    className="flex-1 bg-[#1a1a1a] border border-white/10 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary-green focus:ring-1 focus:ring-primary-green transition-all placeholder:text-gray-500"
                     placeholder="请输入验证码"
                   />
                   <button className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-sm font-medium hover:bg-white/10 transition-colors whitespace-nowrap">
@@ -194,7 +195,7 @@ export default function SettingsPage() {
             </div>
 
             <div className="pt-4 flex justify-end">
-              <button className="bg-lime-300 text-black px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-lime-400 transition-colors">
+              <button className="bg-primary-green text-black px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-primary-green transition-colors">
                 绑定
               </button>
             </div>
@@ -213,7 +214,7 @@ export default function SettingsPage() {
                   type="password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-lime-300 focus:ring-1 focus:ring-lime-300 transition-all placeholder:text-gray-500"
+                  className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary-green focus:ring-1 focus:ring-primary-green transition-all placeholder:text-gray-500"
                   placeholder="请输入当前密码"
                 />
               </div>
@@ -224,7 +225,7 @@ export default function SettingsPage() {
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-lime-300 focus:ring-1 focus:ring-lime-300 transition-all placeholder:text-gray-500"
+                  className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary-green focus:ring-1 focus:ring-primary-green transition-all placeholder:text-gray-500"
                   placeholder="请输入新密码"
                 />
               </div>
@@ -235,7 +236,7 @@ export default function SettingsPage() {
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-lime-300 focus:ring-1 focus:ring-lime-300 transition-all placeholder:text-gray-500"
+                  className="w-full bg-[#1a1a1a] border border-white/10 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary-green focus:ring-1 focus:ring-primary-green transition-all placeholder:text-gray-500"
                   placeholder="请再次输入新密码"
                 />
               </div>
@@ -245,7 +246,7 @@ export default function SettingsPage() {
                 <div className="flex gap-3">
                   <input
                     type="text"
-                    className="flex-1 bg-[#1a1a1a] border border-white/10 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-lime-300 focus:ring-1 focus:ring-lime-300 transition-all placeholder:text-gray-500"
+                    className="flex-1 bg-[#1a1a1a] border border-white/10 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary-green focus:ring-1 focus:ring-primary-green transition-all placeholder:text-gray-500"
                     placeholder={accountType === 'phone' ? "请输入手机验证码" : "请输入邮箱验证码"}
                   />
                   <button className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-sm font-medium hover:bg-white/10 transition-colors whitespace-nowrap">
@@ -271,16 +272,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Avatar Edit Modal */}
-      {isAvatarModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-[#111] border border-white/10 rounded-2xl p-6 w-full max-w-md relative">
-            <button
-              onClick={handleCloseAvatarModal}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
-            >
-              <X size={24} strokeWidth={2} />
-            </button>
-
+      <BaseModal isOpen={isAvatarModalOpen} onClose={handleCloseAvatarModal} className="bg-[#111] p-6 max-w-md w-full">
             <h3 className="text-xl font-semibold mb-6">编辑头像</h3>
 
             <div className="relative w-full aspect-square bg-[#1a1a1a] rounded-xl overflow-hidden mb-6 border border-white/5">
@@ -303,14 +295,12 @@ export default function SettingsPage() {
               </button>
               <button
                 onClick={handleSaveAvatar}
-                className="flex-1 py-3 text-sm font-semibold bg-lime-300 text-black rounded-lg hover:bg-lime-400 transition-colors"
+                className="flex-1 py-3 text-sm font-semibold bg-primary-green text-black rounded-lg hover:bg-primary-green transition-colors"
               >
                 保存头像
               </button>
             </div>
-          </div>
-        </div>
-      )}
+                </BaseModal>
     </div>
   );
 }
