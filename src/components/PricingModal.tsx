@@ -39,6 +39,17 @@ export default function PricingModal({ onClose, currentPlan = 0 }: PricingModalP
     { id: 3, price: 6800 },
   ];
 
+  const [purchaseLoading, setPurchaseLoading] = useState<number | null>(null);
+
+  const handlePurchase = (e: React.MouseEvent, planId: number) => {
+    e.stopPropagation();
+    setPurchaseLoading(planId);
+    setTimeout(() => {
+      setPurchaseLoading(null);
+      alert("处理中...");
+    }, 800);
+  };
+
   const getButtonState = (planId: number, price: number) => {
     // 状态 1：未订阅任何套餐
     if (currentPlan === 0) {
@@ -80,8 +91,8 @@ export default function PricingModal({ onClose, currentPlan = 0 }: PricingModalP
           onClick={() => setSelectedPlan(1)}
           className={`relative flex flex-col rounded-2xl border transition-all duration-300 cursor-pointer p-6 backdrop-blur-sm
             ${selectedPlan === 1 
-              ? 'border-gray-400 shadow-[0_0_15px_var(--color-primary-green)] bg-gradient-to-b from-gray-800/80 to-black'
-              : 'border-gray-800 bg-gradient-to-b from-gray-900/50 to-black hover:border-gray-700 hover:scale-[1.05]'}
+              ? 'border-primary-green shadow-[0_0_15px_var(--color-primary-green)] bg-gradient-to-b from-gray-800/80 to-black'
+              : 'border-gray-800 bg-gradient-to-b from-gray-900/50 to-black hover:border-gray-700'}
           `}
         >
           <div className="absolute top-0 right-6 -translate-y-1/2 px-3 py-1 bg-gradient-to-r from-gray-600 to-gray-800 rounded-full text-xs font-bold text-white shadow-lg">
@@ -104,13 +115,14 @@ export default function PricingModal({ onClose, currentPlan = 0 }: PricingModalP
           </div>
           
           <button 
-            disabled={getButtonState(1, 1280).disabled} 
+            disabled={getButtonState(1, 1280).disabled || purchaseLoading === 1}
+            onClick={(e) => handlePurchase(e, 1)}
             className={`w-full py-3 px-4 rounded-xl font-semibold transition-colors mb-6 
               ${getButtonState(1, 1280).disabled 
                 ? 'bg-gray-800 text-gray-500 cursor-not-allowed' 
                 : 'bg-gray-700 hover:bg-gray-600 text-white shadow-lg'}`}
           >
-            {getButtonState(1, 1280).text}
+            {purchaseLoading === 1 ? "处理中..." : getButtonState(1, 1280).text}
           </button>
           
           <hr className="border-gray-800 mb-6" />
@@ -141,7 +153,7 @@ export default function PricingModal({ onClose, currentPlan = 0 }: PricingModalP
           className={`relative flex flex-col rounded-2xl border transition-all duration-300 cursor-pointer p-6 backdrop-blur-sm
             ${selectedPlan === 2 
               ? 'border-primary-green shadow-[0_0_15px_var(--color-primary-green)] bg-gradient-to-b from-gray-800/80 to-black'
-              : 'border-gray-800 bg-gradient-to-b from-gray-900/50 to-black hover:border-gray-700 hover:scale-[1.05]'}
+              : 'border-gray-800 bg-gradient-to-b from-gray-900/50 to-black hover:border-gray-700'}
           `}
         >
           <div className="absolute top-0 right-6 -translate-y-1/2 px-2 py-0.5 bg-gradient-to-r from-orange-400 to-cyan-300 rounded-t-full rounded-br-full rounded-bl-none text-xs font-medium text-black shadow-lg flex items-center justify-center">
@@ -168,7 +180,8 @@ export default function PricingModal({ onClose, currentPlan = 0 }: PricingModalP
           </div>
           
           <button 
-            disabled={getButtonState(2, 680).disabled}
+            disabled={getButtonState(2, 680).disabled || purchaseLoading === 2}
+            onClick={(e) => handlePurchase(e, 2)}
             className={`w-full py-3 px-4 rounded-xl font-semibold transition-colors mb-6 
               ${getButtonState(2, 680).disabled
                 ? 'bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700'
@@ -176,7 +189,7 @@ export default function PricingModal({ onClose, currentPlan = 0 }: PricingModalP
                   ? 'bg-primary-green hover:bg-primary-green/90 text-black shadow-[0_0_15px_var(--color-primary-green)]'
                   : 'bg-gray-700 hover:bg-gray-600 text-white shadow-lg'}`}
           >
-            {getButtonState(2, 680).text}
+            {purchaseLoading === 2 ? "处理中..." : getButtonState(2, 680).text}
           </button>
           
           <hr className="border-gray-800 mb-6" />
@@ -207,7 +220,7 @@ export default function PricingModal({ onClose, currentPlan = 0 }: PricingModalP
           className={`relative flex flex-col rounded-2xl border transition-all duration-300 cursor-pointer p-6 backdrop-blur-sm
             ${selectedPlan === 3
               ? 'border-primary-green shadow-[0_0_15px_var(--color-primary-green)] bg-gradient-to-b from-gray-800/80 to-black'
-              : 'border-gray-800 bg-gradient-to-b from-gray-900/50 to-black hover:border-gray-700 hover:scale-[1.05]'}
+              : 'border-gray-800 bg-gradient-to-b from-gray-900/50 to-black hover:border-gray-700'}
           `}
         >
           <div className="absolute top-0 right-6 -translate-y-1/2 px-2 py-0.5 bg-gradient-to-r from-orange-400 to-cyan-300 rounded-t-full rounded-br-full rounded-bl-none text-xs font-medium text-black shadow-lg flex items-center justify-center">
@@ -234,7 +247,8 @@ export default function PricingModal({ onClose, currentPlan = 0 }: PricingModalP
           </div>
           
           <button 
-            disabled={getButtonState(3, 6800).disabled}
+            disabled={getButtonState(3, 6800).disabled || purchaseLoading === 3}
+            onClick={(e) => handlePurchase(e, 3)}
             className={`w-full py-3 px-4 rounded-xl font-semibold transition-colors mb-6
               ${getButtonState(3, 6800).disabled
                 ? 'bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700'
@@ -242,7 +256,7 @@ export default function PricingModal({ onClose, currentPlan = 0 }: PricingModalP
                   ? 'bg-primary-green hover:bg-primary-green/90 text-black shadow-[0_0_15px_var(--color-primary-green)]'
                   : 'bg-gray-700 hover:bg-gray-600 text-white shadow-lg'}`}
           >
-            {getButtonState(3, 6800).text}
+            {purchaseLoading === 3 ? "处理中..." : getButtonState(3, 6800).text}
           </button>
           
           <hr className="border-gray-800 mb-6" />
