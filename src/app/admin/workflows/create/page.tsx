@@ -14,15 +14,62 @@ export default function CreateWorkflowPage() {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryTier, setNewCategoryTier] = useState('free');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [isDirty, setIsDirty] = useState(false);
 
   const [coverUrl, setCoverUrl] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [isUploadingVideo, setIsUploadingVideo] = useState(false);
+  const [toastMessage, setToastMessage] = useState<{message: string, type: 'success'|'error'} | null>(null);
+
+  const showToast = (message: string, type: 'success'|'error' = 'success') => {
+    setToastMessage({ message, type });
+  };
+
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    if (toastMessage) {
+      timeoutId = setTimeout(() => {
+        setToastMessage(null);
+      }, 3000);
+    }
+    return () => clearTimeout(timeoutId);
+  }, [toastMessage]);
 
   useEffect(() => {
     fetchCategories();
   }, []);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = ''; // Required for some browsers
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
+
+  useEffect(() => {
+    const handleAnchorClick = (e: MouseEvent) => {
+      // Find the closest anchor tag that was clicked
+      const target = (e.target as Element).closest('a');
+
+      // If it's a link, we have unsaved changes, and the user cancels the navigation, prevent it
+      if (target && isDirty) {
+        if (!window.confirm('您的数据尚未保存，确定要离开吗？')) {
+          e.preventDefault();
+        }
+      }
+    };
+
+    // Use capture phase to ensure this runs before any Next.js client-side navigation handles the click
+    document.addEventListener('click', handleAnchorClick, { capture: true });
+    return () => document.removeEventListener('click', handleAnchorClick, { capture: true });
+  }, [isDirty]);
 
   const fetchCategories = async () => {
     try {
@@ -32,6 +79,9 @@ export default function CreateWorkflowPage() {
       const result = await getCategoriesAction(session.access_token);
       if (result.success && result.categories) {
         setCategories(result.categories);
+        if (result.categories.length > 0) {
+          setSelectedCategory((prev) => prev || result.categories![0].name);
+        }
       }
     } catch (e) {
       console.error(e);
@@ -64,8 +114,9 @@ export default function CreateWorkflowPage() {
 
       if (type === 'cover') setCoverUrl(publicUrl);
       if (type === 'video') setVideoUrl(publicUrl);
+      showToast('上传成功');
     } catch (error: unknown) {
-      alert(`上传失败: ${(error instanceof Error ? error.message : String(error))}`);
+      showToast(`上传失败: ${(error instanceof Error ? error.message : String(error))}`, 'error');
     } finally {
       if (type === 'cover') setIsUploadingCover(false);
       if (type === 'video') setIsUploadingVideo(false);
@@ -83,6 +134,7 @@ export default function CreateWorkflowPage() {
       const result = await createCategoryAction(newCategoryName, newCategoryTier, session.access_token);
       if (result.success) {
         setIsCategoryModalOpen(false);
+        setSelectedCategory(newCategoryName);
         setNewCategoryName('');
         setNewCategoryTier('free');
         fetchCategories(); // Refresh list
@@ -96,6 +148,7 @@ export default function CreateWorkflowPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsDirty(false); // Reset on submit
     setIsSubmitting(true);
 
     const form = e.currentTarget;
@@ -130,8 +183,13 @@ export default function CreateWorkflowPage() {
   };
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
-      <form onSubmit={handleSubmit}>
+    <div className="p-8 max-w-5xl mx-auto relative">
+      {toastMessage && (
+        <div className={`fixed top-4 right-4 px-4 py-2 rounded shadow-lg z-50 text-white ${toastMessage.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`}>
+          {toastMessage.message}
+        </div>
+      )}
+      <form onSubmit={handleSubmit} onChange={() => setIsDirty(true)}>
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">发布新工作流</h2>
@@ -175,7 +233,7 @@ export default function CreateWorkflowPage() {
                   <button type="button" onClick={() => setIsCategoryModalOpen(true)} className="text-sm text-indigo-600 hover:text-indigo-500">管理/新增分类</button>
                 </div>
                 <div className="mt-1">
-                  <select id="category" name="category" className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border bg-white">
+                  <select id="category" name="category" value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border bg-white">
                     {categories.map((c) => (
                       <option key={c.id} value={c.name}>{c.name}</option>
                     ))}
@@ -199,20 +257,26 @@ export default function CreateWorkflowPage() {
                   ) : (
                     <div className="text-center p-4">
                       {isUploadingCover ? (
-                        <p className="text-sm text-gray-500">上传中...</p>
+                        <div className="flex flex-col items-center justify-center">
+                          <svg className="animate-spin h-8 w-8 text-indigo-600 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          <p className="text-sm text-gray-500">上传中...</p>
+                        </div>
                       ) : (
                         <>
                           <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
                             <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                           <p className="mt-1 text-sm text-indigo-600 font-medium">点击上传图片</p>
-                          <p className="text-xs text-gray-500 mt-1">9:16 比例</p>
                         </>
                       )}
                     </div>
                   )}
                   <input type="file" accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={(e) => handleFileUpload(e, 'cover')} disabled={isUploadingCover} />
                 </div>
+                <p className="text-xs text-gray-500 mt-2">建议比例 9:16，支持 JPG/PNG/MP4，大小不超过 50MB</p>
                 <input type="hidden" name="coverUrl" value={coverUrl} />
               </div>
 
@@ -224,20 +288,26 @@ export default function CreateWorkflowPage() {
                   ) : (
                     <div className="text-center p-4">
                       {isUploadingVideo ? (
-                        <p className="text-sm text-gray-500">上传中...</p>
+                        <div className="flex flex-col items-center justify-center">
+                          <svg className="animate-spin h-8 w-8 text-indigo-600 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          <p className="text-sm text-gray-500">上传中...</p>
+                        </div>
                       ) : (
                         <>
                           <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                           </svg>
                           <p className="mt-1 text-sm text-indigo-600 font-medium">点击上传视频</p>
-                          <p className="text-xs text-gray-500 mt-1">9:16 比例</p>
                         </>
                       )}
                     </div>
                   )}
                   <input type="file" accept="video/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={(e) => handleFileUpload(e, 'video')} disabled={isUploadingVideo} />
                 </div>
+                <p className="text-xs text-gray-500 mt-2">建议比例 9:16，支持 JPG/PNG/MP4，大小不超过 50MB</p>
                 <input type="hidden" name="videoUrl" value={videoUrl} />
               </div>
 
