@@ -1,37 +1,36 @@
-import Link from 'next/link';
+'use client';
 
-// Mock data
-const workflows = [
-  {
-    id: 1,
-    name: '高级人像摄影修图',
-    category: '摄影',
-    rSideId: 'app-r-001',
-    points: 10,
-    status: '上架',
-    calls: 15420,
-  },
-  {
-    id: 2,
-    name: '二次元动漫头像生成',
-    category: '二次元',
-    rSideId: 'app-r-002',
-    points: 5,
-    status: '上架',
-    calls: 8930,
-  },
-  {
-    id: 3,
-    name: '4K视频画质超分',
-    category: '视频超分',
-    rSideId: 'app-r-003',
-    points: 20,
-    status: '下架',
-    calls: 215,
-  },
-];
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
+import { getWorkflowsAction } from './actions';
 
 export default function AdminWorkflowsPage() {
+  const [workflows, setWorkflows] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchWorkflows = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          const result = await getWorkflowsAction(session.access_token);
+          if (result.success && result.workflows) {
+            setWorkflows(result.workflows);
+          } else {
+            console.error('Failed to load workflows:', result.error);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching workflows:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWorkflows();
+  }, []);
+
   return (
     <div className="p-8">
       {/* Header section */}
@@ -83,29 +82,38 @@ export default function AdminWorkflowsPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {workflows.map((workflow) => (
+                  {loading ? (
+                    <tr>
+                      <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">加载中...</td>
+                    </tr>
+                  ) : workflows.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">暂无数据</td>
+                    </tr>
+                  ) : workflows.map((workflow) => (
                     <tr key={workflow.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{workflow.name}</div>
+                        <div className="text-sm font-medium text-gray-900">{workflow.title}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-500">{workflow.category}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500 font-mono">{workflow.rSideId}</div>
+                        <div className="text-sm text-gray-500 font-mono">{workflow.r_app_id || '-'}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {workflow.points} 积分
+                        {workflow.cost_points} 积分
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          workflow.status === '上架' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          workflow.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                         }`}>
-                          {workflow.status}
+                          {workflow.status === 'published' ? '上架' : '其他'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {workflow.calls.toLocaleString()}
+                        {/* Fake data for total calls until we implement proper tracking */}
+                        0
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
                         <a href="#" className="text-indigo-600 hover:text-indigo-900">编辑</a>
