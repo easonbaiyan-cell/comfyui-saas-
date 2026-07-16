@@ -59,9 +59,11 @@ export default function EditWorkflowPage({ params }: { params: Promise<{ id: str
           const form = formRef.current;
           if (form) {
             (form.elements.namedItem('title') as HTMLInputElement).value = wf.title || '';
-            (form.elements.namedItem('description') as HTMLTextAreaElement).value = wf.description || '';
+            (form.elements.namedItem('subtitle') as HTMLInputElement).value = wf.description || '';
             (form.elements.namedItem('points') as HTMLInputElement).value = wf.cost_points || '';
             (form.elements.namedItem('appId') as HTMLInputElement).value = wf.r_app_id || '';
+            (form.elements.namedItem('platform') as HTMLSelectElement).value = wf.virtual_platform || '无';
+            (form.elements.namedItem('likes') as HTMLInputElement).value = wf.virtual_likes || '';
 
             const rhPayload = typeof wf.rh_payload_template === 'string' ? wf.rh_payload_template : JSON.stringify(wf.rh_payload_template, null, 2);
             (form.elements.namedItem('rh_payload_template') as HTMLTextAreaElement).value = rhPayload || '';
@@ -216,6 +218,8 @@ export default function EditWorkflowPage({ params }: { params: Promise<{ id: str
       cover_url: coverUrl,
       video_url: videoUrl,
       cost_points: formData.get('points'),
+      virtual_platform: formData.get('platform'),
+      virtual_likes: formData.get('likes'),
       r_app_id: formData.get('appId'),
       node_mapping: [],
       rh_payload_template: parsedPayloadTemplate,
@@ -245,7 +249,7 @@ export default function EditWorkflowPage({ params }: { params: Promise<{ id: str
           {toastMessage.message}
         </div>
       )}
-      <form onSubmit={handleSubmit} onChange={() => setIsDirty(true)}>
+      <form ref={formRef} onSubmit={handleSubmit} onChange={() => setIsDirty(true)}>
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">编辑工作流</h2>
@@ -426,11 +430,11 @@ export default function EditWorkflowPage({ params }: { params: Promise<{ id: str
 
       {/* Category Modal */}
       {isCategoryModalOpen && (
-        <div className="fixed z-10 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div className="fixed z-[100] inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:p-0">
             <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onClick={() => setIsCategoryModalOpen(false)}></div>
             <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div className="relative inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
               <form onSubmit={handleCreateCategory}>
                 <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                   <div className="sm:flex sm:items-start">
