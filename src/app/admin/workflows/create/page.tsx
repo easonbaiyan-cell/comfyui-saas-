@@ -8,7 +8,6 @@ import { supabase } from '@/lib/supabase';
 
 export default function CreateWorkflowPage() {
   const router = useRouter();
-  const [mappingNode, setMappingNode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -116,7 +115,8 @@ export default function CreateWorkflowPage() {
       if (type === 'video') setVideoUrl(publicUrl);
       showToast('上传成功');
     } catch (error: unknown) {
-      showToast(`上传失败: ${(error instanceof Error ? error.message : String(error))}`, 'error');
+      let errMsg = error instanceof Error ? error.message : String(error);
+      showToast(`上传失败，请稍后重试（系统提示：${errMsg}）`, 'error');
     } finally {
       if (type === 'cover') setIsUploadingCover(false);
       if (type === 'video') setIsUploadingVideo(false);
@@ -162,7 +162,7 @@ export default function CreateWorkflowPage() {
       video_url: videoUrl,
       cost_points: formData.get('points'),
       r_app_id: formData.get('appId'),
-      node_mapping: [{ uiName: '用户上传图片', jsonNode: mappingNode }],
+      node_mapping: [],
     };
 
     try {
@@ -276,7 +276,6 @@ export default function CreateWorkflowPage() {
                   )}
                   <input type="file" accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={(e) => handleFileUpload(e, 'cover')} disabled={isUploadingCover} />
                 </div>
-                <p className="text-xs text-gray-500 mt-2">建议比例 9:16，支持 JPG/PNG/MP4，大小不超过 50MB</p>
                 <input type="hidden" name="coverUrl" value={coverUrl} />
               </div>
 
@@ -284,7 +283,7 @@ export default function CreateWorkflowPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">演示视频上传 (Reference Video)</label>
                 <div className="relative aspect-[9/16] w-full max-w-[200px] border-2 border-gray-300 border-dashed rounded-md overflow-hidden bg-gray-50 flex flex-col items-center justify-center hover:bg-gray-100 transition-colors">
                   {videoUrl ? (
-                    <video src={videoUrl} controls className="absolute inset-0 w-full h-full object-cover" />
+                    <video src={videoUrl} autoPlay loop muted playsInline controls onClick={(e) => e.stopPropagation()} className="absolute inset-0 w-full h-full object-cover" />
                   ) : (
                     <div className="text-center p-4">
                       {isUploadingVideo ? (
@@ -307,8 +306,11 @@ export default function CreateWorkflowPage() {
                   )}
                   <input type="file" accept="video/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={(e) => handleFileUpload(e, 'video')} disabled={isUploadingVideo} />
                 </div>
-                <p className="text-xs text-gray-500 mt-2">建议比例 9:16，支持 JPG/PNG/MP4，大小不超过 50MB</p>
                 <input type="hidden" name="videoUrl" value={videoUrl} />
+              </div>
+
+              <div className="sm:col-span-6">
+                <p className="text-sm text-gray-500 text-center">建议比例 9:16，支持 JPG/PNG/MP4，不超过 50MB</p>
               </div>
 
               <div className="sm:col-span-2">
@@ -354,26 +356,6 @@ export default function CreateWorkflowPage() {
               </div>
             </div>
 
-            {/* Parameter Mapping Area */}
-            <div className="mt-8 border-t border-gray-200 pt-6">
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="text-md font-medium text-gray-900">参数映射区 (核心)</h4>
-
-              </div>
-              <div className="space-y-4">
-                <div className="flex items-center space-x-4 bg-gray-50 p-3 rounded-md border border-gray-200">
-                    <div className="flex-1">
-                      <input
-                        type="text"
-                        value={mappingNode}
-                        onChange={(e) => setMappingNode(e.target.value)}
-                        placeholder="用户上传图片对应的 JSON 节点 (如: 10.inputs.image)"
-                        className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border font-mono text-gray-600"
-                      />
-                    </div>
-                  </div>
-              </div>
-            </div>
           </div>
         </div>
         </div>

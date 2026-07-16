@@ -3,34 +3,48 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { getWorkflowsAction, togglePinWorkflowAction, toggleStatusWorkflowAction } from './actions';
+import { getWorkflowsAction, togglePinWorkflowAction, toggleStatusWorkflowAction, getCategoriesAction } from './actions';
 
 export default function AdminWorkflowsPage() {
   const [workflows, setWorkflows] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
 
+  const [nameSearch, setNameSearch] = useState('');
+  const [categorySearch, setCategorySearch] = useState('');
+
   useEffect(() => {
-    const fetchWorkflows = async () => {
+    const fetchData = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
           setSessionToken(session.access_token);
-          const result = await getWorkflowsAction(session.access_token);
-          if (result.success && result.workflows) {
-            setWorkflows(result.workflows);
+
+          const [workflowsResult, categoriesResult] = await Promise.all([
+            getWorkflowsAction(session.access_token),
+            getCategoriesAction(session.access_token)
+          ]);
+          if (workflowsResult.success && workflowsResult.workflows) {
+            setWorkflows(workflowsResult.workflows);
           } else {
-            console.error('Failed to load workflows:', result.error);
+            console.error('Failed to load workflows:', workflowsResult.error);
+          }
+
+          if (categoriesResult.success && categoriesResult.categories) {
+            setCategories(categoriesResult.categories);
+          } else {
+            console.error('Failed to load categories:', categoriesResult.error);
           }
         }
       } catch (err) {
-        console.error('Error fetching workflows:', err);
+        console.error('Error fetching data:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchWorkflows();
+    fetchData();
   }, []);
 
   const handleTogglePin = async (id: string, currentPinStatus: boolean) => {
@@ -86,6 +100,30 @@ export default function AdminWorkflowsPage() {
       <div className="flex flex-col">
         <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
           <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900">商品列表</h3>
+              <div className="flex space-x-4">
+                <input
+                  type="text"
+                  placeholder="搜索工作流名称"
+                  value={nameSearch}
+                  onChange={(e) => setNameSearch(e.target.value)}
+                  className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                />
+                <select
+                  value={categorySearch}
+                  onChange={(e) => setCategorySearch(e.target.value)}
+                  className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border bg-white"
+                >
+                  <option value="">所有分类</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.name}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             <div className="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -114,62 +152,78 @@ export default function AdminWorkflowsPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {loading ? (
-                    <tr>
-                      <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">加载中...</td>
-                    </tr>
-                  ) : workflows.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">暂无数据</td>
-                    </tr>
-                  ) : workflows.map((workflow) => (
-                    <tr key={String(workflow.id)} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm font-medium text-gray-900">{String(workflow.title)}</span>
-                          {workflow.is_pinned && (
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                              置顶
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500">{workflow.category}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500 font-mono">{workflow.r_app_id || '-'}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {workflow.cost_points} 积分
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          workflow.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {workflow.status === 'published' ? '上架' : '下架'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {workflow.usage_count || 0}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
-                        <button
-                          onClick={() => handleTogglePin(String(workflow.id), workflow.is_pinned)}
-                          className={`${workflow.is_pinned ? 'text-yellow-600 hover:text-yellow-900' : 'text-gray-500 hover:text-gray-900'}`}
-                        >
-                          {workflow.is_pinned ? '取消置顶' : '置顶'}
-                        </button>
-                        <button
-                          onClick={() => handleToggleStatus(String(workflow.id), workflow.status)}
-                          className={`${workflow.status === 'published' ? 'text-gray-500 hover:text-gray-900' : 'text-green-600 hover:text-green-900'}`}
-                        >
-                          {workflow.status === 'published' ? '下架' : '上架'}
-                        </button>
-                        <a href="#" className="text-indigo-600 hover:text-indigo-900">编辑</a>
-                      </td>
-                    </tr>
-                  ))}
+                  {(() => {
+                    if (loading) {
+                      return (
+                        <tr>
+                          <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">加载中...</td>
+                        </tr>
+                      );
+                    }
+
+                    const filteredWorkflows = workflows.filter(wf => {
+                      const matchName = !nameSearch || (wf.title && wf.title.toLowerCase().includes(nameSearch.toLowerCase()));
+                      const matchCategory = !categorySearch || wf.category === categorySearch;
+                      return matchName && matchCategory;
+                    });
+
+                    if (filteredWorkflows.length === 0) {
+                      return (
+                        <tr>
+                          <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">暂无数据</td>
+                        </tr>
+                      );
+                    }
+
+                    return filteredWorkflows.map((workflow) => (
+                      <tr key={String(workflow.id)} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-sm font-medium text-gray-900">{String(workflow.title)}</span>
+                            {workflow.is_pinned && (
+                              <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                置顶
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-500">{workflow.category}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-500 font-mono">{workflow.r_app_id || '-'}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {workflow.cost_points} 积分
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            workflow.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {workflow.status === 'published' ? '上架' : '下架'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {workflow.usage_count || 0}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
+                          <button
+                            onClick={() => handleTogglePin(String(workflow.id), workflow.is_pinned)}
+                            className={`${workflow.is_pinned ? 'text-yellow-600 hover:text-yellow-900' : 'text-gray-500 hover:text-gray-900'}`}
+                          >
+                            {workflow.is_pinned ? '取消置顶' : '置顶'}
+                          </button>
+                          <button
+                            onClick={() => handleToggleStatus(String(workflow.id), workflow.status)}
+                            className={`${workflow.status === 'published' ? 'text-gray-500 hover:text-gray-900' : 'text-green-600 hover:text-green-900'}`}
+                          >
+                            {workflow.status === 'published' ? '下架' : '上架'}
+                          </button>
+                          <a href="#" className="text-indigo-600 hover:text-indigo-900">编辑</a>
+                        </td>
+                      </tr>
+                    ));
+                  })()}
                 </tbody>
               </table>
             </div>
