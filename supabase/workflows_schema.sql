@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS workflows (
   cover_url TEXT,
   cost_points INTEGER DEFAULT 0,
   r_app_id TEXT,
+  rh_payload_template JSONB DEFAULT '{}'::jsonb,
   r_submit_url TEXT,
   r_query_url TEXT,
   node_mapping JSONB DEFAULT '[]'::jsonb,
