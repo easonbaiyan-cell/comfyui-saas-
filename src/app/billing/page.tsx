@@ -58,13 +58,13 @@ const mockTasks = [
 const getStatusColor = (status: string) => {
   switch (status) {
     case "成功":
-      return "bg-green-500";
+      return "bg-primary-green";
     case "运行中":
-      return "bg-blue-500";
+      return "bg-primary-green";
     case "排队中":
-      return "bg-yellow-500";
+      return "bg-primary-green";
     case "失败":
-      return "bg-red-500";
+      return "bg-danger-red";
     case "已取消":
       return "bg-gray-500";
     default:
@@ -184,7 +184,7 @@ export default function BillingPage() {
                       {task.points}
                     </td>
                     <td className="px-6 py-4 text-right whitespace-nowrap">
-                      <button className="text-lime-300 hover:text-[#b5e62b] text-sm font-medium transition-colors hover:scale-105 transform">
+                      <button className="text-primary-green hover:text-primary-green text-sm font-medium transition-colors hover:scale-105 transform">
                         再次生成
                       </button>
                     </td>

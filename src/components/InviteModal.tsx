@@ -1,7 +1,7 @@
 "use client";
 
-import { X } from "lucide-react";
 import { Button } from "./ui/button";
+import { BaseModal } from "./BaseModal";
 
 interface InviteModalProps {
   isOpen: boolean;
@@ -12,25 +12,10 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
-      onClick={onClose}
-    >
-      <div
-        className="relative bg-[#0a0a0a] max-w-4xl w-full mx-auto rounded-2xl border border-white/10 p-8 shadow-2xl font-sans"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors z-10"
-        >
-          <X className="w-6 h-6 stroke-[1.5]" />
-          <span className="sr-only">Close</span>
-        </button>
-
+    <BaseModal isOpen={isOpen} onClose={onClose} className="max-w-4xl w-full mx-auto p-8 font-sans">
         {/* Header Section */}
         <div className="mb-8">
-          <div className="w-8 h-[3px] bg-yellow-500 mb-6"></div>
+          <div className="w-8 h-[3px] bg-primary-green mb-6"></div>
           <h2 className="text-3xl font-bold text-white mb-2">邀请好友，获取丰厚现金与积分</h2>
           <p className="text-sm text-gray-400">
             好友通过你的链接注册，首月立享 9 折或获赠 10,000 积分。双向奔赴，轻松裂变。
@@ -43,7 +28,7 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
           <div className="flex flex-col rounded-2xl border border-white/10 bg-[#111111] p-6 hover:border-white/20 transition-all duration-300">
             <div className="flex items-center justify-between mb-6">
               <span className="text-gray-400 font-medium">我的邀请码</span>
-              <span className="text-green-500/70 text-sm">已绑定 rh-v1543</span>
+              <span className="text-primary-green/70 text-sm">已绑定 rh-v1543</span>
             </div>
             <div className="flex items-center justify-between mt-auto">
               <span className="text-4xl font-bold text-white tracking-widest">c19wfslk</span>
@@ -57,7 +42,7 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
           <div className="flex flex-col rounded-2xl border border-white/10 bg-[#111111] p-6 hover:border-white/20 transition-all duration-300">
             <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
               <span className="text-white font-medium">邀请好友链接</span>
-              <Button className="bg-[#a855f7] hover:bg-[#9333ea] text-white rounded-full h-8 px-4 text-xs font-medium transition-colors shadow-lg shadow-purple-500/20">
+              <Button className="bg-primary-green hover:bg-primary-green/80 text-black rounded-full h-8 px-4 text-xs font-medium transition-colors shadow-lg shadow-primary-green/20">
                 复制分享链接 ➔
               </Button>
             </div>
@@ -83,32 +68,31 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
           </div>
 
           {/* Card 2: 白银推手 */}
-          <div className="relative flex flex-col rounded-2xl border border-purple-500/30 bg-gradient-to-b from-[#1a1025] to-[#111111] p-6 hover:border-purple-500/60 hover:shadow-[0_0_20px_rgba(168,85,247,0.15)] transition-all duration-300">
+          <div className="relative flex flex-col rounded-2xl border border-primary-green/30 bg-gradient-to-b from-[#1a1025] to-[#111111] p-6 hover:border-primary-green/60 hover:shadow-[0_0_15px_var(--color-primary-green)] transition-all duration-300">
             <div className="mb-4">
-              <h3 className="text-lg font-medium text-purple-300">累计拉新 5-9 人</h3>
+              <h3 className="text-lg font-medium text-primary-green">累计拉新 5-9 人</h3>
             </div>
             <div className="mb-2">
               <span className="text-3xl font-bold text-white">返现 30%</span>
             </div>
-            <div className="mt-auto pt-4 text-sm text-purple-400/70">
+            <div className="mt-auto pt-4 text-sm text-primary-green/70">
               每单赚 ¥204
             </div>
           </div>
 
           {/* Card 3: 黄金推手 */}
-          <div className="relative flex flex-col rounded-2xl border border-yellow-500/40 bg-gradient-to-b from-[#251e0a] to-[#111111] p-6 hover:border-yellow-500/80 hover:shadow-[0_0_25px_rgba(234,179,8,0.2)] transition-all duration-300 scale-[1.02]">
+          <div className="relative flex flex-col rounded-2xl border border-primary-green/40 bg-gradient-to-b from-[#251e0a] to-[#111111] p-6 hover:border-primary-green/80 hover:shadow-[0_0_15px_var(--color-primary-green)] transition-all duration-300 scale-[1.02]">
             <div className="mb-4">
-              <h3 className="text-lg font-medium text-yellow-500">累计拉新 10 人+</h3>
+              <h3 className="text-lg font-medium text-primary-green">累计拉新 10 人+</h3>
             </div>
             <div className="mb-2">
               <span className="text-3xl font-bold text-white">返现 40%</span>
             </div>
-            <div className="mt-auto pt-4 text-sm text-yellow-500/80">
+            <div className="mt-auto pt-4 text-sm text-primary-green/80">
               每单赚 ¥272 + 赠满配会员
             </div>
           </div>
         </div>
-      </div>
-    </div>
+          </BaseModal>
   );
 }

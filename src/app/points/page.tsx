@@ -42,7 +42,7 @@ export default function PointsPage() {
                   flex flex-col bg-[#111]
                   ${
                     isSelected
-                      ? 'border-lime-300 shadow-[0_0_15px_rgba(212,255,63,0.1)] bg-lime-300/5'
+                      ? 'border-primary-green shadow-[0_0_15px_var(--color-primary-green)] bg-primary-green/5'
                       : 'border-white/10 hover:border-white/20 hover:bg-[#1a1a1a]'
                   }
                 `}
@@ -50,8 +50,8 @@ export default function PointsPage() {
                 {/* 卡片上半部分 */}
                 <div className="p-6 flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className={`p-2 rounded-full ${isSelected ? 'bg-lime-300/20 text-lime-300' : 'bg-white/5 text-white/70'}`}>
-                      <Zap size={24} strokeWidth={isSelected ? 2.5 : 2} className={isSelected ? "fill-lime-300/20" : ""} />
+                    <div className={`p-2 rounded-full ${isSelected ? 'bg-primary-green/20 text-primary-green' : 'bg-white/5 text-black/70'}`}>
+                      <Zap size={24} strokeWidth={isSelected ? 2.5 : 2} className={isSelected ? "fill-primary-green/20" : ""} />
                     </div>
                   </div>
                   <div className="text-3xl font-bold font-mono tracking-tight">
@@ -86,11 +86,11 @@ export default function PointsPage() {
           <div className="flex items-center space-x-6">
             <div className="flex items-baseline space-x-2">
               <span className="text-gray-400">实付款：</span>
-              <span className="text-3xl font-bold text-lime-300">
+              <span className="text-3xl font-bold text-primary-green">
                 <span className="text-xl mr-1">¥</span>{selectedTier.price.toFixed(2)}
               </span>
             </div>
-            <button className="bg-lime-300 hover:bg-lime-400 text-black px-10 py-3 rounded-xl font-bold text-lg transition-colors shadow-[0_0_15px_rgba(212,255,63,0.3)]">
+            <button className="bg-primary-green hover:bg-primary-green text-black px-10 py-3 rounded-xl font-bold text-lg transition-colors shadow-[0_0_15px_var(--color-primary-green)]">
               购买
             </button>
           </div>

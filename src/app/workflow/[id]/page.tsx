@@ -25,14 +25,14 @@ export default function WorkflowDetailPage() {
 
             {/* Video Placeholder */}
             <div className="bg-[#131622] rounded-2xl aspect-[9/16] w-full relative flex items-center justify-center shadow-xl overflow-hidden group">
-              <button className="h-16 w-16 bg-black/50 rounded-full flex items-center justify-center group-hover:bg-[#a855f7]/80 transition-all backdrop-blur-md border border-white/10">
+              <button className="h-16 w-16 bg-black/50 rounded-full flex items-center justify-center group-hover:bg-primary-green/80 transition-all backdrop-blur-md border border-white/10">
                 <Play className="h-8 w-8 text-white ml-1" fill="currentColor" />
               </button>
 
               {/* Social Heat Data Overlay */}
               <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-md font-medium">小红书</span>
+                  <span className="bg-danger-red text-white text-xs px-2 py-1 rounded-md font-medium">小红书</span>
                 </div>
                 <div className="flex items-center gap-3 text-gray-400 text-sm bg-black/60 px-3 py-1.5 rounded-full backdrop-blur-md">
                   <div className="flex items-center gap-1">
@@ -83,7 +83,7 @@ export default function WorkflowDetailPage() {
               {/* Component A: Select */}
               <div className="bg-[#1a1a1a] rounded-lg p-4 mb-3 flex items-center justify-between border border-transparent hover:border-white/5 transition-colors">
                 <span className="text-sm text-gray-200">分辨率</span>
-                <select className="bg-[#131622] text-white text-sm border border-white/10 rounded-md px-3 py-1.5 focus:outline-none focus:border-[#a855f7] appearance-none cursor-pointer hover:bg-[#1a1f33] transition-colors outline-none w-32 text-center">
+                <select className="bg-[#131622] text-white text-sm border border-white/10 rounded-md px-3 py-1.5 focus:outline-none focus:border-primary-green appearance-none cursor-pointer hover:bg-[#1a1f33] transition-colors outline-none w-32 text-center">
                   <option value="720p">720P (竖屏)</option>
                   <option value="1080p">1080P (竖屏)</option>
                   <option value="4k">4K (超清)</option>
@@ -94,7 +94,7 @@ export default function WorkflowDetailPage() {
               <div className="bg-[#1a1a1a] rounded-lg p-4 mb-3 flex items-center justify-between border border-transparent hover:border-white/5 transition-colors">
                 <span className="text-sm text-gray-200">开启面具头盔模式</span>
                 <div
-                  className={`w-12 h-6 rounded-full p-1 cursor-pointer transition-colors duration-300 ease-in-out ${isMaskMode ? 'bg-[#a855f7]' : 'bg-gray-700'}`}
+                  className={`w-12 h-6 rounded-full p-1 cursor-pointer transition-colors duration-300 ease-in-out ${isMaskMode ? 'bg-primary-green' : 'bg-gray-700'}`}
                   onClick={() => setIsMaskMode(!isMaskMode)}
                 >
                   <div
@@ -137,7 +137,7 @@ export default function WorkflowDetailPage() {
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-400">预估</span>
                 <span className="text-sm text-gray-400">≈</span>
-                <div className="flex items-center gap-1 text-yellow-500 font-semibold bg-yellow-500/10 px-3 py-1.5 rounded-full border border-yellow-500/20">
+                <div className="flex items-center gap-1 text-primary-green font-semibold bg-primary-green/10 px-3 py-1.5 rounded-full border border-primary-green/20">
                   <Zap className="h-4 w-4 fill-current" />
                   <span>104 积分</span>
                 </div>
@@ -150,7 +150,7 @@ export default function WorkflowDetailPage() {
               </div>
 
               {/* Generate Button */}
-              <button className="w-full bg-[#a855f7] hover:bg-purple-600 text-white font-bold text-lg h-14 px-12 rounded-xl transition-all shadow-[0_0_20px_rgba(168,85,247,0.3)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center">
+              <button className="w-full bg-primary-green hover:bg-primary-green text-black font-bold text-lg h-14 px-12 rounded-xl transition-all shadow-[0_0_15px_var(--color-primary-green)] hover:shadow-[0_0_15px_var(--color-primary-green)] hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center">
                 立即运行
               </button>
             </div>
@@ -187,7 +187,7 @@ export default function WorkflowDetailPage() {
             <div className="text-xs text-gray-500 flex flex-col gap-1 mt-4">
               <span>生成时间：2026.07.15-14:30:17</span>
               <span>运行时长：12:35</span>
-              <span>有效期：<span className="text-yellow-500/80">9</span>天后过期</span>
+              <span>有效期：<span className="text-primary-green/80">9</span>天后过期</span>
             </div>
           </div>
         </div>

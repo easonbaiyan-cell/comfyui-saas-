@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X } from "lucide-react";
+import { BaseModal } from "./BaseModal";
 
 // Check Icon Component (custom SVG based on your screenshot's style)
 function CheckIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -64,19 +64,9 @@ export default function PricingModal({ onClose, currentPlan = 0 }: PricingModalP
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md" onClick={onClose}>
-      <div
-        className="relative w-full max-w-6xl max-h-[90vh] overflow-y-auto mx-auto bg-[#0b0d13] rounded-2xl p-8 border border-white/10 shadow-2xl font-sans"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors z-10"
-          >
-            <X className="w-6 h-6 stroke-[1.5]" />
-          </button>
-        )}
+    <BaseModal isOpen={true} onClose={() => {
+        if (onClose) onClose();
+      }} className="max-w-6xl w-full mx-auto max-h-[90vh] overflow-y-auto p-8 font-sans">
       
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-white">会员超市</h2>
@@ -90,7 +80,7 @@ export default function PricingModal({ onClose, currentPlan = 0 }: PricingModalP
           onClick={() => setSelectedPlan(1)}
           className={`relative flex flex-col rounded-2xl border transition-all duration-300 cursor-pointer p-6 backdrop-blur-sm
             ${selectedPlan === 1 
-              ? 'border-gray-400 shadow-[0_0_20px_rgba(156,163,175,0.3)] scale-[1.05] bg-gradient-to-b from-gray-800/80 to-black'
+              ? 'border-gray-400 shadow-[0_0_15px_var(--color-primary-green)] scale-[1.05] bg-gradient-to-b from-gray-800/80 to-black'
               : 'border-gray-800 bg-gradient-to-b from-gray-900/50 to-black hover:border-gray-700 hover:scale-[1.05]'}
           `}
         >
@@ -150,15 +140,15 @@ export default function PricingModal({ onClose, currentPlan = 0 }: PricingModalP
           onClick={() => setSelectedPlan(2)}
           className={`relative flex flex-col rounded-2xl border transition-all duration-300 cursor-pointer p-6
             ${selectedPlan === 2 
-              ? 'border-indigo-400 shadow-[0_0_35px_rgba(99,102,241,0.5)] scale-[1.05] bg-gradient-to-b from-indigo-900/60 to-black' 
-              : 'border-indigo-500/80 bg-gradient-to-b from-indigo-950/40 to-black shadow-[0_0_20px_-5px_rgba(99,102,241,0.2)] hover:border-indigo-400/80 hover:scale-[1.05]'}
+              ? 'border-primary-green shadow-[0_0_15px_var(--color-primary-green)] scale-[1.05] bg-gradient-to-b from-primary-green/60 to-black'
+              : 'border-primary-green/80 bg-gradient-to-b from-primary-green/40 to-black shadow-[0_0_20px_-5px_var(--color-primary-green)] hover:border-primary-green/80 hover:scale-[1.05]'}
           `}
         >
-          <div className="absolute top-0 right-6 -translate-y-1/2 px-3 py-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full text-xs font-bold text-white shadow-lg flex items-center justify-center">
+          <div className="absolute top-0 right-6 -translate-y-1/2 px-3 py-1 bg-gradient-to-r from-primary-green to-primary-green rounded-full text-xs font-bold text-white shadow-lg flex items-center justify-center">
             限时 4折<span className="text-[10px] ml-1 opacity-80 font-normal">剩余 02:15:30</span>
           </div>
           <div className="mb-4">
-            <h3 className="text-xl font-semibold text-indigo-300">连续包月</h3>
+            <h3 className="text-xl font-semibold text-primary-green">连续包月</h3>
           </div>
           <div className="mb-1 flex items-baseline gap-2">
             <span className="text-4xl font-bold text-white">¥680</span>
@@ -167,11 +157,11 @@ export default function PricingModal({ onClose, currentPlan = 0 }: PricingModalP
               <span className="text-gray-400 line-through text-xs">日常价 ¥1280/月</span>
             </div>
           </div>
-          <p className="text-sm text-indigo-300/70 mb-4">次月续费 ¥680（可随时取消）</p>
+          <p className="text-sm text-primary-green/70 mb-4">次月续费 ¥680（可随时取消）</p>
           <p className="text-sm text-gray-400 mb-6">1积分=0.0095元</p>
           
           <div className="mt-auto mb-4 text-center">
-            <div className="inline-block px-4 py-1.5 rounded-lg bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 font-bold mb-1">
+            <div className="inline-block px-4 py-1.5 rounded-lg bg-primary-green/20 border border-primary-green/30 text-primary-green font-bold mb-1">
               72000 积分/月
             </div>
             <p className="text-xs text-gray-400 mt-1">每月生成约180个视频，每个视频约3.5元</p>
@@ -182,7 +172,7 @@ export default function PricingModal({ onClose, currentPlan = 0 }: PricingModalP
             className={`w-full py-3 px-4 rounded-xl font-semibold transition-colors mb-6 
               ${getButtonState(2, 680).disabled
                 ? 'bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700'
-                : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-[0_0_15px_rgba(79,70,229,0.5)]'}`}
+                : 'bg-primary-green hover:bg-primary-green text-black shadow-[0_0_15px_var(--color-primary-green)]'}`}
           >
             {getButtonState(2, 680).text}
           </button>
@@ -191,19 +181,19 @@ export default function PricingModal({ onClose, currentPlan = 0 }: PricingModalP
           
           <ul className="space-y-4 text-sm text-gray-200">
             <li className="flex items-center gap-3">
-              <CheckIcon className="text-indigo-400 w-5 h-5" />
+              <CheckIcon className="text-primary-green w-5 h-5" />
               不含水印
             </li>
             <li className="flex items-center gap-3">
-              <CheckIcon className="text-indigo-400 w-5 h-5" />
+              <CheckIcon className="text-primary-green w-5 h-5" />
               单任务时长 60 分钟
             </li>
             <li className="flex items-center gap-3">
-              <CheckIcon className="text-indigo-400 w-5 h-5" />
+              <CheckIcon className="text-primary-green w-5 h-5" />
               享受插队权益
             </li>
             <li className="flex items-center gap-3">
-              <CheckIcon className="text-indigo-400 w-5 h-5" />
+              <CheckIcon className="text-primary-green w-5 h-5" />
               并发数 5
             </li>
           </ul>
@@ -214,15 +204,15 @@ export default function PricingModal({ onClose, currentPlan = 0 }: PricingModalP
           onClick={() => setSelectedPlan(3)}
           className={`relative flex flex-col rounded-2xl border transition-all duration-300 cursor-pointer p-6
             ${selectedPlan === 3
-              ? 'border-yellow-500 shadow-[0_0_25px_rgba(234,179,8,0.3)] scale-[1.05] bg-gradient-to-b from-yellow-900/40 to-black'
-              : 'border-yellow-700/50 bg-gradient-to-b from-yellow-950/30 to-black hover:border-yellow-600/70 hover:scale-[1.05]'}
+              ? 'border-primary-green shadow-[0_0_15px_var(--color-primary-green)] scale-[1.05] bg-gradient-to-b from-primary-green/40 to-black'
+              : 'border-primary-green/50 bg-gradient-to-b from-primary-green/30 to-black hover:border-primary-green/70 hover:scale-[1.05]'}
           `}
         >
-          <div className="absolute top-0 right-6 -translate-y-1/2 px-3 py-1 bg-gradient-to-r from-yellow-500 to-yellow-700 rounded-full text-xs font-bold text-yellow-950 shadow-lg flex items-center justify-center">
+          <div className="absolute top-0 right-6 -translate-y-1/2 px-3 py-1 bg-gradient-to-r from-primary-green to-primary-green rounded-full text-xs font-bold text-black shadow-lg flex items-center justify-center">
             限时 3折<span className="text-[10px] ml-1 opacity-80 font-normal">剩余 02:15:30</span>
           </div>
           <div className="mb-4">
-            <h3 className="text-xl font-semibold text-yellow-500/90">连续包年</h3>
+            <h3 className="text-xl font-semibold text-primary-green/90">连续包年</h3>
           </div>
           <div className="mb-1 flex items-baseline gap-2">
             <span className="text-4xl font-bold text-white">¥6800</span>
@@ -235,7 +225,7 @@ export default function PricingModal({ onClose, currentPlan = 0 }: PricingModalP
           <p className="text-sm text-gray-400 mb-6">1积分=0.0078元</p>
           
           <div className="mt-auto mb-4 text-center">
-            <div className="inline-block px-4 py-1.5 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-yellow-500 font-bold mb-1">
+            <div className="inline-block px-4 py-1.5 rounded-lg bg-primary-green/10 border border-primary-green/30 text-primary-green font-bold mb-1">
               72000 积分/月
             </div>
             <p className="text-xs text-gray-500 mt-1">每月生成约180个视频，每个视频约3元</p>
@@ -246,7 +236,7 @@ export default function PricingModal({ onClose, currentPlan = 0 }: PricingModalP
             className={`w-full py-3 px-4 rounded-xl font-semibold transition-colors mb-6
               ${getButtonState(3, 6800).disabled
                 ? 'bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700'
-                : 'bg-gradient-to-r from-yellow-700/80 to-yellow-600/80 border border-yellow-500/50 hover:from-yellow-600 hover:to-yellow-500 text-white shadow-[0_0_15px_rgba(234,179,8,0.4)]'}`}
+                : 'bg-gradient-to-r from-primary-green/80 to-primary-green/80 border border-primary-green/50 hover:from-primary-green hover:to-primary-green text-black shadow-[0_0_15px_var(--color-primary-green)]'}`}
           >
             {getButtonState(3, 6800).text}
           </button>
@@ -255,19 +245,19 @@ export default function PricingModal({ onClose, currentPlan = 0 }: PricingModalP
           
           <ul className="space-y-4 text-sm text-gray-300">
             <li className="flex items-center gap-3">
-              <CheckIcon className="text-yellow-600 w-5 h-5" />
+              <CheckIcon className="text-primary-green w-5 h-5" />
               不含水印
             </li>
             <li className="flex items-center gap-3">
-              <CheckIcon className="text-yellow-600 w-5 h-5" />
+              <CheckIcon className="text-primary-green w-5 h-5" />
               单任务时长 60 分钟
             </li>
             <li className="flex items-center gap-3">
-              <CheckIcon className="text-yellow-600 w-5 h-5" />
+              <CheckIcon className="text-primary-green w-5 h-5" />
               享受插队权益
             </li>
             <li className="flex items-center gap-3">
-              <CheckIcon className="text-yellow-600 w-5 h-5" />
+              <CheckIcon className="text-primary-green w-5 h-5" />
               并发数 5
             </li>
           </ul>
@@ -283,7 +273,6 @@ export default function PricingModal({ onClose, currentPlan = 0 }: PricingModalP
         </p>
       </div>
       
-      </div>
-    </div>
+          </BaseModal>
   );
 }

@@ -44,7 +44,7 @@ export function PromoBanner({ text, countdownUntil }: { text?: string, countdown
         const split = part.split(kw);
         return split.reduce((acc: (string | React.ReactNode)[], current, idx) => {
           if (idx === 0) return [current];
-          return [...acc, <span key={`${kw}-${idx}`} className="bg-pink-500 text-white px-2 py-0.5 rounded-md mx-1 font-bold">{kw}</span>, current];
+          return [...acc, <span key={`${kw}-${idx}`} className="bg-primary-green text-black px-2 py-0.5 rounded-md mx-1 font-bold">{kw}</span>, current];
         }, []);
       });
     });

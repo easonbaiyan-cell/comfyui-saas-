@@ -76,7 +76,7 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
             {/* 1. 常驻展示区：放在鉴权判断的外部，永远显示 */}
             <button
               onClick={() => setIsInviteOpen(true)}
-              className="hidden sm:flex items-center bg-[#1a1a1a] hover:bg-[#2a2a2a] text-[#d4af37] px-4 py-2 rounded-full text-sm font-medium transition-colors border border-[#d4af37]/30 h-10 mr-2"
+              className="hidden sm:flex items-center bg-[#1a1a1a] hover:bg-[#2a2a2a] text-primary-green px-4 py-2 rounded-full text-sm font-medium transition-colors border border-primary-green/30 h-10 mr-2"
             >
               邀请获取积分
             </button>
@@ -87,7 +87,7 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
               onClick={() => setIsMessageOpen(true)}
             >
               <Bell className="h-5 w-5" />
-              <span className="absolute top-2 right-2 block h-2.5 w-2.5 rounded-full bg-yellow-400 ring-2 ring-[#1a1a1a]"></span>
+              <span className="absolute top-2 right-2 block h-2.5 w-2.5 rounded-full bg-primary-green ring-2 ring-[#1a1a1a]"></span>
             </Button>
             <div
               className="relative"
@@ -116,7 +116,7 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
             {/* 会员超市 按钮绑定了唤起收费弹窗 */}
             <Button
               size="sm"
-              className="hidden sm:flex bg-[#1a1a1a] hover:bg-[#2a2a2a] text-[#00e5ff] border border-transparent hover:border-[#00e5ff]/30 px-4 rounded-xl h-10"
+              className="hidden sm:flex bg-[#1a1a1a] hover:bg-[#2a2a2a] text-primary-green border border-transparent hover:border-primary-green/30 px-4 rounded-xl h-10"
               onClick={() => setIsPricingOpen(true)}
             >
               <Home className="mr-2 h-4 w-4" />
@@ -132,7 +132,7 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
                 >
                   <span className="text-xs text-gray-400 font-medium">会员中心</span>
                   <div className="flex items-center gap-1">
-                    <Zap className="h-4 w-4 text-yellow-500 fill-current" />
+                    <Zap className="h-4 w-4 text-primary-green fill-current" />
                     <span className="text-sm font-bold text-white">6,525</span>
                   </div>
                   <div className="w-6 h-6 rounded-full border border-white/20 overflow-hidden flex items-center justify-center bg-gray-800">
@@ -155,7 +155,7 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
                       </div>
 
                       {/* 2. 会员状态卡片 */}
-                      <div className="bg-lime-300 rounded-xl p-3 flex items-center justify-between mb-3">
+                      <div className="bg-primary-green rounded-xl p-3 flex items-center justify-between mb-3">
                         <div className="flex flex-col">
                           <div className="flex items-center gap-1.5 text-black font-bold text-sm">
                             <Crown className="h-4 w-4" />
@@ -179,7 +179,7 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
                           <span className="text-xs">剩余积分</span>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className="text-lime-300 font-bold text-lg font-mono tracking-tight">56,435</span>
+                          <span className="text-primary-green font-bold text-lg font-mono tracking-tight">56,435</span>
                           <Link
                             href="/points"
                             onClick={() => setIsProfileDropdownOpen(false)}
@@ -214,7 +214,7 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
                             setIsProfileDropdownOpen(false);
                             handleSignOut();
                           }}
-                          className="flex items-center w-full gap-3 px-2 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 focus:bg-red-500/10 focus:text-red-300 rounded-lg transition-colors cursor-pointer"
+                          className="flex items-center w-full gap-3 px-2 py-2.5 text-sm text-danger-red hover:text-danger-red hover:bg-danger-red/10 focus:bg-danger-red/10 focus:text-danger-red rounded-lg transition-colors cursor-pointer"
                         >
                           <LogOut className="h-4 w-4" />
                           <span>退出登录</span>
@@ -274,7 +274,7 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
 
           {/* 分类 Tab */}
           <div className="px-4 border-b border-white/5">
-            <div className="inline-block py-3 text-sm font-medium text-white border-b-2 border-yellow-500">
+            <div className="inline-block py-3 text-sm font-medium text-white border-b-2 border-primary-green">
               官方消息
             </div>
           </div>
@@ -284,7 +284,7 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
             {/* Mock Message 1 */}
             <div className="bg-[#1a1a1a] rounded-lg p-3 mb-3">
               <div className="flex items-center gap-2 mb-2">
-                <span className="h-2 w-2 rounded-full bg-yellow-400"></span>
+                <span className="h-2 w-2 rounded-full bg-primary-green"></span>
                 <h3 className="text-sm font-semibold text-white">全新「控制台」上线</h3>
               </div>
               <p className="text-xs text-gray-400 mb-2 truncate">原消费记录已全面升级，提供更清晰的账单明细和使用分析。</p>
@@ -294,7 +294,7 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
             {/* Mock Message 2 */}
             <div className="bg-[#1a1a1a] rounded-lg p-3 mb-3">
               <div className="flex items-center gap-2 mb-2">
-                <span className="h-2 w-2 rounded-full bg-yellow-400"></span>
+                <span className="h-2 w-2 rounded-full bg-primary-green"></span>
                 <h3 className="text-sm font-semibold text-white">充值优惠活动</h3>
               </div>
               <p className="text-xs text-gray-400 mb-2 truncate">本月充值积分享受额外20%赠送，多充多送，活动限时进行中。</p>

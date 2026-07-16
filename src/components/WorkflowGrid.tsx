@@ -85,7 +85,7 @@ export function WorkflowGrid({ workflows }: { workflows: Workflow[] }) {
                   <Lock className={`w-4 h-4 transition-colors ${
                     activeCategory === cat ? 'text-white' : 'text-gray-400 group-hover:text-white'
                   }`} />
-                  <span className="absolute -top-3 -right-11 text-[8px] bg-yellow-500/20 text-yellow-500 px-1 py-[1px] rounded-sm whitespace-nowrap">
+                  <span className="absolute -top-3 -right-11 text-[8px] bg-primary-green/20 text-primary-green px-1 py-[1px] rounded-sm whitespace-nowrap">
                     包年专享
                   </span>
                 </div>
@@ -94,7 +94,7 @@ export function WorkflowGrid({ workflows }: { workflows: Workflow[] }) {
 
             {/* Active Indicator */}
             {activeCategory === cat && (
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-[3px] rounded-full bg-purple-500" />
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-[3px] rounded-full bg-primary-green" />
             )}
           </div>
         ))}
