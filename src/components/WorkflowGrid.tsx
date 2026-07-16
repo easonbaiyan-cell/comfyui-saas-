@@ -17,8 +17,20 @@ interface Workflow {
   title: string;
   description: string | null;
   coverImageUrl: string | null;
+  referenceVideoUrl: string | null;
+  virtualPlatform: string | null;
+  virtualLikes: number | null;
   category: string | null;
   creditCost: number;
+}
+
+
+function formatLikes(likes: number | null): string {
+  if (likes == null) return "0";
+  if (likes >= 10000) {
+    return (likes / 10000).toFixed(1) + 'w';
+  }
+  return likes.toString();
 }
 
 function VideoCard({ workflow }: { workflow: Workflow }) {
@@ -46,7 +58,7 @@ function VideoCard({ workflow }: { workflow: Workflow }) {
       >
         <video
           ref={videoRef}
-          src="https://www.w3schools.com/html/mov_bbb.mp4"
+          src={workflow.referenceVideoUrl || ""}
           className="absolute inset-0 w-full h-full object-cover"
           muted
           loop
@@ -55,10 +67,15 @@ function VideoCard({ workflow }: { workflow: Workflow }) {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3">
           <h3 className="text-white text-sm font-medium truncate mb-1">
-            {workflow.title || "国风少女汉服跟拍工作流"}
+            {workflow.title}
           </h3>
-          <div className="flex items-center text-xs text-gray-300">
-            <span>🤍 15.9w</span>
+          <div className="flex items-center justify-between text-xs text-gray-300">
+            {workflow.virtualPlatform && (
+              <span className="bg-danger-red/80 text-white text-[10px] px-1.5 py-0.5 rounded mr-2">
+                {workflow.virtualPlatform}
+              </span>
+            )}
+            <span>🤍 {formatLikes(workflow.virtualLikes)}</span>
           </div>
         </div>
       </div>
