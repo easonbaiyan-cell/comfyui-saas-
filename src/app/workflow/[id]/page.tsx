@@ -8,8 +8,11 @@ import { useAuthStore } from '@/store/auth';
 
 
 
-export default function WorkflowDetailPage({ params }: { params: { id: string } }) {
-  const { id: workflowId } = params;
+import { use } from 'react';
+
+export default function WorkflowDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
+  const { id: workflowId } = resolvedParams;
   const [isMaskMode, setIsMaskMode] = useState(false);
   const [skipFrames, setSkipFrames] = useState(0);
 

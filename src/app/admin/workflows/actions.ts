@@ -181,3 +181,64 @@ export async function getWorkflowsAction(accessToken: string) {
     return { success: false, error: error.message };
   }
 }
+
+export async function getWorkflowAction(workflowId: string, accessToken: string) {
+  try {
+    const supabase = getAuthenticatedClient(accessToken);
+    const { data: userData, error: userError } = await supabase.auth.getUser(accessToken);
+
+    if (userError || !userData.user || userData.user.id !== process.env.NEXT_PUBLIC_ADMIN_UUID) {
+      throw new Error('Unauthorized');
+    }
+
+    const { data, error } = await supabase
+      .from('workflows')
+      .select('*')
+      .eq('id', workflowId)
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    return { success: true, workflow: data };
+  } catch (error: any) {
+    console.error('Error in getWorkflowAction:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function updateWorkflowAction(workflowId: string, formData: any, accessToken: string) {
+  try {
+    const supabase = getAuthenticatedClient(accessToken);
+    const { data: userData, error: userError } = await supabase.auth.getUser(accessToken);
+
+    if (userError || !userData.user || userData.user.id !== process.env.NEXT_PUBLIC_ADMIN_UUID) {
+      throw new Error('Unauthorized');
+    }
+
+    const { error } = await supabase
+      .from('workflows')
+      .update({
+        title: formData.title,
+        description: formData.description,
+        category: formData.category,
+        cover_url: formData.cover_url,
+        video_url: formData.video_url,
+        cost_points: parseInt(formData.cost_points) || 0,
+        r_app_id: formData.r_app_id,
+        node_mapping: formData.node_mapping || [],
+        rh_payload_template: formData.rh_payload_template || [],
+      })
+      .eq('id', workflowId);
+
+    if (error) {
+      throw error;
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error in updateWorkflowAction:', error);
+    return { success: false, error: error.message };
+  }
+}
