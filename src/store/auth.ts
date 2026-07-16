@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 
 interface AuthState {
-  user: any | null;
-  setUser: (user: any | null) => void;
+  user: { id: string; email?: string; phone?: string } | null;
+  setUser: (user: { id: string; email?: string; phone?: string } | null) => void;
   积分余额: number;
   set积分余额: (balance: number) => void;
 }

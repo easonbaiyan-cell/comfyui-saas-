@@ -123,10 +123,10 @@ export default function AdminWorkflowsPage() {
                       <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">暂无数据</td>
                     </tr>
                   ) : workflows.map((workflow) => (
-                    <tr key={workflow.id} className="hover:bg-gray-50 transition-colors">
+                    <tr key={String(workflow.id)} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center space-x-2">
-                          <span className="text-sm font-medium text-gray-900">{workflow.title}</span>
+                          <span className="text-sm font-medium text-gray-900">{String(workflow.title)}</span>
                           {workflow.is_pinned && (
                             <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
                               置顶
@@ -155,13 +155,13 @@ export default function AdminWorkflowsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
                         <button
-                          onClick={() => handleTogglePin(workflow.id, workflow.is_pinned)}
+                          onClick={() => handleTogglePin(String(workflow.id), workflow.is_pinned)}
                           className={`${workflow.is_pinned ? 'text-yellow-600 hover:text-yellow-900' : 'text-gray-500 hover:text-gray-900'}`}
                         >
                           {workflow.is_pinned ? '取消置顶' : '置顶'}
                         </button>
                         <button
-                          onClick={() => handleToggleStatus(workflow.id, workflow.status)}
+                          onClick={() => handleToggleStatus(String(workflow.id), workflow.status)}
                           className={`${workflow.status === 'published' ? 'text-gray-500 hover:text-gray-900' : 'text-green-600 hover:text-green-900'}`}
                         >
                           {workflow.status === 'published' ? '下架' : '上架'}
