@@ -1,3 +1,10 @@
+export interface Profile {
+  id: string;
+  points: number;
+  inviter_id: string | null;
+  created_at: string;
+}
+
 export interface VideoTask {
   id: string;
   user_id: string;
