@@ -52,6 +52,58 @@ export async function createWorkflowAction(formData: any, accessToken: string) {
   }
 }
 
+export async function togglePinWorkflowAction(workflowId: string, currentPinStatus: boolean, accessToken: string) {
+  try {
+    const supabase = getAuthenticatedClient(accessToken);
+    const { data: userData, error: userError } = await supabase.auth.getUser(accessToken);
+
+    if (userError || !userData.user || userData.user.id !== process.env.NEXT_PUBLIC_ADMIN_UUID) {
+      throw new Error('Unauthorized');
+    }
+
+    const { error } = await supabase
+      .from('workflows')
+      .update({ is_pinned: !currentPinStatus })
+      .eq('id', workflowId);
+
+    if (error) {
+      throw error;
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error in togglePinWorkflowAction:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function toggleStatusWorkflowAction(workflowId: string, currentStatus: string, accessToken: string) {
+  try {
+    const supabase = getAuthenticatedClient(accessToken);
+    const { data: userData, error: userError } = await supabase.auth.getUser(accessToken);
+
+    if (userError || !userData.user || userData.user.id !== process.env.NEXT_PUBLIC_ADMIN_UUID) {
+      throw new Error('Unauthorized');
+    }
+
+    const newStatus = currentStatus === 'published' ? 'offline' : 'published';
+
+    const { error } = await supabase
+      .from('workflows')
+      .update({ status: newStatus })
+      .eq('id', workflowId);
+
+    if (error) {
+      throw error;
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error in toggleStatusWorkflowAction:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 export async function createCategoryAction(name: string, requiredTier: string, accessToken: string) {
   try {
     const supabase = getAuthenticatedClient(accessToken);

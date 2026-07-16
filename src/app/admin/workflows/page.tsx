@@ -3,17 +3,19 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { getWorkflowsAction } from './actions';
+import { getWorkflowsAction, togglePinWorkflowAction, toggleStatusWorkflowAction } from './actions';
 
 export default function AdminWorkflowsPage() {
   const [workflows, setWorkflows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchWorkflows = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
+          setSessionToken(session.access_token);
           const result = await getWorkflowsAction(session.access_token);
           if (result.success && result.workflows) {
             setWorkflows(result.workflows);
@@ -30,6 +32,36 @@ export default function AdminWorkflowsPage() {
 
     fetchWorkflows();
   }, []);
+
+  const handleTogglePin = async (id: string, currentPinStatus: boolean) => {
+    if (!sessionToken) return;
+
+    // Optimistic update
+    setWorkflows(workflows.map(wf => wf.id === id ? { ...wf, is_pinned: !currentPinStatus } : wf));
+
+    const result = await togglePinWorkflowAction(id, currentPinStatus, sessionToken);
+    if (!result.success) {
+      console.error('Failed to toggle pin:', result.error);
+      // Revert on failure
+      setWorkflows(workflows.map(wf => wf.id === id ? { ...wf, is_pinned: currentPinStatus } : wf));
+    }
+  };
+
+  const handleToggleStatus = async (id: string, currentStatus: string) => {
+    if (!sessionToken) return;
+
+    const newStatus = currentStatus === 'published' ? 'offline' : 'published';
+
+    // Optimistic update
+    setWorkflows(workflows.map(wf => wf.id === id ? { ...wf, status: newStatus } : wf));
+
+    const result = await toggleStatusWorkflowAction(id, currentStatus, sessionToken);
+    if (!result.success) {
+      console.error('Failed to toggle status:', result.error);
+      // Revert on failure
+      setWorkflows(workflows.map(wf => wf.id === id ? { ...wf, status: currentStatus } : wf));
+    }
+  };
 
   return (
     <div className="p-8">
@@ -93,7 +125,14 @@ export default function AdminWorkflowsPage() {
                   ) : workflows.map((workflow) => (
                     <tr key={workflow.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{workflow.title}</div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm font-medium text-gray-900">{workflow.title}</span>
+                          {workflow.is_pinned && (
+                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                              置顶
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-500">{workflow.category}</div>
@@ -108,16 +147,26 @@ export default function AdminWorkflowsPage() {
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           workflow.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                         }`}>
-                          {workflow.status === 'published' ? '上架' : '其他'}
+                          {workflow.status === 'published' ? '上架' : '下架'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {/* Fake data for total calls until we implement proper tracking */}
-                        0
+                        {workflow.usage_count || 0}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
+                        <button
+                          onClick={() => handleTogglePin(workflow.id, workflow.is_pinned)}
+                          className={`${workflow.is_pinned ? 'text-yellow-600 hover:text-yellow-900' : 'text-gray-500 hover:text-gray-900'}`}
+                        >
+                          {workflow.is_pinned ? '取消置顶' : '置顶'}
+                        </button>
+                        <button
+                          onClick={() => handleToggleStatus(workflow.id, workflow.status)}
+                          className={`${workflow.status === 'published' ? 'text-gray-500 hover:text-gray-900' : 'text-green-600 hover:text-green-900'}`}
+                        >
+                          {workflow.status === 'published' ? '下架' : '上架'}
+                        </button>
                         <a href="#" className="text-indigo-600 hover:text-indigo-900">编辑</a>
-                        <a href="#" className="text-red-600 hover:text-red-900">删除</a>
                       </td>
                     </tr>
                   ))}
