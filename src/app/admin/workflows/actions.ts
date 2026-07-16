@@ -37,6 +37,7 @@ export async function createWorkflowAction(formData: any, accessToken: string) {
         cost_points: parseInt(formData.cost_points) || 0,
         r_app_id: formData.r_app_id,
         node_mapping: formData.node_mapping || [],
+        rh_payload_template: formData.rh_payload_template || [],
         status: 'published'
       }
     ]);

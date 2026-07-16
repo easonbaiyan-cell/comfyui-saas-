@@ -115,7 +115,7 @@ export default function CreateWorkflowPage() {
       if (type === 'video') setVideoUrl(publicUrl);
       showToast('上传成功');
     } catch (error: unknown) {
-      let errMsg = error instanceof Error ? error.message : String(error);
+      const errMsg = error instanceof Error ? error.message : String(error);
       showToast(`上传失败，请稍后重试（系统提示：${errMsg}）`, 'error');
     } finally {
       if (type === 'cover') setIsUploadingCover(false);
@@ -154,6 +154,19 @@ export default function CreateWorkflowPage() {
     const form = e.currentTarget;
     const formData = new FormData(form);
 
+    let parsedPayloadTemplate = [];
+    const payloadTemplateString = formData.get('rh_payload_template') as string;
+
+    if (payloadTemplateString && payloadTemplateString.trim() !== '') {
+      try {
+        parsedPayloadTemplate = JSON.parse(payloadTemplateString);
+      } catch (e) {
+        showToast('JSON 格式不合法', 'error');
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
     const payload = {
       title: formData.get('title'),
       description: formData.get('subtitle'),
@@ -163,6 +176,7 @@ export default function CreateWorkflowPage() {
       cost_points: formData.get('points'),
       r_app_id: formData.get('appId'),
       node_mapping: [],
+      rh_payload_template: parsedPayloadTemplate,
     };
 
     try {
@@ -230,7 +244,7 @@ export default function CreateWorkflowPage() {
               <div className="sm:col-span-3">
                 <div className="flex justify-between items-center">
                   <label htmlFor="category" className="block text-sm font-medium text-gray-700">选择分类</label>
-                  <button type="button" onClick={() => setIsCategoryModalOpen(true)} className="text-sm text-indigo-600 hover:text-indigo-500">管理/新增分类</button>
+                  <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsCategoryModalOpen(true); }} className="text-sm text-indigo-600 hover:text-indigo-500">管理/新增分类</button>
                 </div>
                 <div className="mt-1">
                   <select id="category" name="category" value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border bg-white">
@@ -353,6 +367,13 @@ export default function CreateWorkflowPage() {
                 <div className="mt-1">
                   <input type="text" name="appId" id="appId" className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border font-mono" placeholder="app-..." />
                 </div>
+              </div>
+              <div className="sm:col-span-6">
+                <label htmlFor="rh_payload_template" className="block text-sm font-medium text-gray-700">RunningHub 节点配置 (JSON Payload)</label>
+                <div className="mt-1">
+                  <textarea name="rh_payload_template" id="rh_payload_template" rows={10} className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border font-mono bg-gray-50" placeholder='[{"nodeId":"123","type":"image","value":""}]'></textarea>
+                </div>
+                <p className="mt-2 text-sm text-gray-500">直接粘贴 R 平台复制出的 nodeInfoList JSON 数组。</p>
               </div>
             </div>
 
