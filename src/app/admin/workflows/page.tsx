@@ -3,16 +3,21 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { getWorkflowsAction, togglePinWorkflowAction, toggleStatusWorkflowAction, getCategoriesAction } from './actions';
+import { getWorkflowsAction, togglePinWorkflowAction, toggleStatusWorkflowAction, getCategoriesAction, deleteWorkflowAction, swapWorkflowSortOrderAction } from './actions';
+import CategoryManagementModal from './CategoryManagementModal';
 
 export default function AdminWorkflowsPage() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [workflows, setWorkflows] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
 
   const [nameSearch, setNameSearch] = useState('');
   const [categorySearch, setCategorySearch] = useState('');
+  const [sortMode, setSortMode] = useState<'recommended' | 'hottest' | 'newest'>('newest');
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<{message: string, type: 'success'|'error'} | null>(null);
 
   const showToast = (message: string, type: 'success'|'error' = 'success') => {
@@ -26,7 +31,55 @@ export default function AdminWorkflowsPage() {
         setToastMessage(null);
       }, 3000);
     }
-    return () => clearTimeout(timeoutId);
+
+  const handleDelete = async (id: string) => {
+    if (!sessionToken) return;
+    if (!window.confirm('确认删除此工作流吗？此操作不可恢复。')) return;
+
+    const result = await deleteWorkflowAction(id, sessionToken);
+    if (result.success) {
+      setWorkflows(workflows.filter(wf => wf.id !== id));
+      showToast('删除成功', 'success');
+    } else {
+      showToast('删除失败: ' + result.error, 'error');
+    }
+  };
+
+  const handleMove = async (index: number, direction: 'up' | 'down') => {
+    if (!sessionToken || sortMode !== 'recommended' || nameSearch || categorySearch) return;
+
+    const newWorkflows = [...workflows];
+    const swapIndex = direction === 'up' ? index - 1 : index + 1;
+
+    if (swapIndex < 0 || swapIndex >= newWorkflows.length) return;
+
+    const currentWf = newWorkflows[index];
+    const swapWf = newWorkflows[swapIndex];
+
+    // Optimistic update
+    newWorkflows[index] = swapWf;
+    newWorkflows[swapIndex] = currentWf;
+    setWorkflows(newWorkflows);
+
+    const result = await swapWorkflowSortOrderAction(
+      currentWf.id,
+      currentWf.sort_order || index,
+      swapWf.id,
+      swapWf.sort_order || swapIndex,
+      sessionToken
+    );
+
+    if (!result.success) {
+       // Revert
+       showToast('排序更新失败: ' + result.error, 'error');
+       const revertWorkflows = [...workflows];
+       revertWorkflows[index] = currentWf;
+       revertWorkflows[swapIndex] = swapWf;
+       setWorkflows(revertWorkflows);
+    }
+  };
+
+  return () => clearTimeout(timeoutId);
   }, [toastMessage]);
 
 
@@ -38,7 +91,7 @@ export default function AdminWorkflowsPage() {
           setSessionToken(session.access_token);
 
           const [workflowsResult, categoriesResult] = await Promise.all([
-            getWorkflowsAction(session.access_token),
+            getWorkflowsAction(session.access_token, sortMode),
             getCategoriesAction(session.access_token)
           ]);
           if (workflowsResult.success && workflowsResult.workflows) {
@@ -61,7 +114,8 @@ export default function AdminWorkflowsPage() {
     };
 
     fetchData();
-  }, []);
+  }, [sortMode]);
+
 
   const handleTogglePin = async (id: string, currentPinStatus: boolean) => {
     if (!sessionToken) return;
@@ -130,15 +184,23 @@ export default function AdminWorkflowsPage() {
           <h2 className="text-2xl font-bold text-gray-900">商品与算力管理</h2>
           <p className="text-gray-500 mt-1">管理所有工作流商品、配置参数和算力映射。</p>
         </div>
-        <Link
-          href="/admin/workflows/create"
-          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-        >
-          <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-          </svg>
-          发布新工作流 (Add Workflow)
-        </Link>
+        <div className="flex gap-4">
+          <button
+            onClick={() => setIsCategoryModalOpen(true)}
+            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            管理分类 (Categories)
+          </button>
+          <Link
+            href="/admin/workflows/create"
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+            </svg>
+            发布新工作流 (Add Workflow)
+          </Link>
+        </div>
       </div>
 
       {/* Data Table */}
@@ -149,6 +211,16 @@ export default function AdminWorkflowsPage() {
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-medium text-gray-900">商品列表</h3>
               <div className="flex space-x-4">
+                <select
+                  value={sortMode}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  onChange={(e) => setSortMode(e.target.value as any)}
+                  className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border bg-white"
+                >
+                  <option value="newest">最新 (Newest)</option>
+                  <option value="hottest">最热 (Hottest)</option>
+                  <option value="recommended">推荐 (Recommended)</option>
+                </select>
                 <input
                   type="text"
                   placeholder="搜索工作流名称"
@@ -191,8 +263,8 @@ export default function AdminWorkflowsPage() {
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       总调用次数
                     </th>
-                    <th scope="col" className="relative px-6 py-3">
-                      <span className="sr-only">操作</span>
+                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      操作
                     </th>
                   </tr>
                 </thead>
@@ -220,7 +292,7 @@ export default function AdminWorkflowsPage() {
                       );
                     }
 
-                    return filteredWorkflows.map((workflow) => (
+                    return filteredWorkflows.map((workflow, index) => (
                       <tr key={String(workflow.id)} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center space-x-2">
@@ -251,7 +323,25 @@ export default function AdminWorkflowsPage() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {workflow.usage_count || 0}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
+                          {sortMode === 'recommended' && !nameSearch && !categorySearch && (
+                            <>
+                              <button
+                                onClick={() => handleMove(index, 'up')}
+                                disabled={index === 0}
+                                className={`${index === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-blue-600 hover:text-blue-900'}`}
+                              >
+                                上移
+                              </button>
+                              <button
+                                onClick={() => handleMove(index, 'down')}
+                                disabled={index === filteredWorkflows.length - 1}
+                                className={`${index === filteredWorkflows.length - 1 ? 'text-gray-300 cursor-not-allowed' : 'text-blue-600 hover:text-blue-900'}`}
+                              >
+                                下移
+                              </button>
+                            </>
+                          )}
                           <button
                             onClick={() => handleTogglePin(String(workflow.id), workflow.is_pinned)}
                             className={`${workflow.is_pinned ? 'text-yellow-600 hover:text-yellow-900' : 'text-gray-500 hover:text-gray-900'}`}
@@ -265,6 +355,12 @@ export default function AdminWorkflowsPage() {
                             {workflow.status === 'published' ? '下架' : '上架'}
                           </button>
                           <Link href={`/admin/workflows/edit/${String(workflow.id)}`} className="text-indigo-600 hover:text-indigo-900">编辑</Link>
+                          <button
+                            onClick={() => handleDelete(String(workflow.id))}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            删除
+                          </button>
                         </td>
                       </tr>
                     ));
@@ -275,6 +371,10 @@ export default function AdminWorkflowsPage() {
           </div>
         </div>
       </div>
+      <CategoryManagementModal
+        isOpen={isCategoryModalOpen}
+        onClose={() => setIsCategoryModalOpen(false)}
+      />
     </div>
   );
 }
