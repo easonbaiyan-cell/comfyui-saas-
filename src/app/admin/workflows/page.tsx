@@ -3,8 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { getWorkflowsAction, togglePinWorkflowAction, toggleStatusWorkflowAction, getCategoriesAction, reorderWorkflowsAction, deleteWorkflowAction } from './actions';
-import CategoryManagementModal from './CategoryManagementModal';
+import { getWorkflowsAction, togglePinWorkflowAction, toggleStatusWorkflowAction, getCategoriesAction } from './actions';
 
 export default function AdminWorkflowsPage() {
   const [workflows, setWorkflows] = useState<any[]>([]);
@@ -15,7 +14,6 @@ export default function AdminWorkflowsPage() {
   const [nameSearch, setNameSearch] = useState('');
   const [categorySearch, setCategorySearch] = useState('');
   const [toastMessage, setToastMessage] = useState<{message: string, type: 'success'|'error'} | null>(null);
-  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
 
   const showToast = (message: string, type: 'success'|'error' = 'success') => {
     setToastMessage({ message, type });
@@ -102,76 +100,6 @@ export default function AdminWorkflowsPage() {
   };
 
 
-
-  const handleMoveUp = async (index: number) => {
-    if (!sessionToken || index === 0) return;
-    const newWorkflows = [...workflows];
-    const temp = newWorkflows[index - 1].sort_order;
-    newWorkflows[index - 1].sort_order = newWorkflows[index].sort_order;
-    newWorkflows[index].sort_order = temp;
-
-    const itemTemp = newWorkflows[index - 1];
-    newWorkflows[index - 1] = newWorkflows[index];
-    newWorkflows[index] = itemTemp;
-
-    setWorkflows(newWorkflows);
-
-    const updates = [
-      { id: newWorkflows[index - 1].id, sort_order: newWorkflows[index - 1].sort_order },
-      { id: newWorkflows[index].id, sort_order: newWorkflows[index].sort_order }
-    ];
-
-    const result = await reorderWorkflowsAction(updates, sessionToken);
-    if (!result.success) {
-      showToast('排序失败', 'error');
-      // A full refresh might be safer on failure
-      const refresh = await getWorkflowsAction(sessionToken);
-      if (refresh.success && refresh.workflows) setWorkflows(refresh.workflows);
-    }
-  };
-
-  const handleMoveDown = async (index: number) => {
-    if (!sessionToken || index === workflows.length - 1) return;
-    const newWorkflows = [...workflows];
-    const temp = newWorkflows[index + 1].sort_order;
-    newWorkflows[index + 1].sort_order = newWorkflows[index].sort_order;
-    newWorkflows[index].sort_order = temp;
-
-    const itemTemp = newWorkflows[index + 1];
-    newWorkflows[index + 1] = newWorkflows[index];
-    newWorkflows[index] = itemTemp;
-
-    setWorkflows(newWorkflows);
-
-    const updates = [
-      { id: newWorkflows[index + 1].id, sort_order: newWorkflows[index + 1].sort_order },
-      { id: newWorkflows[index].id, sort_order: newWorkflows[index].sort_order }
-    ];
-
-    const result = await reorderWorkflowsAction(updates, sessionToken);
-    if (!result.success) {
-      showToast('排序失败', 'error');
-      const refresh = await getWorkflowsAction(sessionToken);
-      if (refresh.success && refresh.workflows) setWorkflows(refresh.workflows);
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!sessionToken) return;
-    if (!window.confirm('确定要删除这个工作流吗？此操作不可撤销。')) return;
-
-    const originalWorkflows = [...workflows];
-    setWorkflows(workflows.filter(wf => wf.id !== id));
-
-    const result = await deleteWorkflowAction(id, sessionToken);
-    if (!result.success) {
-      setWorkflows(originalWorkflows);
-      showToast('删除失败', 'error');
-    } else {
-      showToast('删除成功', 'success');
-    }
-  };
-
   return (
     <div className="p-8">
       {/* Global Toast Message */}
@@ -202,26 +130,15 @@ export default function AdminWorkflowsPage() {
           <h2 className="text-2xl font-bold text-gray-900">商品与算力管理</h2>
           <p className="text-gray-500 mt-1">管理所有工作流商品、配置参数和算力映射。</p>
         </div>
-        <div className="flex space-x-4">
-          <button
-            onClick={() => setIsCategoryModalOpen(true)}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            <svg className="-ml-1 mr-2 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-            </svg>
-            管理分类 (Manage Categories)
-          </button>
-          <Link
-            href="/admin/workflows/create"
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-              <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-            </svg>
-            发布新工作流 (Add Workflow)
-          </Link>
-        </div>
+        <Link
+          href="/admin/workflows/create"
+          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        >
+          <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+          </svg>
+          发布新工作流 (Add Workflow)
+        </Link>
       </div>
 
       {/* Data Table */}
@@ -336,26 +253,6 @@ export default function AdminWorkflowsPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
                           <button
-                            onClick={() => handleMoveUp(workflows.indexOf(workflow))}
-                            disabled={workflows.indexOf(workflow) === 0 || !!nameSearch || !!categorySearch}
-                            className="text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
-                            title="上移 (Move Up)"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={() => handleMoveDown(workflows.indexOf(workflow))}
-                            disabled={workflows.indexOf(workflow) === workflows.length - 1 || !!nameSearch || !!categorySearch}
-                            className="text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
-                            title="下移 (Move Down)"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </button>
-                          <button
                             onClick={() => handleTogglePin(String(workflow.id), workflow.is_pinned)}
                             className={`${workflow.is_pinned ? 'text-yellow-600 hover:text-yellow-900' : 'text-gray-500 hover:text-gray-900'}`}
                           >
@@ -368,12 +265,6 @@ export default function AdminWorkflowsPage() {
                             {workflow.status === 'published' ? '下架' : '上架'}
                           </button>
                           <Link href={`/admin/workflows/edit/${String(workflow.id)}`} className="text-indigo-600 hover:text-indigo-900">编辑</Link>
-                          <button
-                            onClick={() => handleDelete(String(workflow.id))}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            删除
-                          </button>
                         </td>
                       </tr>
                     ));
@@ -384,12 +275,6 @@ export default function AdminWorkflowsPage() {
           </div>
         </div>
       </div>
-      {isCategoryModalOpen && sessionToken && (
-        <CategoryManagementModal
-          sessionToken={sessionToken}
-          onClose={() => setIsCategoryModalOpen(false)}
-        />
-      )}
     </div>
   );
 }
