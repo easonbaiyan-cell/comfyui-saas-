@@ -146,6 +146,7 @@ export async function getCategoriesAction(accessToken: string) {
     const { data, error } = await supabase
       .from('categories')
       .select('*')
+      .order('sort_order', { ascending: true })
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -155,6 +156,58 @@ export async function getCategoriesAction(accessToken: string) {
     return { success: true, categories: data };
   } catch (error: any) {
     console.error('Error in getCategoriesAction:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function deleteCategoryAction(categoryId: string, accessToken: string) {
+  try {
+    const supabase = getAuthenticatedClient(accessToken);
+    const { data: userData, error: userError } = await supabase.auth.getUser(accessToken);
+
+    if (userError || !userData.user || userData.user.id !== process.env.NEXT_PUBLIC_ADMIN_UUID) {
+      throw new Error('Unauthorized');
+    }
+
+    const { error } = await supabase
+      .from('categories')
+      .delete()
+      .eq('id', categoryId);
+
+    if (error) {
+      throw error;
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error in deleteCategoryAction:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function reorderCategoriesAction(updates: { id: string; sort_order: number }[], accessToken: string) {
+  try {
+    const supabase = getAuthenticatedClient(accessToken);
+    const { data: userData, error: userError } = await supabase.auth.getUser(accessToken);
+
+    if (userError || !userData.user || userData.user.id !== process.env.NEXT_PUBLIC_ADMIN_UUID) {
+      throw new Error('Unauthorized');
+    }
+
+    // Supabase JS client doesn't have a simple bulk update for arbitrary fields,
+    // so we'll do individual updates. Given categories are small in number, this is acceptable.
+    for (const update of updates) {
+      const { error } = await supabase
+        .from('categories')
+        .update({ sort_order: update.sort_order })
+        .eq('id', update.id);
+
+      if (error) throw error;
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error in reorderCategoriesAction:', error);
     return { success: false, error: error.message };
   }
 }

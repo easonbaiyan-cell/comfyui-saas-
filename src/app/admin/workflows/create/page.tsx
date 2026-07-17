@@ -5,14 +5,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createWorkflowAction, getCategoriesAction, createCategoryAction } from '../actions';
 import { supabase } from '@/lib/supabase';
+import CategoryManagementModal from '../CategoryManagementModal';
 
 export default function CreateWorkflowPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState('');
-  const [newCategoryTier, setNewCategoryTier] = useState('free');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [isDirty, setIsDirty] = useState(false);
 
@@ -120,29 +119,6 @@ export default function CreateWorkflowPage() {
     } finally {
       if (type === 'cover') setIsUploadingCover(false);
       if (type === 'video') setIsUploadingVideo(false);
-    }
-  };
-
-  const handleCreateCategory = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newCategoryName) return;
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("No session found");
-
-      const result = await createCategoryAction(newCategoryName, newCategoryTier, session.access_token);
-      if (result.success) {
-        setIsCategoryModalOpen(false);
-        setSelectedCategory(newCategoryName);
-        setNewCategoryName('');
-        setNewCategoryTier('free');
-        fetchCategories(); // Refresh list
-      } else {
-        alert('Failed to create category: ' + result.error);
-      }
-    } catch (e: any) {
-      alert(e.message);
     }
   };
 
@@ -385,47 +361,14 @@ export default function CreateWorkflowPage() {
       </form>
 
       {/* Category Modal */}
-      {isCategoryModalOpen && (
-        <div className="fixed z-[100] inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:p-0">
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onClick={() => setIsCategoryModalOpen(false)}></div>
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div className="relative inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-              <form onSubmit={handleCreateCategory}>
-                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                  <div className="sm:flex sm:items-start">
-                    <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                      <h3 className="text-lg leading-6 font-medium text-gray-900" id="modal-title">新增分类</h3>
-                      <div className="mt-4 space-y-4">
-                        <div>
-                          <label htmlFor="newCategoryName" className="block text-sm font-medium text-gray-700">分类名称</label>
-                          <input type="text" id="newCategoryName" value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} required className="mt-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" />
-                        </div>
-                        <div>
-                          <label htmlFor="newCategoryTier" className="block text-sm font-medium text-gray-700">可见会员等级</label>
-                          <select id="newCategoryTier" value={newCategoryTier} onChange={(e) => setNewCategoryTier(e.target.value)} className="mt-1 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border bg-white">
-                            <option value="free">免费用户</option>
-                            <option value="month">基础包月</option>
-                            <option value="year">连续包年</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                  <button type="submit" className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
-                    保存
-                  </button>
-                  <button type="button" onClick={() => setIsCategoryModalOpen(false)} className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                    取消
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
+      <CategoryManagementModal
+        isOpen={isCategoryModalOpen}
+        onClose={() => setIsCategoryModalOpen(false)}
+        onCategorySelected={(categoryName) => {
+          setSelectedCategory(categoryName);
+          fetchCategories();
+        }}
+      />
     </div>
   );
 }
