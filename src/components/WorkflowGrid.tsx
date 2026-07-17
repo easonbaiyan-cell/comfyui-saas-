@@ -3,7 +3,6 @@
 import { useState, useRef } from "react";
 import Link from "next/link";
 import { Lock } from "lucide-react";
-import { useRouter } from 'next/navigation';
 
 
 interface Category {
@@ -84,8 +83,7 @@ function VideoCard({ workflow }: { workflow: Workflow }) {
   );
 }
 
-export function WorkflowGrid({ workflows, categories, initialSortMode = 'recommended' }: { workflows: Workflow[], categories: Category[], initialSortMode?: string }) {
-  const router = useRouter();
+export function WorkflowGrid({ workflows, categories }: { workflows: Workflow[], categories: Category[] }) {
   const [activeCategory, setActiveCategory] = useState(categories.length > 0 ? categories[0].name : "");
 
   const filteredWorkflows = activeCategory
@@ -94,9 +92,8 @@ export function WorkflowGrid({ workflows, categories, initialSortMode = 'recomme
 
   return (
     <div className="w-full flex flex-col gap-4">
-      <div className="flex justify-between items-center w-full border-b border-white/5 pb-2">
       {/* Category Navigation */}
-      <div className="flex overflow-x-auto no-scrollbar gap-6">
+      <div className="flex w-full overflow-x-auto no-scrollbar gap-6 border-b border-white/5 pb-2">
         {categories.map((cat) => (
           <div
             key={cat.id}
@@ -127,28 +124,6 @@ export function WorkflowGrid({ workflows, categories, initialSortMode = 'recomme
             )}
           </div>
         ))}
-      </div>
-      {/* Sort Options */}
-      <div className="flex items-center gap-4 text-sm flex-shrink-0">
-        <button
-          onClick={() => router.push('/?sort=recommended#workflows')}
-          className={`transition-colors ${initialSortMode === 'recommended' ? 'text-white font-medium' : 'text-gray-400 hover:text-white'}`}
-        >
-          推荐
-        </button>
-        <button
-          onClick={() => router.push('/?sort=hottest#workflows')}
-          className={`transition-colors ${initialSortMode === 'hottest' ? 'text-white font-medium' : 'text-gray-400 hover:text-white'}`}
-        >
-          最热
-        </button>
-        <button
-          onClick={() => router.push('/?sort=newest#workflows')}
-          className={`transition-colors ${initialSortMode === 'newest' ? 'text-white font-medium' : 'text-gray-400 hover:text-white'}`}
-        >
-          最新
-        </button>
-      </div>
       </div>
 
       {/* Grid Layout */}

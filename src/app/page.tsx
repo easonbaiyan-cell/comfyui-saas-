@@ -5,9 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Home({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
-  const resolvedSearchParams = await searchParams;
-  const sortMode = (resolvedSearchParams.sort as string) || 'recommended';
+export default async function Home() {
   // Try to fetch settings, handle the case where DB is empty or fails gracefully
   let siteSettings = null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -42,17 +40,12 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ [
             }));
         }
 
-        // Handle sort dynamically
-        let workflowQuery = supabase.from('workflows').select('*').eq('status', 'published').order('is_pinned', { ascending: false });
-        if (sortMode === 'hottest') {
-          workflowQuery = workflowQuery.order('usage_count', { ascending: false }).order('created_at', { ascending: false });
-        } else if (sortMode === 'newest') {
-          workflowQuery = workflowQuery.order('created_at', { ascending: false });
-        } else {
-          workflowQuery = workflowQuery.order('sort_order', { ascending: true }).order('created_at', { ascending: false });
-        }
-
-        const { data: wfs } = await workflowQuery;
+        const { data: wfs } = await supabase
+          .from('workflows')
+          .select('*')
+          .eq('status', 'published')
+          .order('is_pinned', { ascending: false })
+          .order('created_at', { ascending: false });
 
         if (wfs) {
             // Transform Decimal to number for the UI component
@@ -113,7 +106,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ [
 
       <main className="flex-1">
         <section className="container mx-auto px-4 py-6" id="workflows">
-          <WorkflowGrid workflows={workflows} categories={categories} initialSortMode={sortMode} />
+          <WorkflowGrid workflows={workflows} categories={categories} />
         </section>
       </main>
 
