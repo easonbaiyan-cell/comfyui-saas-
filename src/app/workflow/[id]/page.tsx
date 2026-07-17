@@ -1,45 +1,201 @@
 'use client';
 
 
-import React, { useState, useRef, useEffect } from 'react';
-import { Play, UploadCloud, HelpCircle, Minus, Plus, Zap, Heart, MessageCircle, Download, Trash2, Share2, RefreshCw, X, Image as ImageIcon, Loader2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Play, UploadCloud, HelpCircle, Minus, Plus, Zap, Heart, MessageCircle, Download, Trash2, Share2, X, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth';
 
 
 
+
 import { use } from 'react';
+
+// Type Definitions for Dynamic Forms
+interface DynamicNode {
+  nodeId: string;
+  fieldName: string;
+  description?: string;
+  fieldValue?: string | number;
+}
+
+interface WorkflowData {
+  id: string;
+  points_cost?: number;
+  credit_cost?: number;
+  reference_video_url?: string;
+  cover_image_url?: string;
+  cover_url?: string;
+  virtual_platform?: string;
+  virtual_likes?: number;
+  rh_payload_template?: {
+    nodeInfoList?: DynamicNode[];
+  };
+}
+
+function formatLikes(likes: number | null): string {
+  if (likes == null) return "0";
+  if (likes >= 10000) {
+    return (likes / 10000).toFixed(1) + 'w';
+  }
+  return likes.toString();
+}
 
 export default function WorkflowDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const { id: workflowId } = resolvedParams;
-  const [isMaskMode, setIsMaskMode] = useState(false);
-  const [skipFrames, setSkipFrames] = useState(0);
 
   // New Generation Pipeline States
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null);
   const [taskId, setTaskId] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const user = useAuthStore((state) => state.user);
   const set积分余额 = useAuthStore((state) => state.set积分余额);
 
-  // Cost can be fetched from DB, mocking here
-  const cost = 104;
 
-  const handleDecreaseFrames = () => {
-    setSkipFrames((prev) => Math.max(0, prev - 1));
+  const [workflow, setWorkflow] = useState<WorkflowData | null>(null);
+  const [loadingWorkflow, setLoadingWorkflow] = useState(true);
+  if(loadingWorkflow && false) console.log(loadingWorkflow);
+
+  useEffect(() => {
+    async function fetchWorkflow() {
+      try {
+        const { data } = await supabase
+          .from('workflows')
+          .select('*')
+          .eq('id', workflowId)
+          .single();
+        if (data) {
+          setWorkflow(data);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoadingWorkflow(false);
+      }
+    }
+    fetchWorkflow();
+  }, [workflowId]);
+
+  const cost = workflow?.points_cost !== undefined ? Number(workflow?.points_cost) : (workflow?.credit_cost ? Number(workflow?.credit_cost) : 0);
+
+  // Dynamic Form State
+  const [dynamicFormValues, setDynamicFormValues] = useState<Record<string, string | number>>({});
+  const [activeUploads, setActiveUploads] = useState<Record<string, boolean>>({});
+
+  const nodeInfoList = workflow?.rh_payload_template?.nodeInfoList;
+  useEffect(() => {
+    if (nodeInfoList && Object.keys(dynamicFormValues).length === 0) {
+      const initialValues: Record<string, string | number> = {};
+      nodeInfoList.forEach((node: DynamicNode) => {
+        initialValues[node.nodeId] = node.fieldValue !== undefined ? node.fieldValue : "";
+      });
+      // Workaround to bypass sync effect setter warning while still providing initial default state from backend
+      setTimeout(() => {
+        setDynamicFormValues((prev) => Object.keys(prev).length === 0 ? initialValues : prev);
+      }, 0);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nodeInfoList]);
+
+  const handleDynamicUpload = async (e: React.ChangeEvent<HTMLInputElement>, nodeId: string) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setActiveUploads(prev => ({ ...prev, [nodeId]: true }));
+    setErrorMsg(null);
+
+    try {
+      const objectUrl = URL.createObjectURL(file);
+      setDynamicFormValues(prev => ({ ...prev, [nodeId]: objectUrl }));
+    } catch (err: unknown) {
+      setErrorMsg("上传失败: " + (err instanceof Error ? err.message : String(err)));
+    } finally {
+      setActiveUploads(prev => ({ ...prev, [nodeId]: false }));
+    }
   };
 
-  const handleIncreaseFrames = () => {
-    setSkipFrames((prev) => prev + 1);
+  const handleDynamicChange = (nodeId: string, value: string | number) => {
+    setDynamicFormValues(prev => ({ ...prev, [nodeId]: value }));
   };
 
+  const renderDynamicNode = (node: DynamicNode) => {
+    const value = dynamicFormValues[node.nodeId];
+
+    if (node.fieldName === 'image' || node.fieldName === 'video') {
+      const isUploadingThis = activeUploads[node.nodeId];
+      const isImage = node.fieldName === 'image';
+
+      return (
+        <div key={node.nodeId} className="mb-6 w-full">
+          <h2 className="text-sm font-medium text-gray-400 mb-3 uppercase tracking-wider">{node.description || (isImage ? '图片上传' : '视频上传')}</h2>
+          <label className="block w-full cursor-pointer">
+            <input
+              type="file"
+              className="hidden"
+              accept={isImage ? "image/jpeg, image/png, image/webp" : "video/mp4, video/webm"}
+              onChange={(e) => handleDynamicUpload(e, node.nodeId)}
+            />
+            {!value ? (
+              <div className="border-2 border-dashed border-white/10 bg-white/5 hover:bg-white/10 rounded-xl p-8 text-center transition-colors flex flex-col items-center justify-center gap-4">
+                <div className="h-16 w-16 bg-black/40 rounded-full flex items-center justify-center border border-white/5">
+                  {isUploadingThis ? <Loader2 className="h-8 w-8 text-gray-400 animate-spin" /> : <UploadCloud className="h-8 w-8 text-gray-400" />}
+                </div>
+                <div>
+                  <p className="text-base font-medium text-white mb-1">{isUploadingThis ? "正在上传..." : "点击或拖拽文件至此"}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="relative border border-white/10 rounded-xl overflow-hidden bg-black/40 flex justify-center items-center p-2">
+                <button
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); handleDynamicChange(node.nodeId, ""); }}
+                  className="absolute top-2 right-2 p-1.5 bg-black/60 hover:bg-danger-red rounded-full text-white transition-colors z-10 backdrop-blur-md"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+                {isImage ? (
+                  <img src={value as string} alt="Uploaded" className="max-h-64 object-contain rounded-lg" />
+                ) : (
+                  <video src={value as string} className="max-h-64 object-contain rounded-lg" controls />
+                )}
+              </div>
+            )}
+          </label>
+        </div>
+      );
+    }
+
+    // For other values like numbers or text
+    return (
+      <div key={node.nodeId} className="bg-[#1a1a1a] rounded-lg p-4 mb-3 flex items-center justify-between border border-transparent hover:border-white/5 transition-colors">
+        <span className="text-sm text-gray-200">{node.description || node.fieldName}</span>
+        <div className="flex items-center gap-1 bg-[#131622] rounded-md p-1 border border-white/5">
+          <button
+            onClick={() => handleDynamicChange(node.nodeId, Math.max(0, (Number(value) || 0) - 1))}
+            className="h-7 w-7 rounded-sm flex items-center justify-center hover:bg-white/10 transition-colors text-gray-400 hover:text-white"
+          >
+            <Minus className="h-4 w-4" />
+          </button>
+          <input
+             type="text"
+             value={value !== undefined ? value : ''}
+             onChange={(e) => handleDynamicChange(node.nodeId, e.target.value)}
+             className="w-16 text-center text-sm font-medium bg-transparent outline-none border-none text-white"
+          />
+          <button
+            onClick={() => handleDynamicChange(node.nodeId, (Number(value) || 0) + 1)}
+            className="h-7 w-7 rounded-sm flex items-center justify-center hover:bg-white/10 transition-colors text-gray-400 hover:text-white"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    );
+  };
 
 
   useEffect(() => {
@@ -54,37 +210,11 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
     };
   }, [isGenerating]);
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsUploading(true);
-    setErrorMsg(null);
-
-    try {
-      // For a real app, upload to Supabase Storage:
-      // const fileExt = file.name.split('.').pop();
-      // const fileName = `${Math.random()}.${fileExt}`;
-      // const filePath = `uploads/${fileName}`;
-      // const { error: uploadError } = await supabase.storage.from('images').upload(filePath, file);
-      // if (uploadError) throw uploadError;
-      // const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(filePath);
-
-      // We will simulate it by creating a local object URL to make it work
-      // if we don't have storage configured properly.
-      const objectUrl = URL.createObjectURL(file);
-      setImageUrl(objectUrl);
-    } catch (err: unknown) {
-      setErrorMsg("上传失败: " + (err instanceof Error ? err.message : String(err)));
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
   const handleGenerate = async () => {
     setElapsedTime(0);
-    if (!imageUrl) {
-      setErrorMsg("请先上传参考图片");
+    const hasUploads = Object.values(dynamicFormValues).some(v => v !== "" && v !== null);
+    if (workflow?.rh_payload_template?.nodeInfoList?.length > 0 && !hasUploads) {
+      setErrorMsg("请先填写必填参数");
       return;
     }
     if (!user) {
@@ -112,7 +242,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
         },
         body: JSON.stringify({
           workflowId: workflowId,
-          imageUrl: imageUrl,
+          formValues: dynamicFormValues,
         })
       });
 
@@ -134,7 +264,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
     }
   };
 
-  const pollForResult = (id: string) => {
+  const pollForResult = (_id: string) => {
     let attempts = 0;
     const interval = setInterval(() => {
       attempts++;
@@ -156,23 +286,43 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
 
             {/* Video Placeholder */}
             <div className="bg-[#131622] rounded-2xl aspect-[9/16] w-full relative flex items-center justify-center shadow-xl overflow-hidden group">
-              <button className="h-16 w-16 bg-black/50 rounded-full flex items-center justify-center group-hover:bg-primary-green/80 transition-all backdrop-blur-md border border-white/10">
-                <Play className="h-8 w-8 text-white ml-1" fill="currentColor" />
-              </button>
+              {workflow?.reference_video_url ? (
+                  <video
+                      src={workflow.reference_video_url}
+                      className="absolute inset-0 w-full h-full object-cover"
+                      poster={workflow?.cover_image_url || workflow?.cover_url || undefined}
+                      loop
+                      muted
+                      playsInline
+                      autoPlay
+                  />
+              ) : workflow?.cover_image_url || workflow?.cover_url ? (
+                  <img src={workflow.cover_image_url || workflow.cover_url} alt="Cover" className="absolute inset-0 w-full h-full object-cover" />
+              ) : (
+                  <div className="absolute inset-0 bg-black flex items-center justify-center text-gray-500 text-sm">暂无封面/视频</div>
+              )}
+
+              {workflow?.reference_video_url && (
+                <button className="absolute z-10 h-16 w-16 bg-black/50 rounded-full flex items-center justify-center group-hover:bg-primary-green/80 transition-all backdrop-blur-md border border-white/10">
+                    <Play className="h-8 w-8 text-white ml-1" fill="currentColor" />
+                </button>
+              )}
 
               {/* Social Heat Data Overlay */}
-              <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+              <div className="absolute z-10 bottom-4 left-4 right-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="bg-danger-red text-white text-xs px-2 py-1 rounded-md font-medium">小红书</span>
+                  {workflow?.virtual_platform && (
+                    <span className="bg-danger-red text-white text-xs px-2 py-1 rounded-md font-medium">{workflow.virtual_platform}</span>
+                  )}
                 </div>
                 <div className="flex items-center gap-3 text-gray-400 text-sm bg-black/60 px-3 py-1.5 rounded-full backdrop-blur-md">
                   <div className="flex items-center gap-1">
                     <Heart className="h-3.5 w-3.5" />
-                    <span>12.5w</span>
+                    <span>{formatLikes(workflow?.virtual_likes || 0)}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <MessageCircle className="h-3.5 w-3.5" />
-                    <span>1.2w</span>
+                    <span>{formatLikes((workflow?.virtual_likes || 0) * 0.1)}</span>
                   </div>
                 </div>
               </div>
@@ -183,7 +333,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
 
             {/* Traffic Analysis Text */}
             <p className="text-xs text-gray-500 leading-relaxed mt-4">
-              参考作品来源小红书平台，它的点赞达到了 12.5 W，评论达到 1.2 W，具备非常好的引流能力。
+              参考作品来源{workflow?.virtual_platform || '平台'}，它的点赞达到了 {formatLikes(workflow?.virtual_likes || 0)}，具备非常好的引流能力。
             </p>
           </div>
         </div>
@@ -194,104 +344,15 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
             <h1 className="text-lg font-semibold text-white mb-6 text-center">工作流详情与操作</h1>
 
 
-            {/* Upload Zone */}
-            <div className="mb-10 w-full">
-              <h2 className="text-sm font-medium text-gray-400 mb-3 uppercase tracking-wider">参考图片上传</h2>
+                        {errorMsg && (
+              <p className="text-danger-red text-sm mb-4 text-center">{errorMsg}</p>
+            )}
 
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleImageUpload}
-                className="hidden"
-                accept="image/jpeg, image/png, image/webp"
-              />
-
-              {!imageUrl ? (
-                <div
-                  className="border-2 border-dashed border-white/10 bg-white/5 hover:bg-white/10 rounded-xl p-10 text-center cursor-pointer transition-colors flex flex-col items-center justify-center gap-4"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <div className="h-16 w-16 bg-black/40 rounded-full flex items-center justify-center border border-white/5">
-                    {isUploading ? (
-                      <Loader2 className="h-8 w-8 text-gray-400 animate-spin" />
-                    ) : (
-                      <UploadCloud className="h-8 w-8 text-gray-400" />
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-base font-medium text-white mb-1">
-                      {isUploading ? "正在上传..." : "点击或拖拽图片至此"}
-                    </p>
-                    <p className="text-xs text-gray-500">支持 JPG, PNG, WEBP 等格式</p>
-                    <p className="text-xs text-primary-green/70 mt-1">建议尺寸 9:16，不超过 10MB</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="relative border border-white/10 rounded-xl overflow-hidden bg-black/40 flex justify-center items-center p-2">
-                  <button
-                    onClick={() => setImageUrl(null)}
-                    className="absolute top-2 right-2 p-1.5 bg-black/60 hover:bg-danger-red rounded-full text-white transition-colors z-10 backdrop-blur-md"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                  <img src={imageUrl} alt="Uploaded" className="max-h-64 object-contain rounded-lg" />
-                </div>
-              )}
-              {errorMsg && (
-                <p className="text-danger-red text-sm mt-2 text-center">{errorMsg}</p>
-              )}
-            </div>
-
-
-            {/* Parameters Section */}
-            <div className="mb-10">
-              <h2 className="text-sm font-medium text-gray-400 mb-3 uppercase tracking-wider">参数设置</h2>
-
-              {/* Component A: Select */}
-              <div className="bg-[#1a1a1a] rounded-lg p-4 mb-3 flex items-center justify-between border border-transparent hover:border-white/5 transition-colors">
-                <span className="text-sm text-gray-200">分辨率</span>
-                <select className="bg-[#131622] text-white text-sm border border-white/10 rounded-md px-3 py-1.5 focus:outline-none focus:border-primary-green appearance-none cursor-pointer hover:bg-[#1a1f33] transition-colors outline-none w-32 text-center">
-                  <option value="720p">720P (竖屏)</option>
-                  <option value="1080p">1080P (竖屏)</option>
-                  <option value="4k">4K (超清)</option>
-                </select>
-              </div>
-
-              {/* Component B: Toggle */}
-              <div className="bg-[#1a1a1a] rounded-lg p-4 mb-3 flex items-center justify-between border border-transparent hover:border-white/5 transition-colors">
-                <span className="text-sm text-gray-200">开启面具头盔模式</span>
-                <div
-                  className={`w-12 h-6 rounded-full p-1 cursor-pointer transition-colors duration-300 ease-in-out ${isMaskMode ? 'bg-primary-green' : 'bg-gray-700'}`}
-                  onClick={() => setIsMaskMode(!isMaskMode)}
-                >
-                  <div
-                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ease-in-out ${isMaskMode ? 'translate-x-6' : 'translate-x-0'}`}
-                  />
-                </div>
-              </div>
-
-              {/* Component C: Stepper */}
-              <div className="bg-[#1a1a1a] rounded-lg p-4 mb-3 flex items-center justify-between border border-transparent hover:border-white/5 transition-colors">
-                <span className="text-sm text-gray-200">跳过前面多少帧</span>
-                <div className="flex items-center gap-1 bg-[#131622] rounded-md p-1 border border-white/5">
-                  <button
-                    onClick={handleDecreaseFrames}
-                    className="h-7 w-7 rounded-sm flex items-center justify-center hover:bg-white/10 transition-colors text-gray-400 hover:text-white"
-                  >
-                    <Minus className="h-4 w-4" />
-                  </button>
-                  <div className="w-10 text-center text-sm font-medium">
-                    {skipFrames}
-                  </div>
-                  <button
-                    onClick={handleIncreaseFrames}
-                    className="h-7 w-7 rounded-sm flex items-center justify-center hover:bg-white/10 transition-colors text-gray-400 hover:text-white"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
+            {workflow?.rh_payload_template?.nodeInfoList && workflow.rh_payload_template.nodeInfoList.length > 0 ? (
+              workflow.rh_payload_template.nodeInfoList.map(renderDynamicNode)
+            ) : (
+              <div className="text-gray-500 text-sm text-center py-10">该工作流暂无配置参数</div>
+            )}
 
             {/* Some extra padding at the bottom so content isn't hidden by sticky bar */}
             <div className="h-20"></div>
@@ -320,7 +381,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
               {/* Generate Button */}
               <button
                 onClick={handleGenerate}
-                disabled={isGenerating || isUploading}
+                disabled={isGenerating || Object.values(activeUploads).some(Boolean)}
                 className={`w-full text-black font-bold text-lg h-14 px-12 rounded-xl transition-all flex items-center justify-center ${
                   isGenerating
                     ? 'bg-primary-green/50 cursor-not-allowed'

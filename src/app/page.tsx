@@ -51,13 +51,16 @@ export default async function Home() {
             // Transform Decimal to number for the UI component
             workflows = wfs.map(w => ({
               id: w.id,
-              runninghubId: w.runninghub_id,
+              runninghubId: w.runninghub_id || w.r_app_id || "",
               title: w.title,
               description: w.description,
-              coverImageUrl: w.cover_image_url,
+              coverImageUrl: w.cover_image_url || w.cover_url || null,
+              referenceVideoUrl: w.reference_video_url || w.video_url || null,
+              virtualPlatform: w.virtual_platform || null,
+              virtualLikes: w.virtual_likes || 0,
               category: w.category,
-              creditCost: w.credit_cost ? Number(w.credit_cost) : 0,
-              isActive: w.is_active,
+              creditCost: w.points_cost !== undefined ? Number(w.points_cost) : (w.credit_cost ? Number(w.credit_cost) : 0),
+              isActive: w.is_active !== undefined ? w.is_active : (w.status === 'published'),
               createdAt: w.created_at,
               updatedAt: w.updated_at
             }));
