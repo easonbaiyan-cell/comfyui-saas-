@@ -55,4 +55,3 @@ EXECUTE FUNCTION update_updated_at_column();
 -- Added virtual fields for workflow presentation
 ALTER TABLE workflows ADD COLUMN IF NOT EXISTS virtual_platform TEXT;
 ALTER TABLE workflows ADD COLUMN IF NOT EXISTS virtual_likes INTEGER DEFAULT 0;
-ALTER TABLE workflows ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0;
