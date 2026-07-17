@@ -221,10 +221,17 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
     const { data: sessionData } = await supabase.auth.getSession();
     const currentUser = sessionData?.session?.user || user;
 
-    const hasUploads = Object.values(dynamicFormValues).some(v => v !== "" && v !== null);
-    if (workflow?.rh_payload_template?.nodeInfoList?.length > 0 && !hasUploads) {
-      setErrorMsg("请先填写必填参数");
-      return;
+    const nodeInfoList = workflow?.rh_payload_template?.nodeInfoList;
+    if (nodeInfoList && nodeInfoList.length > 0) {
+      const isMissingParams = nodeInfoList.some((node: DynamicNode) => {
+        const val = dynamicFormValues[node.nodeId];
+        return val === "" || val === null || val === undefined;
+      });
+
+      if (isMissingParams) {
+        setErrorMsg("请上传所有必需的图片/参数");
+        return;
+      }
     }
     if (!currentUser) {
       setErrorMsg("请先登录");
