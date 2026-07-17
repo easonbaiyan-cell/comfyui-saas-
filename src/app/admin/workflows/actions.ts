@@ -240,7 +240,7 @@ export async function reorderCategoriesAction(updates: { id: string; sort_order:
   }
 }
 
-export async function getWorkflowsAction(accessToken: string, sortBy: 'sort_order' | 'usage_count' | 'created_at' = 'sort_order') {
+export async function getWorkflowsAction(accessToken: string) {
   try {
     const supabase = getAuthenticatedClient(accessToken);
     const { data: userData, error: userError } = await supabase.auth.getUser(accessToken);
@@ -249,17 +249,10 @@ export async function getWorkflowsAction(accessToken: string, sortBy: 'sort_orde
       throw new Error('Unauthorized');
     }
 
-    let query = supabase.from('workflows').select('*');
-
-    if (sortBy === 'sort_order') {
-      query = query.order('sort_order', { ascending: true }).order('created_at', { ascending: false });
-    } else if (sortBy === 'usage_count') {
-      query = query.order('usage_count', { ascending: false }).order('created_at', { ascending: false });
-    } else {
-      query = query.order('created_at', { ascending: false });
-    }
-
-    const { data, error } = await query;
+    const { data, error } = await supabase
+      .from('workflows')
+      .select('*')
+      .order('created_at', { ascending: false });
 
     if (error) {
       throw error;
@@ -268,56 +261,6 @@ export async function getWorkflowsAction(accessToken: string, sortBy: 'sort_orde
     return { success: true, workflows: data };
   } catch (error: any) {
     console.error('Error in getWorkflowsAction:', error);
-    return { success: false, error: error.message };
-  }
-}
-
-export async function reorderWorkflowsAction(updates: { id: string; sort_order: number }[], accessToken: string) {
-  try {
-    const supabase = getAuthenticatedClient(accessToken);
-    const { data: userData, error: userError } = await supabase.auth.getUser(accessToken);
-
-    if (userError || !userData.user || userData.user.id !== process.env.NEXT_PUBLIC_ADMIN_UUID) {
-      throw new Error('Unauthorized');
-    }
-
-    for (const update of updates) {
-      const { error } = await supabase
-        .from('workflows')
-        .update({ sort_order: update.sort_order })
-        .eq('id', update.id);
-
-      if (error) throw error;
-    }
-
-    return { success: true };
-  } catch (error: any) {
-    console.error('Error in reorderWorkflowsAction:', error);
-    return { success: false, error: error.message };
-  }
-}
-
-export async function deleteWorkflowAction(workflowId: string, accessToken: string) {
-  try {
-    const supabase = getAuthenticatedClient(accessToken);
-    const { data: userData, error: userError } = await supabase.auth.getUser(accessToken);
-
-    if (userError || !userData.user || userData.user.id !== process.env.NEXT_PUBLIC_ADMIN_UUID) {
-      throw new Error('Unauthorized');
-    }
-
-    const { error } = await supabase
-      .from('workflows')
-      .delete()
-      .eq('id', workflowId);
-
-    if (error) {
-      throw error;
-    }
-
-    return { success: true };
-  } catch (error: any) {
-    console.error('Error in deleteWorkflowAction:', error);
     return { success: false, error: error.message };
   }
 }
