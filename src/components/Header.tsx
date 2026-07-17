@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import PricingModal from "./PricingModal";
 import { PointsModal } from "./PointsModal";
 import { InviteModal } from "./InviteModal";
@@ -95,11 +94,9 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
           {/* Left: Logo Only */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center">
-              <Image 
+              <img
                 src={logoUrl || "/logo.png"} 
                 alt="Logo" 
-                width={120} 
-                height={32} 
                 className="h-8 w-auto object-contain" 
               />
             </Link>
