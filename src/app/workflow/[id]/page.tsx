@@ -26,6 +26,7 @@ interface WorkflowData {
   reference_video_url?: string;
   cover_image_url?: string;
   cover_url?: string;
+  description?: string;
   virtual_platform?: string;
   virtual_likes?: number;
   rh_payload_template?: {
@@ -149,19 +150,19 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
                 </div>
               </div>
             ) : (
-              <div className="relative border border-white/10 rounded-xl overflow-hidden bg-black/40 flex justify-center items-center p-2">
-                <button
-                  type="button"
-                  onClick={(e) => { e.preventDefault(); handleDynamicChange(node.nodeId, ""); }}
-                  className="absolute top-2 right-2 p-1.5 bg-black/60 hover:bg-danger-red rounded-full text-white transition-colors z-10 backdrop-blur-md"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+              <div className="relative border border-dashed border-white/20 rounded-xl overflow-hidden bg-black/40 flex justify-center items-center p-2 group">
                 {isImage ? (
                   <img src={value as string} alt="Uploaded" className="max-h-64 object-contain rounded-lg" />
                 ) : (
                   <video src={value as string} className="max-h-64 object-contain rounded-lg" controls />
                 )}
+                <button
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); handleDynamicChange(node.nodeId, ""); }}
+                  className="absolute bottom-2 right-2 p-2 bg-black/60 hover:bg-danger-red rounded-full text-white transition-colors z-10 backdrop-blur-md opacity-0 group-hover:opacity-100"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </div>
             )}
           </label>
@@ -292,20 +293,13 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
                       className="absolute inset-0 w-full h-full object-cover"
                       poster={workflow?.cover_image_url || workflow?.cover_url || undefined}
                       loop
-                      muted
                       playsInline
-                      autoPlay
+                      controls
                   />
               ) : workflow?.cover_image_url || workflow?.cover_url ? (
                   <img src={workflow.cover_image_url || workflow.cover_url} alt="Cover" className="absolute inset-0 w-full h-full object-cover" />
               ) : (
                   <div className="absolute inset-0 bg-black flex items-center justify-center text-gray-500 text-sm">暂无封面/视频</div>
-              )}
-
-              {workflow?.reference_video_url && (
-                <button className="absolute z-10 h-16 w-16 bg-black/50 rounded-full flex items-center justify-center group-hover:bg-primary-green/80 transition-all backdrop-blur-md border border-white/10">
-                    <Play className="h-8 w-8 text-white ml-1" fill="currentColor" />
-                </button>
               )}
 
               {/* Social Heat Data Overlay */}
@@ -333,7 +327,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
 
             {/* Traffic Analysis Text */}
             <p className="text-xs text-gray-500 leading-relaxed mt-4">
-              参考作品来源{workflow?.virtual_platform || '平台'}，它的点赞达到了 {formatLikes(workflow?.virtual_likes || 0)}，具备非常好的引流能力。
+              {workflow?.description || '暂无描述'}
             </p>
           </div>
         </div>
@@ -372,8 +366,8 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
                 </div>
                 <div className="relative group cursor-help ml-1">
                   <HelpCircle className="h-4 w-4 text-gray-500 hover:text-gray-300 transition-colors" />
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-black border border-white/10 text-xs text-gray-300 rounded shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all pointer-events-none text-center">
-                    最终以实际生成时间换算为准
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-black border border-white/10 text-xs text-gray-300 rounded shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all pointer-events-none text-center">
+                    扣除规则：每次生成将根据该工作流设定的单次消耗积分进行扣除。
                   </div>
                 </div>
               </div>
@@ -394,7 +388,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
                     生成中...
                   </>
                 ) : (
-                  `立即生成 (消耗 ${cost} 积分)`
+                  "立即生成"
                 )}
               </button>
             </div>
