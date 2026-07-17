@@ -21,6 +21,7 @@ interface DynamicNode {
 
 interface WorkflowData {
   id: string;
+  cost_points?: number;
   points_cost?: number;
   credit_cost?: number;
   reference_video_url?: string;
@@ -54,6 +55,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const user = useAuthStore((state) => state.user);
+  const 积分余额 = useAuthStore((state) => state.积分余额);
   const set积分余额 = useAuthStore((state) => state.set积分余额);
 
 
@@ -81,7 +83,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
     fetchWorkflow();
   }, [workflowId]);
 
-  const cost = workflow?.points_cost !== undefined ? Number(workflow?.points_cost) : (workflow?.credit_cost ? Number(workflow?.credit_cost) : 0);
+  const cost = workflow?.cost_points !== undefined ? Number(workflow?.cost_points) : (workflow?.points_cost !== undefined ? Number(workflow?.points_cost) : (workflow?.credit_cost ? Number(workflow?.credit_cost) : 0));
 
   // Dynamic Form State
   const [dynamicFormValues, setDynamicFormValues] = useState<Record<string, string | number>>({});
@@ -222,6 +224,10 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
       setErrorMsg("请先登录");
       return;
     }
+    if (积分余额 < cost) {
+      setErrorMsg("积分不足，请先充值");
+      return;
+    }
 
     setIsGenerating(true);
     setErrorMsg(null);
@@ -287,20 +293,14 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
 
             {/* Video Placeholder */}
             <div className="bg-[#131622] rounded-2xl aspect-[9/16] w-full relative flex items-center justify-center shadow-xl overflow-hidden group">
-              {workflow?.reference_video_url ? (
-                  <video
-                      src={workflow.reference_video_url}
-                      className="absolute inset-0 w-full h-full object-cover"
-                      poster={workflow?.cover_image_url || workflow?.cover_url || undefined}
-                      loop
-                      playsInline
-                      controls
-                  />
-              ) : workflow?.cover_image_url || workflow?.cover_url ? (
-                  <img src={workflow.cover_image_url || workflow.cover_url} alt="Cover" className="absolute inset-0 w-full h-full object-cover" />
-              ) : (
-                  <div className="absolute inset-0 bg-black flex items-center justify-center text-gray-500 text-sm">暂无封面/视频</div>
-              )}
+              <video
+                  src={workflow?.reference_video_url || ""}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  poster={workflow?.cover_image_url || workflow?.cover_url || undefined}
+                  loop
+                  playsInline
+                  controls
+              />
 
               {/* Social Heat Data Overlay */}
               <div className="absolute z-10 bottom-4 left-4 right-4 flex items-center justify-between">
@@ -314,16 +314,9 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
                     <Heart className="h-3.5 w-3.5" />
                     <span>{formatLikes(workflow?.virtual_likes || 0)}</span>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <MessageCircle className="h-3.5 w-3.5" />
-                    <span>{formatLikes((workflow?.virtual_likes || 0) * 0.1)}</span>
-                  </div>
                 </div>
               </div>
             </div>
-
-            {/* Invisible Spacer to align with right column's action buttons */}
-            <div className="h-9 mt-4"></div>
 
             {/* Traffic Analysis Text */}
             <p className="text-xs text-gray-500 leading-relaxed mt-4">
