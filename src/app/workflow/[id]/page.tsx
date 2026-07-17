@@ -89,6 +89,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
   // Dynamic Form State
   const [dynamicFormValues, setDynamicFormValues] = useState<Record<string, string | number>>({});
   const [activeUploads, setActiveUploads] = useState<Record<string, boolean>>({});
+  const [previewUrls, setPreviewUrls] = useState<Record<string, string>>({});
 
   const nodeInfoList = workflow?.rh_payload_template?.nodeInfoList;
   useEffect(() => {
@@ -116,20 +117,37 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
       const formData = new FormData();
       formData.append('file', file);
 
-      const res = await fetch('/api/upload', {
+      const apiKey = process.env.NEXT_PUBLIC_RUNNINGHUB_API_KEY;
+      if (!apiKey) {
+        throw new Error('未配置 API Key');
+      }
+
+      const res = await fetch('https://www.runninghub.cn/openapi/v2/media/upload/binary', {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`
+        },
         body: formData
       });
 
       const data = await res.json();
 
-      if (!res.ok) {
-        throw new Error(data.error || 'Upload failed');
+      if (!res.ok || data.code !== 0) {
+        throw new Error(data.message || '上传失败');
       }
 
-      setDynamicFormValues(prev => ({ ...prev, [nodeId]: data.url }));
+      const fileName = data.data?.fileName;
+      if (!fileName) {
+        throw new Error('服务器未返回文件路径');
+      }
+
+      setDynamicFormValues(prev => ({ ...prev, [nodeId]: fileName }));
+
+      const objectUrl = URL.createObjectURL(file);
+      setPreviewUrls(prev => ({ ...prev, [nodeId]: objectUrl }));
     } catch (err: unknown) {
-      setErrorMsg("上传失败: " + (err instanceof Error ? err.message : String(err)));
+      console.error('上传出错:', err);
+      setErrorMsg("上传失败，请重试");
     } finally {
       setActiveUploads(prev => ({ ...prev, [nodeId]: false }));
     }
@@ -168,13 +186,22 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
             ) : (
               <div className="relative border border-dashed border-white/20 rounded-xl overflow-hidden bg-black/40 flex justify-center items-center p-2 group">
                 {isImage ? (
-                  <img src={value as string} alt="Uploaded" className="max-h-64 object-contain rounded-lg" />
+                  <img src={previewUrls[node.nodeId] || (value as string)} alt="Uploaded" className="max-h-64 object-contain rounded-lg" />
                 ) : (
-                  <video src={value as string} className="max-h-64 object-contain rounded-lg" controls />
+                  <video src={previewUrls[node.nodeId] || (value as string)} className="max-h-64 object-contain rounded-lg" controls />
                 )}
                 <button
                   type="button"
-                  onClick={(e) => { e.preventDefault(); handleDynamicChange(node.nodeId, ""); }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleDynamicChange(node.nodeId, "");
+                    if (previewUrls[node.nodeId]) {
+                      URL.revokeObjectURL(previewUrls[node.nodeId]);
+                      const newPreviews = { ...previewUrls };
+                      delete newPreviews[node.nodeId];
+                      setPreviewUrls(newPreviews);
+                    }
+                  }}
                   className="absolute bottom-2 right-2 p-2 bg-black/60 hover:bg-danger-red rounded-full text-white transition-colors z-10 backdrop-blur-md opacity-0 group-hover:opacity-100"
                 >
                   <Trash2 className="w-4 h-4" />
