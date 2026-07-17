@@ -3,13 +3,15 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { getWorkflowsAction, togglePinWorkflowAction, toggleStatusWorkflowAction, getCategoriesAction } from './actions';
+import { getWorkflowsAction, togglePinWorkflowAction, toggleStatusWorkflowAction, getCategoriesAction, deleteWorkflowAction, reorderWorkflowsAction } from './actions';
+import CategoryManagementModal from './CategoryManagementModal';
 
 export default function AdminWorkflowsPage() {
   const [workflows, setWorkflows] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
 
   const [nameSearch, setNameSearch] = useState('');
   const [categorySearch, setCategorySearch] = useState('');
@@ -80,6 +82,108 @@ export default function AdminWorkflowsPage() {
     }
   };
 
+
+  const handleDelete = async (id: string, title: string) => {
+    if (!sessionToken) return;
+    if (!confirm(`确定要删除工作流 "${title}" 吗？此操作不可撤销。`)) return;
+
+    const originalWorkflows = [...workflows];
+    setWorkflows(workflows.filter(wf => String(wf.id) !== id));
+
+    const result = await deleteWorkflowAction(id, sessionToken);
+    if (!result.success) {
+      console.error('Failed to delete workflow:', result.error);
+      setWorkflows(originalWorkflows);
+      showToast('删除失败', 'error');
+    } else {
+      showToast('已成功删除', 'success');
+      // Refresh to ensure sync
+      const fetchResult = await getWorkflowsAction(sessionToken);
+      if (fetchResult.success && fetchResult.workflows) {
+        setWorkflows(fetchResult.workflows);
+      }
+    }
+  };
+
+  const handleMoveUp = async (index: number) => {
+    if (!sessionToken || index <= 0) return;
+    const originalWorkflows = [...workflows];
+    const newWorkflows = [...workflows];
+
+    const currentWf = newWorkflows[index];
+    const prevWf = newWorkflows[index - 1];
+
+    // Ensure they have valid sort_orders
+    const currentOrder = currentWf.sort_order ?? index;
+    const prevOrder = prevWf.sort_order ?? (index - 1);
+
+    // Swap them in the local state immediately
+    const temp = newWorkflows[index];
+    newWorkflows[index] = newWorkflows[index - 1];
+    newWorkflows[index - 1] = temp;
+
+    // Assign swapped sort orders
+    newWorkflows[index - 1] = { ...newWorkflows[index - 1], sort_order: prevOrder };
+    newWorkflows[index] = { ...newWorkflows[index], sort_order: currentOrder };
+
+    setWorkflows(newWorkflows);
+
+    try {
+      const updates = [
+        { id: String(currentWf.id), sort_order: prevOrder },
+        { id: String(prevWf.id), sort_order: currentOrder }
+      ];
+      const result = await reorderWorkflowsAction(updates, sessionToken);
+      if (!result.success) throw new Error(result.error);
+
+      const fetchResult = await getWorkflowsAction(sessionToken);
+      if (fetchResult.success && fetchResult.workflows) setWorkflows(fetchResult.workflows);
+    } catch (e: any) {
+      console.error('Failed to move up:', e);
+      setWorkflows(originalWorkflows);
+      showToast('上移失败', 'error');
+    }
+  };
+
+  const handleMoveDown = async (index: number) => {
+    if (!sessionToken || index >= workflows.length - 1) return;
+    const originalWorkflows = [...workflows];
+    const newWorkflows = [...workflows];
+
+    const currentWf = newWorkflows[index];
+    const nextWf = newWorkflows[index + 1];
+
+    const currentOrder = currentWf.sort_order ?? index;
+    const nextOrder = nextWf.sort_order ?? (index + 1);
+
+    // Swap in state
+    const temp = newWorkflows[index];
+    newWorkflows[index] = newWorkflows[index + 1];
+    newWorkflows[index + 1] = temp;
+
+    // Assign swapped sort orders
+    newWorkflows[index + 1] = { ...newWorkflows[index + 1], sort_order: nextOrder };
+    newWorkflows[index] = { ...newWorkflows[index], sort_order: currentOrder };
+
+    setWorkflows(newWorkflows);
+
+    try {
+      const updates = [
+        { id: String(currentWf.id), sort_order: nextOrder },
+        { id: String(nextWf.id), sort_order: currentOrder }
+      ];
+      const result = await reorderWorkflowsAction(updates, sessionToken);
+      if (!result.success) throw new Error(result.error);
+
+      const fetchResult = await getWorkflowsAction(sessionToken);
+      if (fetchResult.success && fetchResult.workflows) setWorkflows(fetchResult.workflows);
+    } catch (e: any) {
+      console.error('Failed to move down:', e);
+      setWorkflows(originalWorkflows);
+      showToast('下移失败', 'error');
+    }
+  };
+
   const handleToggleStatus = async (id: string, currentStatus: string) => {
     if (!sessionToken) return;
 
@@ -130,6 +234,15 @@ export default function AdminWorkflowsPage() {
           <h2 className="text-2xl font-bold text-gray-900">商品与算力管理</h2>
           <p className="text-gray-500 mt-1">管理所有工作流商品、配置参数和算力映射。</p>
         </div>
+        <button
+          onClick={() => setIsCategoryModalOpen(true)}
+          className="inline-flex items-center px-4 py-2 mr-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        >
+          <svg className="-ml-1 mr-2 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+          </svg>
+          管理/新增分类
+        </button>
         <Link
           href="/admin/workflows/create"
           className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
@@ -265,6 +378,27 @@ export default function AdminWorkflowsPage() {
                             {workflow.status === 'published' ? '下架' : '上架'}
                           </button>
                           <Link href={`/admin/workflows/edit/${String(workflow.id)}`} className="text-indigo-600 hover:text-indigo-900">编辑</Link>
+
+                          <button
+                            onClick={() => handleMoveUp(workflows.findIndex(w => w.id === workflow.id))}
+                            disabled={workflows.findIndex(w => w.id === workflow.id) === 0}
+                            className="text-blue-600 hover:text-blue-900 disabled:text-gray-300 disabled:cursor-not-allowed"
+                          >
+                            上移
+                          </button>
+                          <button
+                            onClick={() => handleMoveDown(workflows.findIndex(w => w.id === workflow.id))}
+                            disabled={workflows.findIndex(w => w.id === workflow.id) === workflows.length - 1}
+                            className="text-blue-600 hover:text-blue-900 disabled:text-gray-300 disabled:cursor-not-allowed"
+                          >
+                            下移
+                          </button>
+                          <button
+                            onClick={() => handleDelete(String(workflow.id), workflow.title)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            删除
+                          </button>
                         </td>
                       </tr>
                     ));
@@ -275,6 +409,15 @@ export default function AdminWorkflowsPage() {
           </div>
         </div>
       </div>
+
+      {/* Category Modal */}
+      <CategoryManagementModal
+        isOpen={isCategoryModalOpen}
+        onClose={() => setIsCategoryModalOpen(false)}
+        onCategorySelected={(categoryName) => {
+          // Optionally handle selection, for now just close
+        }}
+      />
     </div>
   );
 }

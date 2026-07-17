@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@supabase/supabase-js';
+import { revalidatePath } from 'next/cache';
 
 // Re-initialize Supabase client with the admin's token
 // to ensure Row Level Security policies evaluate correctly.
@@ -252,6 +253,7 @@ export async function getWorkflowsAction(accessToken: string) {
     const { data, error } = await supabase
       .from('workflows')
       .select('*')
+      .order('sort_order', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -324,6 +326,59 @@ export async function updateWorkflowAction(workflowId: string, formData: any, ac
     return { success: true };
   } catch (error: any) {
     console.error('Error in updateWorkflowAction:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function deleteWorkflowAction(workflowId: string, accessToken: string) {
+  try {
+    const supabase = getAuthenticatedClient(accessToken);
+    const { data: userData, error: userError } = await supabase.auth.getUser(accessToken);
+
+    if (userError || !userData.user || userData.user.id !== process.env.NEXT_PUBLIC_ADMIN_UUID) {
+      throw new Error('Unauthorized');
+    }
+
+    const { error } = await supabase
+      .from('workflows')
+      .delete()
+      .eq('id', workflowId);
+
+    if (error) {
+      throw error;
+    }
+
+    revalidatePath('/admin/workflows');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error in deleteWorkflowAction:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function reorderWorkflowsAction(updates: { id: string; sort_order: number }[], accessToken: string) {
+  try {
+    const supabase = getAuthenticatedClient(accessToken);
+    const { data: userData, error: userError } = await supabase.auth.getUser(accessToken);
+
+    if (userError || !userData.user || userData.user.id !== process.env.NEXT_PUBLIC_ADMIN_UUID) {
+      throw new Error('Unauthorized');
+    }
+
+    // Process individual updates
+    for (const update of updates) {
+      const { error } = await supabase
+        .from('workflows')
+        .update({ sort_order: update.sort_order })
+        .eq('id', update.id);
+
+      if (error) throw error;
+    }
+
+    revalidatePath('/admin/workflows');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error in reorderWorkflowsAction:', error);
     return { success: false, error: error.message };
   }
 }
