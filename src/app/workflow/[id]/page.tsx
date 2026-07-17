@@ -25,6 +25,7 @@ interface WorkflowData {
   points_cost?: number;
   credit_cost?: number;
   reference_video_url?: string;
+  video_url?: string;
   cover_image_url?: string;
   cover_url?: string;
   description?: string;
@@ -298,7 +299,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
             {/* Video Placeholder */}
             <div className="bg-[#131622] rounded-2xl aspect-[9/16] w-full relative flex items-center justify-center shadow-xl overflow-hidden group">
               <video
-                  src={workflow?.reference_video_url || ""}
+                  src={workflow?.reference_video_url || workflow?.video_url || ""}
                   className="absolute inset-0 w-full h-full object-cover"
                   poster={workflow?.cover_image_url || workflow?.cover_url || undefined}
                   autoPlay
