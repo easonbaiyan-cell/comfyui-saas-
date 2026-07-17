@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     // Fetch workflow details
     const { data: workflow, error: workflowError } = await supabase
       .from('workflows')
-      .select('credit_cost, runninghub_id')
+      .select('credit_cost, runninghub_id, rh_payload_template')
       .eq('id', workflowId)
       .single();
 
@@ -72,16 +72,54 @@ export async function POST(req: Request) {
       .update({ points: newPoints })
       .eq('id', user.id);
 
-    if (updateError) {
+if (updateError) {
       console.error('Update points error:', updateError);
     }
 
-    // Simulate calling RunningHub Submit API
-    const mockTaskId = `task_${Math.random().toString(36).substring(2, 15)}`;
+    // Call RunningHub Submit API
+    let nodeInfoList = [];
+    if (workflow.rh_payload_template && workflow.rh_payload_template.nodeInfoList) {
+      nodeInfoList = workflow.rh_payload_template.nodeInfoList.map((node: any) => {
+        let value = formValues[node.nodeId];
+        if (value === undefined) {
+          value = node.fieldValue !== undefined ? node.fieldValue : "";
+        }
+        return {
+          nodeId: node.nodeId,
+          type: node.fieldName || node.type || "text",
+          value: value
+        };
+      });
+    }
+
+    const payload = {
+      workflowId: workflow.runninghub_id,
+      apiKey: process.env.RUNNINGHUB_API_KEY || '',
+      nodeInfoList: nodeInfoList
+    };
+
+    const rhResponse = await fetch('https://www.runninghub.cn/task/openapi/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.RUNNINGHUB_API_KEY || ''}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const rhData = await rhResponse.json();
+
+    if (rhData.code !== 0) {
+      // Refund points if generation fails?
+      console.error('RunningHub API Error:', rhData);
+      return NextResponse.json({ error: rhData.msg || 'Third-party API failed' }, { status: 500 });
+    }
+
+    const taskId = String(rhData.data.taskId);
 
     return NextResponse.json({
       success: true,
-      taskId: mockTaskId,
+      taskId: taskId,
       newPoints: newPoints
     });
 
