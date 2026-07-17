@@ -6,10 +6,8 @@ async function run() {
   });
   await client.connect();
   try {
-    const w = await client.query('SELECT * FROM workflows;');
-    console.log("workflows count:", w.rows.length);
-    const c = await client.query('SELECT * FROM categories;');
-    console.log("categories count:", c.rows.length);
+    const res = await client.query('SELECT reference_video_url, cover_image_url, cover_url FROM workflows LIMIT 3');
+    console.log(res.rows);
   } catch (e) {
     console.error(e);
   } finally {
