@@ -1,0 +1,13 @@
+
+> temp_app@0.1.0 dev
+> next dev
+
+   ▲ Next.js 15.5.20
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.0.2:3000
+
+ ✓ Starting...
+ ✓ Ready in 1963ms
+ ○ Compiling / ...
+ ✓ Compiled / in 10.8s (888 modules)
+ GET / 200 in 12834ms

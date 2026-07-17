@@ -97,7 +97,7 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
               <img
                 src={logoUrl || "/logo.png"} 
                 alt="Logo" 
-                className="h-7 w-auto object-contain"
+                className="h-5 w-auto object-contain"
               />
             </Link>
           </div>
