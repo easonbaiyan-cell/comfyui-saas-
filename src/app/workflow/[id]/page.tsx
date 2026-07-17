@@ -215,12 +215,17 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
 
   const handleGenerate = async () => {
     setElapsedTime(0);
+
+    // Fetch session first for accurate auth check
+    const { data: sessionData } = await supabase.auth.getSession();
+    const currentUser = sessionData?.session?.user || user;
+
     const hasUploads = Object.values(dynamicFormValues).some(v => v !== "" && v !== null);
     if (workflow?.rh_payload_template?.nodeInfoList?.length > 0 && !hasUploads) {
       setErrorMsg("请先填写必填参数");
       return;
     }
-    if (!user) {
+    if (!currentUser) {
       setErrorMsg("请先登录");
       return;
     }
@@ -234,8 +239,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
     setGeneratedVideoUrl(null);
 
     try {
-      const { data: session } = await supabase.auth.getSession();
-      const token = session?.session?.access_token;
+      const token = sessionData?.session?.access_token;
 
       if (!token) {
         throw new Error("未获取到认证信息");
@@ -297,29 +301,26 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
                   src={workflow?.reference_video_url || ""}
                   className="absolute inset-0 w-full h-full object-cover"
                   poster={workflow?.cover_image_url || workflow?.cover_url || undefined}
+                  autoPlay
+                  muted
                   loop
                   playsInline
                   controls
               />
+            </div>
 
-              {/* Social Heat Data Overlay */}
-              <div className="absolute z-10 bottom-4 left-4 right-4 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {workflow?.virtual_platform && (
-                    <span className="bg-danger-red text-white text-xs px-2 py-1 rounded-md font-medium">{workflow.virtual_platform}</span>
-                  )}
-                </div>
-                <div className="flex items-center gap-3 text-gray-400 text-sm bg-black/60 px-3 py-1.5 rounded-full backdrop-blur-md">
-                  <div className="flex items-center gap-1">
-                    <Heart className="h-3.5 w-3.5" />
-                    <span>{formatLikes(workflow?.virtual_likes || 0)}</span>
-                  </div>
-                </div>
+            <div className="flex flex-row gap-2 items-center mb-2 mt-4">
+              {workflow?.virtual_platform && (
+                <span className="bg-danger-red text-white text-xs px-2 py-1 rounded-md font-medium">{workflow.virtual_platform}</span>
+              )}
+              <div className="flex items-center gap-1 text-gray-400 text-sm bg-black/60 px-3 py-1.5 rounded-full backdrop-blur-md">
+                <Heart className="h-3.5 w-3.5" />
+                <span>{formatLikes(workflow?.virtual_likes || 0)}</span>
               </div>
             </div>
 
             {/* Traffic Analysis Text */}
-            <p className="text-xs text-gray-500 leading-relaxed mt-4">
+            <p className="text-xs text-gray-500 leading-relaxed">
               {workflow?.description || '暂无描述'}
             </p>
           </div>
