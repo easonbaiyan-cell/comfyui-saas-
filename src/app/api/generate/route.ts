@@ -28,10 +28,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { workflowId, imageUrl } = await req.json();
+    const { workflowId, formValues } = await req.json();
 
-    if (!workflowId || !imageUrl) {
-      return NextResponse.json({ error: 'Missing workflowId or imageUrl' }, { status: 400 });
+    if (!workflowId || !formValues) {
+      return NextResponse.json({ error: 'Missing workflowId or formValues' }, { status: 400 });
     }
 
     // Fetch workflow details
