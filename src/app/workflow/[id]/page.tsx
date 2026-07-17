@@ -301,7 +301,6 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
               <video
                   src={workflow?.reference_video_url || workflow?.video_url || ""}
                   className="absolute inset-0 w-full h-full object-cover"
-                  poster={workflow?.cover_image_url || workflow?.cover_url || undefined}
                   autoPlay
                   muted
                   loop
