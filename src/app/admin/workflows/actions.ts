@@ -240,7 +240,7 @@ export async function reorderCategoriesAction(updates: { id: string; sort_order:
   }
 }
 
-export async function getWorkflowsAction(accessToken: string) {
+export async function getWorkflowsAction(accessToken: string, sortMode: 'recommended' | 'hottest' | 'newest' = 'newest') {
   try {
     const supabase = getAuthenticatedClient(accessToken);
     const { data: userData, error: userError } = await supabase.auth.getUser(accessToken);
@@ -249,10 +249,17 @@ export async function getWorkflowsAction(accessToken: string) {
       throw new Error('Unauthorized');
     }
 
-    const { data, error } = await supabase
-      .from('workflows')
-      .select('*')
-      .order('created_at', { ascending: false });
+    let query = supabase.from('workflows').select('*');
+
+    if (sortMode === 'recommended') {
+      query = query.order('sort_order', { ascending: true }).order('created_at', { ascending: false });
+    } else if (sortMode === 'hottest') {
+      query = query.order('usage_count', { ascending: false }).order('created_at', { ascending: false });
+    } else {
+      query = query.order('created_at', { ascending: false });
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       throw error;
@@ -261,6 +268,66 @@ export async function getWorkflowsAction(accessToken: string) {
     return { success: true, workflows: data };
   } catch (error: any) {
     console.error('Error in getWorkflowsAction:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function deleteWorkflowAction(workflowId: string, accessToken: string) {
+  try {
+    const supabase = getAuthenticatedClient(accessToken);
+    const { data: userData, error: userError } = await supabase.auth.getUser(accessToken);
+
+    if (userError || !userData.user || userData.user.id !== process.env.NEXT_PUBLIC_ADMIN_UUID) {
+      throw new Error('Unauthorized');
+    }
+
+    const { error } = await supabase
+      .from('workflows')
+      .delete()
+      .eq('id', workflowId);
+
+    if (error) {
+      throw error;
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error in deleteWorkflowAction:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function swapWorkflowSortOrderAction(workflowId1: string, sortOrder1: number, workflowId2: string, sortOrder2: number, accessToken: string) {
+  try {
+    const supabase = getAuthenticatedClient(accessToken);
+    const { data: userData, error: userError } = await supabase.auth.getUser(accessToken);
+
+    if (userError || !userData.user || userData.user.id !== process.env.NEXT_PUBLIC_ADMIN_UUID) {
+      throw new Error('Unauthorized');
+    }
+
+    // Supabase RPC or multi-update would be better, but doing two updates is fine for small numbers
+    const { error: error1 } = await supabase
+      .from('workflows')
+      .update({ sort_order: sortOrder2 })
+      .eq('id', workflowId1);
+
+    if (error1) throw error1;
+
+    const { error: error2 } = await supabase
+      .from('workflows')
+      .update({ sort_order: sortOrder1 })
+      .eq('id', workflowId2);
+
+    if (error2) {
+      // attempt to rollback
+      await supabase.from('workflows').update({ sort_order: sortOrder1 }).eq('id', workflowId1);
+      throw error2;
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error in swapWorkflowSortOrderAction:', error);
     return { success: false, error: error.message };
   }
 }
