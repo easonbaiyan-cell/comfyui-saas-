@@ -62,7 +62,7 @@ export default function EditWorkflowPage({ params }: { params: Promise<{ id: str
             (form.elements.namedItem('points') as HTMLInputElement).value = wf.cost_points || '';
             (form.elements.namedItem('appId') as HTMLInputElement).value = wf.r_app_id || '';
             (form.elements.namedItem('platform') as HTMLSelectElement).value = wf.virtual_platform || '无';
-            (form.elements.namedItem('likes') as HTMLInputElement).value = wf.virtual_likes || '';
+            (form.elements.namedItem('likes') as HTMLInputElement).value = wf.virtual_likes?.toString() || '';
 
             const rhPayload = typeof wf.rh_payload_template === 'string' ? wf.rh_payload_template : JSON.stringify(wf.rh_payload_template, null, 2);
             (form.elements.namedItem('rh_payload_template') as HTMLTextAreaElement).value = rhPayload || '';
@@ -353,9 +353,9 @@ export default function EditWorkflowPage({ params }: { params: Promise<{ id: str
                 <label htmlFor="platform" className="block text-sm font-medium text-gray-700">前台显示的虚拟平台标识</label>
                 <div className="mt-1">
                   <select id="platform" name="platform" className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border bg-white">
-                    <option>无</option>
-                    <option>抖音</option>
-                    <option>小红书</option>
+                    <option value="无">无</option>
+                    <option value="抖音">抖音</option>
+                    <option value="小红书">小红书</option>
                   </select>
                 </div>
               </div>
