@@ -113,8 +113,21 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
     setErrorMsg(null);
 
     try {
-      const objectUrl = URL.createObjectURL(file);
-      setDynamicFormValues(prev => ({ ...prev, [nodeId]: objectUrl }));
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Upload failed');
+      }
+
+      setDynamicFormValues(prev => ({ ...prev, [nodeId]: data.url }));
     } catch (err: unknown) {
       setErrorMsg("上传失败: " + (err instanceof Error ? err.message : String(err)));
     } finally {
@@ -274,7 +287,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
       setTaskId(data.taskId);
       set积分余额(data.newPoints);
 
-      // Start Polling (mocking here)
+      // Start Polling
       pollForResult(data.taskId);
 
     } catch (err: unknown) {
@@ -283,16 +296,45 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
     }
   };
 
-  const pollForResult = (_id: string) => {
+  const pollForResult = (taskId: string) => {
     let attempts = 0;
-    const interval = setInterval(() => {
+    const interval = setInterval(async () => {
       attempts++;
-      if (attempts >= 5) {
+      if (attempts >= 120) { // 10 minutes limit (120 * 5s = 600s)
         clearInterval(interval);
-        setGeneratedVideoUrl("https://www.w3schools.com/html/mov_bbb.mp4"); // Mock video result
+        setErrorMsg('生成超时，请稍后重试');
         setIsGenerating(false);
+        return;
       }
-    }, 1000); // Poll every 1 second, finish after 5 seconds
+
+      try {
+        const res = await fetch('/api/status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ taskId })
+        });
+        const data = await res.json();
+
+        // As per documentation structure: data is the response
+        // If data.status === 'SUCCESS', we look at results[0].url
+        if (data && data.status === 'SUCCESS') {
+           clearInterval(interval);
+           if (data.results && data.results.length > 0) {
+              setGeneratedVideoUrl(data.results[0].url);
+           } else {
+              setErrorMsg('生成成功但未找到视频/图片URL');
+           }
+           setIsGenerating(false);
+        } else if (data && data.status === 'FAILED') {
+           clearInterval(interval);
+           setErrorMsg(data.errorMessage || '生成失败');
+           setIsGenerating(false);
+        }
+        // If RUNNING or QUEUED, just wait for the next tick
+      } catch (err) {
+        console.error('Polling error', err);
+      }
+    }, 5000); // Poll every 5 seconds
   };
 
   return (
