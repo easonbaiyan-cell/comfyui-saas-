@@ -5,13 +5,16 @@ import { createClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Home() {
+export default async function Home({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   // Try to fetch settings, handle the case where DB is empty or fails gracefully
   let siteSettings = null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let workflows: any[] = [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let categories: any[] = [];
+
+  const params = await searchParams;
+  const sortMode = Array.isArray(params.sort) ? params.sort[0] : params.sort || 'newest';
 
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -40,12 +43,20 @@ export default async function Home() {
             }));
         }
 
-        const { data: wfs } = await supabase
-          .from('workflows')
-          .select('*')
-          .eq('status', 'published')
-          .order('is_pinned', { ascending: false })
-          .order('created_at', { ascending: false });
+        let query = supabase.from('workflows').select('*').eq('status', 'published');
+
+        // Always keep pinned workflows at the top
+        query = query.order('is_pinned', { ascending: false });
+
+        if (sortMode === 'recommended') {
+          query = query.order('sort_order', { ascending: true }).order('created_at', { ascending: false });
+        } else if (sortMode === 'hottest') {
+          query = query.order('usage_count', { ascending: false }).order('created_at', { ascending: false });
+        } else {
+          query = query.order('created_at', { ascending: false });
+        }
+
+        const { data: wfs } = await query;
 
         if (wfs) {
             // Transform Decimal to number for the UI component
@@ -106,6 +117,17 @@ export default async function Home() {
 
       <main className="flex-1">
         <section className="container mx-auto px-4 py-6" id="workflows">
+          <div className="mb-4 flex space-x-4">
+            <a href="/?sort=newest#workflows" className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${sortMode === 'newest' ? 'bg-primary-green text-black' : 'bg-white/10 text-gray-300 hover:bg-white/20'}`}>
+              最新 (Newest)
+            </a>
+            <a href="/?sort=recommended#workflows" className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${sortMode === 'recommended' ? 'bg-primary-green text-black' : 'bg-white/10 text-gray-300 hover:bg-white/20'}`}>
+              推荐 (Recommended)
+            </a>
+            <a href="/?sort=hottest#workflows" className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${sortMode === 'hottest' ? 'bg-primary-green text-black' : 'bg-white/10 text-gray-300 hover:bg-white/20'}`}>
+              最热 (Hottest)
+            </a>
+          </div>
           <WorkflowGrid workflows={workflows} categories={categories} />
         </section>
       </main>

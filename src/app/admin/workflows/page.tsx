@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { getWorkflowsAction, togglePinWorkflowAction, toggleStatusWorkflowAction, getCategoriesAction } from './actions';
+import { getWorkflowsAction, togglePinWorkflowAction, toggleStatusWorkflowAction, getCategoriesAction, deleteWorkflowAction, reorderWorkflowsAction } from './actions';
+import CategoryManagementModal from './CategoryManagementModal';
 
 export default function AdminWorkflowsPage() {
   const [workflows, setWorkflows] = useState<any[]>([]);
@@ -13,6 +14,8 @@ export default function AdminWorkflowsPage() {
 
   const [nameSearch, setNameSearch] = useState('');
   const [categorySearch, setCategorySearch] = useState('');
+  const [sortMode, setSortMode] = useState<'newest' | 'recommended' | 'hottest'>('newest');
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<{message: string, type: 'success'|'error'} | null>(null);
 
   const showToast = (message: string, type: 'success'|'error' = 'success') => {
@@ -32,13 +35,14 @@ export default function AdminWorkflowsPage() {
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
           setSessionToken(session.access_token);
 
           const [workflowsResult, categoriesResult] = await Promise.all([
-            getWorkflowsAction(session.access_token),
+            getWorkflowsAction(session.access_token, sortMode),
             getCategoriesAction(session.access_token)
           ]);
           if (workflowsResult.success && workflowsResult.workflows) {
@@ -61,7 +65,15 @@ export default function AdminWorkflowsPage() {
     };
 
     fetchData();
-  }, []);
+  }, [sortMode]);
+
+  const fetchCategories = async () => {
+    if (!sessionToken) return;
+    const res = await getCategoriesAction(sessionToken);
+    if (res.success && res.categories) {
+      setCategories(res.categories);
+    }
+  };
 
   const handleTogglePin = async (id: string, currentPinStatus: boolean) => {
     if (!sessionToken) return;
@@ -99,6 +111,74 @@ export default function AdminWorkflowsPage() {
     }
   };
 
+  const handleDeleteWorkflow = async (id: string) => {
+    if (!sessionToken) return;
+
+    if (!window.confirm("确定要删除这个工作流吗？此操作不可恢复。")) {
+      return;
+    }
+
+    const result = await deleteWorkflowAction(id, sessionToken);
+    if (result.success) {
+      setWorkflows(workflows.filter(wf => wf.id !== id));
+      showToast('工作流已删除', 'success');
+    } else {
+      showToast('删除失败: ' + result.error, 'error');
+    }
+  };
+
+  const handleMove = async (index: number, direction: 'up' | 'down') => {
+    if (!sessionToken) return;
+    if (sortMode !== 'recommended') return; // Should only reorder in recommended mode
+    if (nameSearch || categorySearch) {
+      showToast('请先清除搜索和分类过滤后再进行排序', 'error');
+      return;
+    }
+
+    const newWorkflows = [...workflows];
+    let swappedItem1, swappedItem2;
+
+    if (direction === 'up' && index > 0) {
+      // Swap with previous
+      swappedItem1 = newWorkflows[index];
+      swappedItem2 = newWorkflows[index - 1];
+
+      const tempOrder = swappedItem1.sort_order;
+      swappedItem1.sort_order = swappedItem2.sort_order !== undefined ? swappedItem2.sort_order : index - 1;
+      swappedItem2.sort_order = tempOrder !== undefined ? tempOrder : index;
+
+      newWorkflows[index] = swappedItem2;
+      newWorkflows[index - 1] = swappedItem1;
+
+    } else if (direction === 'down' && index < newWorkflows.length - 1) {
+      // Swap with next
+      swappedItem1 = newWorkflows[index];
+      swappedItem2 = newWorkflows[index + 1];
+
+      const tempOrder = swappedItem1.sort_order;
+      swappedItem1.sort_order = swappedItem2.sort_order !== undefined ? swappedItem2.sort_order : index + 1;
+      swappedItem2.sort_order = tempOrder !== undefined ? tempOrder : index;
+
+      newWorkflows[index] = swappedItem2;
+      newWorkflows[index + 1] = swappedItem1;
+    } else {
+      return;
+    }
+
+    setWorkflows(newWorkflows);
+
+    // Persist to backend ONLY the 2 items that swapped
+    const updates = [
+      { id: swappedItem1.id, sort_order: swappedItem1.sort_order },
+      { id: swappedItem2.id, sort_order: swappedItem2.sort_order }
+    ];
+
+    const result = await reorderWorkflowsAction(updates, sessionToken);
+    if (!result.success) {
+      showToast('排序更新失败', 'error');
+      console.error(result.error);
+    }
+  };
 
   return (
     <div className="p-8">
@@ -130,15 +210,23 @@ export default function AdminWorkflowsPage() {
           <h2 className="text-2xl font-bold text-gray-900">商品与算力管理</h2>
           <p className="text-gray-500 mt-1">管理所有工作流商品、配置参数和算力映射。</p>
         </div>
-        <Link
-          href="/admin/workflows/create"
-          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-        >
-          <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-          </svg>
-          发布新工作流 (Add Workflow)
-        </Link>
+        <div className="flex space-x-4">
+          <button
+            onClick={() => setIsCategoryModalOpen(true)}
+            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            管理分类 (Categories)
+          </button>
+          <Link
+            href="/admin/workflows/create"
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+            </svg>
+            发布新工作流 (Add Workflow)
+          </Link>
+        </div>
       </div>
 
       {/* Data Table */}
@@ -147,7 +235,29 @@ export default function AdminWorkflowsPage() {
           <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
 
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium text-gray-900">商品列表</h3>
+              <div className="flex space-x-4 items-center">
+                <h3 className="text-lg font-medium text-gray-900 mr-4">商品列表</h3>
+                <div className="flex bg-gray-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setSortMode('newest')}
+                    className={`px-4 py-1 text-sm rounded-md transition-colors ${sortMode === 'newest' ? 'bg-white shadow text-gray-900 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
+                  >
+                    最新 (Newest)
+                  </button>
+                  <button
+                    onClick={() => setSortMode('recommended')}
+                    className={`px-4 py-1 text-sm rounded-md transition-colors ${sortMode === 'recommended' ? 'bg-white shadow text-gray-900 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
+                  >
+                    推荐 (Recommended)
+                  </button>
+                  <button
+                    onClick={() => setSortMode('hottest')}
+                    className={`px-4 py-1 text-sm rounded-md transition-colors ${sortMode === 'hottest' ? 'bg-white shadow text-gray-900 font-medium' : 'text-gray-500 hover:text-gray-700'}`}
+                  >
+                    最热 (Hottest)
+                  </button>
+                </div>
+              </div>
               <div className="flex space-x-4">
                 <input
                   type="text"
@@ -220,7 +330,7 @@ export default function AdminWorkflowsPage() {
                       );
                     }
 
-                    return filteredWorkflows.map((workflow) => (
+                    return filteredWorkflows.map((workflow, index) => (
                       <tr key={String(workflow.id)} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center space-x-2">
@@ -252,6 +362,12 @@ export default function AdminWorkflowsPage() {
                           {workflow.usage_count || 0}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
+                          {sortMode === 'recommended' && (
+                            <span className="inline-flex space-x-1 mr-2 text-gray-400">
+                              <button onClick={() => handleMove(index, 'up')} disabled={index === 0} className="hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed" title="上移 (Move Up)">↑</button>
+                              <button onClick={() => handleMove(index, 'down')} disabled={index === filteredWorkflows.length - 1} className="hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed" title="下移 (Move Down)">↓</button>
+                            </span>
+                          )}
                           <button
                             onClick={() => handleTogglePin(String(workflow.id), workflow.is_pinned)}
                             className={`${workflow.is_pinned ? 'text-yellow-600 hover:text-yellow-900' : 'text-gray-500 hover:text-gray-900'}`}
@@ -265,6 +381,12 @@ export default function AdminWorkflowsPage() {
                             {workflow.status === 'published' ? '下架' : '上架'}
                           </button>
                           <Link href={`/admin/workflows/edit/${String(workflow.id)}`} className="text-indigo-600 hover:text-indigo-900">编辑</Link>
+                          <button
+                            onClick={() => handleDeleteWorkflow(String(workflow.id))}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            删除
+                          </button>
                         </td>
                       </tr>
                     ));
@@ -275,6 +397,13 @@ export default function AdminWorkflowsPage() {
           </div>
         </div>
       </div>
+      <CategoryManagementModal
+        isOpen={isCategoryModalOpen}
+        onClose={() => setIsCategoryModalOpen(false)}
+        onCategorySelected={(categoryName) => {
+          fetchCategories(); // Refresh categories
+        }}
+      />
     </div>
   );
 }
