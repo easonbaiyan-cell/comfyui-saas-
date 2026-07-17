@@ -107,6 +107,34 @@ export async function toggleStatusWorkflowAction(workflowId: string, currentStat
   }
 }
 
+export async function updateCategoryAction(categoryId: string, name: string, requiredTier: string, accessToken: string) {
+  try {
+    const supabase = getAuthenticatedClient(accessToken);
+    const { data: userData, error: userError } = await supabase.auth.getUser(accessToken);
+
+    if (userError || !userData.user || userData.user.id !== process.env.NEXT_PUBLIC_ADMIN_UUID) {
+      throw new Error("Unauthorized");
+    }
+
+    const { error } = await supabase
+      .from("categories")
+      .update({
+        name,
+        required_tier: requiredTier
+      })
+      .eq("id", categoryId);
+
+    if (error) {
+      throw error;
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error in updateCategoryAction:", error);
+    return { success: false, error: error.message };
+  }
+}
+
 export async function createCategoryAction(name: string, requiredTier: string, accessToken: string) {
   try {
     const supabase = getAuthenticatedClient(accessToken);
