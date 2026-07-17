@@ -250,14 +250,37 @@ export async function getWorkflowsAction(accessToken: string) {
       throw new Error('Unauthorized');
     }
 
-    const { data, error } = await supabase
-      .from('workflows')
-      .select('*')
-      .order('sort_order', { ascending: true, nullsFirst: false })
-      .order('created_at', { ascending: false });
+    let data, error;
 
-    if (error) {
-      throw error;
+    try {
+      const result = await supabase
+        .from('workflows')
+        .select('*')
+        .order('sort_order', { ascending: true, nullsFirst: false })
+        .order('created_at', { ascending: false });
+
+      data = result.data;
+      error = result.error;
+
+      if (error) {
+        throw error;
+      }
+    } catch (primaryError) {
+      console.error("Fetch Workflows Error (Primary Query):", primaryError);
+
+      // Fallback query without sort_order
+      const fallbackResult = await supabase
+        .from('workflows')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      data = fallbackResult.data;
+      error = fallbackResult.error;
+
+      if (error) {
+        console.error("Fetch Workflows Error (Fallback Query):", error);
+        throw error;
+      }
     }
 
     return { success: true, workflows: data };
