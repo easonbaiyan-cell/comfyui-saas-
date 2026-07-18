@@ -51,9 +51,15 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
   // New Generation Pipeline States
   const [isGenerating, setIsGenerating] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null);
+  const [generatedMediaUrl, setGeneratedMediaUrl] = useState<string | null>(null);
   const [taskId, setTaskId] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<any>(null);
+
+  const isImageUrl = (url: string) => {
+    if (!url) return false;
+    const lowerUrl = url.toLowerCase();
+    return lowerUrl.endsWith('.png') || lowerUrl.endsWith('.jpg') || lowerUrl.endsWith('.jpeg') || lowerUrl.endsWith('.webp') || lowerUrl.endsWith('.gif');
+  };
 
   const extractErrorMessage = (err: any): string => {
     if (!err) return '未知错误';
@@ -296,7 +302,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
 
     setIsGenerating(true);
     setErrorMsg(null);
-    setGeneratedVideoUrl(null);
+    setGeneratedMediaUrl(null);
     setPollStatus(null);
 
     try {
@@ -357,7 +363,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
     let attempts = 0;
     const interval = setInterval(async () => {
       attempts++;
-      if (attempts >= 120) { // 10 minutes limit (120 * 5s = 600s)
+      if (attempts >= 720) { // 60 minutes limit (720 * 5s = 3600s)
         clearInterval(interval);
         setErrorMsg('生成超时，请稍后重试');
         setIsGenerating(false);
@@ -375,7 +381,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
         if (data && data.code === 0) {
            clearInterval(interval);
            if (data.data && data.data.length > 0 && data.data[0].fileUrl) {
-              setGeneratedVideoUrl(data.data[0].fileUrl);
+              setGeneratedMediaUrl(data.data[0].fileUrl);
            } else {
               setErrorMsg('生成成功但未找到视频/图片URL');
            }
@@ -536,7 +542,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
         {/* Right Column: Generated Video and Actions */}
         <div className="p-6 flex flex-col items-center justify-start overflow-y-auto h-full">
           <div className="w-full max-w-sm flex flex-col">
-            <h1 className="text-lg font-semibold text-white mb-6 text-center">生成视频</h1>
+            <h1 className="text-lg font-semibold text-white mb-6 text-center">生成结果</h1>
 
             {/* Video Placeholder */}
             <div className="bg-[#131622] rounded-2xl aspect-[9/16] w-full relative flex flex-col items-center justify-center shadow-xl overflow-hidden border border-white/5">
@@ -551,45 +557,53 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
                   </div>
                   {taskId && <p className="text-xs text-primary-green/60 mt-2 font-mono">Task: {taskId}</p>}
                 </div>
-              ) : generatedVideoUrl ? (
-                <video
-                  src={generatedVideoUrl}
-                  className="absolute inset-0 w-full h-full object-cover"
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  controls
-                />
+              ) : generatedMediaUrl ? (
+                isImageUrl(generatedMediaUrl) ? (
+                  <img
+                    src={generatedMediaUrl}
+                    alt="生成结果"
+                    className="absolute inset-0 w-full h-full object-contain"
+                  />
+                ) : (
+                  <video
+                    src={generatedMediaUrl}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    controls
+                  />
+                )
               ) : (
-                <span className="text-gray-600 text-sm">暂无生成视频</span>
+                <span className="text-gray-600 text-sm">暂无生成结果</span>
               )}
             </div>
 
             {/* Action Buttons */}
             <div className="flex justify-center gap-4 mt-4 h-9 items-center">
               <button
-                disabled={!generatedVideoUrl}
-                className={`p-2 transition-colors ${generatedVideoUrl ? 'text-gray-400 hover:text-white' : 'text-gray-700 cursor-not-allowed'}`}
+                disabled={!generatedMediaUrl}
+                className={`p-2 transition-colors ${generatedMediaUrl ? 'text-gray-400 hover:text-white' : 'text-gray-700 cursor-not-allowed'}`}
               >
                 <Download className="h-5 w-5" />
               </button>
               <button
-                disabled={!generatedVideoUrl}
-                className={`p-2 transition-colors ${generatedVideoUrl ? 'text-gray-400 hover:text-white' : 'text-gray-700 cursor-not-allowed'}`}
+                disabled={!generatedMediaUrl}
+                className={`p-2 transition-colors ${generatedMediaUrl ? 'text-gray-400 hover:text-white' : 'text-gray-700 cursor-not-allowed'}`}
               >
                 <Trash2 className="h-5 w-5" />
               </button>
               <button
-                disabled={!generatedVideoUrl}
-                className={`p-2 transition-colors ${generatedVideoUrl ? 'text-gray-400 hover:text-white' : 'text-gray-700 cursor-not-allowed'}`}
+                disabled={!generatedMediaUrl}
+                className={`p-2 transition-colors ${generatedMediaUrl ? 'text-gray-400 hover:text-white' : 'text-gray-700 cursor-not-allowed'}`}
               >
                 <Share2 className="h-5 w-5" />
               </button>
             </div>
 
             {/* Data Records Text */}
-            {generatedVideoUrl && (
+            {generatedMediaUrl && (
               <div className="text-xs text-gray-500 flex flex-col gap-1 mt-4">
                 <span>生成时间：{new Date().toLocaleString()}</span>
                 <span>有效期：<span className="text-primary-green/80">9</span>天后过期</span>
