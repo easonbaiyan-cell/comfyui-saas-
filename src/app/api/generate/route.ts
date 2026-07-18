@@ -28,7 +28,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { workflowId, formValues } = await req.json();
+    const body = await req.json();
+
+    // 强校验红线：核心字段缺失直接返回 400，严禁向底层透传导致 500 崩溃
+    if (!body || !body.rh_payload_template) {
+      console.warn("API 拦截无效请求: 缺失 rh_payload_template");
+      return NextResponse.json(
+        { error: "参数校验失败", details: "缺失核心字段: rh_payload_template" },
+        { status: 400 }
+      );
+    }
+
+    const { workflowId, formValues } = body;
 
     if (!workflowId || !formValues) {
       return NextResponse.json({ error: 'Missing workflowId or formValues' }, { status: 400 });
