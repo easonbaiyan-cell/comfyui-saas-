@@ -53,8 +53,7 @@ export async function POST(req: Request) {
       .single();
 
     if (workflowError || !workflow) {
-      // Return 404 but allow continuing with mock logic for demo
-      // return NextResponse.json({ error: 'Workflow not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Workflow not found in local database.' }, { status: 404 });
     }
 
     const cost = workflow?.cost_points !== undefined ? Number(workflow.cost_points) : (workflow?.points_cost !== undefined ? Number(workflow.points_cost) : (workflow?.credit_cost ? Number(workflow.credit_cost) : 0));
