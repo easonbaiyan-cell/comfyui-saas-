@@ -114,7 +114,8 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
     if (nodeInfoList && Object.keys(dynamicFormValues).length === 0) {
       const initialValues: Record<string, string | number> = {};
       nodeInfoList.forEach((node: DynamicNode) => {
-        initialValues[node.nodeId] = node.fieldValue !== undefined ? node.fieldValue : "";
+        const isFile = node.fieldName === 'image' || node.fieldName === 'video';
+        initialValues[node.nodeId] = isFile ? "" : (node.fieldValue !== undefined ? node.fieldValue : "");
       });
       // Workaround to bypass sync effect setter warning while still providing initial default state from backend
       setTimeout(() => {
@@ -190,7 +191,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
                   {isUploadingThis ? <Loader2 className="h-8 w-8 text-gray-400 animate-spin" /> : <UploadCloud className="h-8 w-8 text-gray-400" />}
                 </div>
                 <div>
-                  <p className="text-base font-medium text-white mb-1">{isUploadingThis ? "正在上传..." : "点击或拖拽文件至此"}</p>
+                  <p className="text-base font-medium text-white mb-1">{isUploadingThis ? "正在上传..." : "点击加载上传"}</p>
                 </div>
               </div>
             ) : (
@@ -263,6 +264,19 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
       if (interval) clearInterval(interval);
     };
   }, [isGenerating]);
+
+  // Recover task polling from local storage
+  useEffect(() => {
+    if (!workflowId) return;
+    const cachedTaskId = localStorage.getItem(`active_task_${workflowId}`);
+    if (cachedTaskId) {
+      setTaskId(cachedTaskId);
+      setIsGenerating(true);
+      setPollStatus('正在恢复任务状态...');
+      pollForResult(cachedTaskId);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workflowId]);
 
   const handleGenerate = async () => {
     // 请在 fetch 请求发生前，优先执行以下拦截
@@ -350,6 +364,9 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
       setTaskId(data.taskId);
       set积分余额(data.newPoints);
 
+      // Store in local storage to prevent loss on refresh
+      localStorage.setItem(`active_task_${workflowId}`, data.taskId);
+
       // Start Polling
       pollForResult(data.taskId);
 
@@ -380,6 +397,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
 
         if (data && data.code === 0) {
            clearInterval(interval);
+           localStorage.removeItem(`active_task_${workflowId}`);
            if (data.data && data.data.length > 0 && data.data[0].fileUrl) {
               setGeneratedMediaUrl(data.data[0].fileUrl);
            } else {
@@ -391,11 +409,13 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
            setPollStatus(data.code === 804 ? '正在拼命生成中...' : '排队中...');
         } else if (data && data.code === 805) {
            clearInterval(interval);
+           localStorage.removeItem(`active_task_${workflowId}`);
            const errorData = data.data?.failedReason || '生成失败';
            setErrorMsg(extractErrorMessage(errorData));
            setIsGenerating(false);
         } else if (data && data.code !== undefined) {
            clearInterval(interval);
+           localStorage.removeItem(`active_task_${workflowId}`);
            const errorData = data.msg || data.message || '未知状态异常';
            setErrorMsg(extractErrorMessage(errorData));
            setIsGenerating(false);
