@@ -122,7 +122,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
         throw new Error('未配置 API Key');
       }
 
-      const res = await fetch('https://www.runninghub.cn/openapi/v2/media/upload/binary', {
+      const res = await fetch('/api/rh-upload', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${apiKey}`
