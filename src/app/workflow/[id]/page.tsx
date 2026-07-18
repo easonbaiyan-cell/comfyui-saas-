@@ -72,6 +72,14 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
     }
   };
   const [pollStatus, setPollStatus] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
+
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
 
   const user = useAuthStore((state) => state.user);
   const 积分余额 = useAuthStore((state) => state.积分余额);
@@ -271,9 +279,15 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
 
     const storageKey = `active_task_${workflowId}`;
     const cachedTaskId = localStorage.getItem(storageKey);
+    const startKey = `task_start_${workflowId}`;
+    const startTime = localStorage.getItem(startKey);
 
     if (cachedTaskId) {
         console.log("恢复执行任务:", cachedTaskId);
+        if (startTime) {
+          const passedSeconds = Math.floor((Date.now() - parseInt(startTime, 10)) / 1000);
+          setElapsedTime(passedSeconds > 0 ? passedSeconds : 0);
+        }
         setTaskId(cachedTaskId);
         setIsGenerating(true);
         setPollStatus("正在恢复任务状态...");
@@ -370,6 +384,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
 
       // Store in local storage to prevent loss on refresh
       localStorage.setItem(`active_task_${workflowId}`, data.taskId);
+      localStorage.setItem(`task_start_${workflowId}`, Date.now().toString());
 
       // Start Polling
       pollForResult(data.taskId);
@@ -377,6 +392,40 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
     } catch (err: unknown) {
       setErrorMsg((err instanceof Error ? err.message : String(err)));
       setIsGenerating(false);
+    }
+  };
+
+  const handleDownload = async () => {
+    if (!generatedMediaUrl) return;
+    try {
+      const res = await fetch(generatedMediaUrl);
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'papagaga_result';
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      window.open(generatedMediaUrl, '_blank');
+    }
+  };
+
+  const handleReset = () => {
+    if (window.confirm('确定要清除当前结果吗？')) {
+      setGeneratedMediaUrl(null);
+      setElapsedTime(0);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!generatedMediaUrl) return;
+    try {
+      await navigator.clipboard.writeText(generatedMediaUrl);
+      setToastMessage({ text: '链接已复制到剪贴板', type: 'success' });
+    } catch (err) {
+      console.error('复制失败', err);
+      setToastMessage({ text: '复制失败，请手动复制', type: 'error' });
     }
   };
 
@@ -403,6 +452,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
         if (data && data.code === 0) {
            clearInterval(interval);
            localStorage.removeItem(`active_task_${workflowId}`);
+           localStorage.removeItem(`task_start_${workflowId}`);
            if (data.data && data.data.length > 0 && data.data[0].fileUrl) {
               setGeneratedMediaUrl(data.data[0].fileUrl);
            } else {
@@ -415,12 +465,14 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
         } else if (data && data.code === 805) {
            clearInterval(interval);
            localStorage.removeItem(`active_task_${workflowId}`);
+           localStorage.removeItem(`task_start_${workflowId}`);
            const errorData = data.data?.failedReason || '生成失败';
            setErrorMsg(extractErrorMessage(errorData));
            setIsGenerating(false);
         } else if (data && data.code !== undefined) {
            clearInterval(interval);
            localStorage.removeItem(`active_task_${workflowId}`);
+           localStorage.removeItem(`task_start_${workflowId}`);
            const errorData = data.msg || data.message || '未知状态异常';
            setErrorMsg(extractErrorMessage(errorData));
            setIsGenerating(false);
@@ -462,6 +514,11 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="h-[calc(100vh-64px)] bg-[#0a0a0a] text-white overflow-hidden">
+      {toastMessage && (
+        <div className={`fixed top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg text-sm font-medium z-[100] transition-all shadow-lg ${toastMessage.type === 'error' ? 'bg-danger-red text-white' : 'bg-primary-green text-black'}`}>
+          {toastMessage.text}
+        </div>
+      )}
       <div className="grid grid-cols-1 lg:grid-cols-3 h-full w-full">
         {/* Left Column: Showcase Video */}
         <div className="border-r border-white/5 p-6 flex flex-col items-center justify-start overflow-y-auto">
@@ -609,18 +666,21 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
             <div className="flex justify-center gap-4 mt-4 h-9 items-center">
               <button
                 disabled={!generatedMediaUrl}
+                onClick={handleDownload}
                 className={`p-2 transition-colors ${generatedMediaUrl ? 'text-gray-400 hover:text-white' : 'text-gray-700 cursor-not-allowed'}`}
               >
                 <Download className="h-5 w-5" />
               </button>
               <button
                 disabled={!generatedMediaUrl}
+                onClick={handleReset}
                 className={`p-2 transition-colors ${generatedMediaUrl ? 'text-gray-400 hover:text-white' : 'text-gray-700 cursor-not-allowed'}`}
               >
                 <Trash2 className="h-5 w-5" />
               </button>
               <button
                 disabled={!generatedMediaUrl}
+                onClick={handleShare}
                 className={`p-2 transition-colors ${generatedMediaUrl ? 'text-gray-400 hover:text-white' : 'text-gray-700 cursor-not-allowed'}`}
               >
                 <Share2 className="h-5 w-5" />
