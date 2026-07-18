@@ -15,6 +15,14 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api/rh-upload/:path*',
+        destination: 'https://www.runninghub.cn/openapi/v2/media/upload/binary',
+      },
+    ];
+  },
 };
 
 export default nextConfig;
