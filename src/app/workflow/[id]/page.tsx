@@ -267,16 +267,20 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
 
   // Recover task polling from local storage
   useEffect(() => {
-    if (!workflowId) return;
-    const cachedTaskId = localStorage.getItem(`active_task_${workflowId}`);
+    if (typeof window === 'undefined' || !workflowId) return;
+
+    const storageKey = `active_task_${workflowId}`;
+    const cachedTaskId = localStorage.getItem(storageKey);
+
     if (cachedTaskId) {
-      setTaskId(cachedTaskId);
-      setIsGenerating(true);
-      setPollStatus('正在恢复任务状态...');
-      pollForResult(cachedTaskId);
+        console.log("恢复执行任务:", cachedTaskId);
+        setTaskId(cachedTaskId);
+        setIsGenerating(true);
+        setPollStatus("正在恢复任务状态...");
+        // 必须将 ID 作为参数传给轮询函数！
+        pollForResult(cachedTaskId);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workflowId]);
+  }, [workflowId]); // 依赖数组必须包含 workflowId
 
   const handleGenerate = async () => {
     // 请在 fetch 请求发生前，优先执行以下拦截
@@ -376,7 +380,8 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
     }
   };
 
-  const pollForResult = (taskId: string) => {
+  const pollForResult = async (currentTaskId: string) => {
+    if (!currentTaskId) return;
     let attempts = 0;
     const interval = setInterval(async () => {
       attempts++;
@@ -391,7 +396,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
         const res = await fetch('/api/status', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ taskId })
+          body: JSON.stringify({ taskId: currentTaskId })
         });
         const data = await res.json();
 
