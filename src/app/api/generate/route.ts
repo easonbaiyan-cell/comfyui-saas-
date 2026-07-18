@@ -89,18 +89,9 @@ if (updateError) {
 
     // Call RunningHub Submit API
     let nodeInfoList = [];
-    if (workflow.rh_payload_template && workflow.rh_payload_template.nodeInfoList) {
-      nodeInfoList = workflow.rh_payload_template.nodeInfoList.map((node: any) => {
-        let value = formValues[node.nodeId];
-        if (value === undefined) {
-          value = node.fieldValue !== undefined ? node.fieldValue : "";
-        }
-        return {
-          nodeId: String(node.nodeId),
-          fieldName: String(node.fieldName || node.type || "text"),
-          fieldValue: typeof value === 'object' ? JSON.stringify(value) : String(value)
-        };
-      });
+    if (body.rh_payload_template && body.rh_payload_template.nodeInfoList) {
+      // Use the frontend-constructed nodeInfoList to preserve exact data types
+      nodeInfoList = body.rh_payload_template.nodeInfoList;
     }
 
     const payload = {
