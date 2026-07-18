@@ -54,7 +54,7 @@ export async function POST(req: Request) {
     );
     const { data: workflow, error: workflowError } = await supabaseAdmin
       .from('workflows')
-      .select('cost_points, points_cost, credit_cost, runninghub_id, rh_payload_template')
+      .select('cost_points, r_app_id, status')
       .eq('id', workflowId)
       .single();
 
@@ -63,7 +63,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Workflow not found in local database.' }, { status: 404 });
     }
 
-    const cost = workflow?.cost_points !== undefined ? Number(workflow.cost_points) : (workflow?.points_cost !== undefined ? Number(workflow.points_cost) : (workflow?.credit_cost ? Number(workflow.credit_cost) : 0));
+    const cost = workflow?.cost_points !== undefined ? Number(workflow.cost_points) : 0;
 
     // Fetch profile points
     const { data: profile, error: profileError } = await supabase
@@ -101,7 +101,7 @@ if (updateError) {
     }
 
     const payload = {
-      webappId: workflow.runninghub_id,
+      webappId: workflow.r_app_id,
       apiKey: 'aa0c44bf36314b1ebdc7937ddede6fae',
       nodeInfoList: nodeInfoList
     };
