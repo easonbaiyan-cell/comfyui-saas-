@@ -41,18 +41,25 @@ export async function POST(req: Request) {
 
     const { workflowId, formValues } = body;
 
+    console.log('Received workflowId:', workflowId);
+
     if (!workflowId || !formValues) {
       return NextResponse.json({ error: 'Missing workflowId or formValues' }, { status: 400 });
     }
 
     // Fetch workflow details
-    const { data: workflow, error: workflowError } = await supabase
+    const supabaseAdmin = createClient(
+      supabaseUrl,
+      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'dummy_key'
+    );
+    const { data: workflow, error: workflowError } = await supabaseAdmin
       .from('workflows')
       .select('cost_points, points_cost, credit_cost, runninghub_id, rh_payload_template')
       .eq('id', workflowId)
       .single();
 
     if (workflowError || !workflow) {
+      console.error('Supabase Query Error:', workflowError);
       return NextResponse.json({ error: 'Workflow not found in local database.' }, { status: 404 });
     }
 
