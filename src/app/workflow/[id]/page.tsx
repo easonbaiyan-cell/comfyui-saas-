@@ -116,24 +116,18 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
     try {
       const formData = new FormData();
       formData.append('file', file);
+      formData.append('apiKey', 'aa0c44bf36314b1ebdc7937ddede6fae');
+      formData.append('fileType', 'input');
 
-      const apiKey = process.env.NEXT_PUBLIC_RUNNINGHUB_API_KEY;
-      if (!apiKey) {
-        throw new Error('未配置 API Key');
-      }
-
-      const res = await fetch('https://www.runninghub.cn/openapi/v2/media/upload/binary', {
+      const res = await fetch('/api/rh-upload', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`
-        },
         body: formData
       });
 
       const data = await res.json();
 
       if (!res.ok || data.code !== 0) {
-        throw new Error(data.message || '上传失败');
+        throw new Error(data.msg || data.message || '上传失败');
       }
 
       const fileName = data.data?.fileName;
@@ -342,22 +336,25 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
         });
         const data = await res.json();
 
-        // As per documentation structure: data is the response
-        // If data.status === 'SUCCESS', we look at results[0].url
-        if (data && data.status === 'SUCCESS') {
+        if (data && data.code === 0) {
            clearInterval(interval);
-           if (data.results && data.results.length > 0) {
-              setGeneratedVideoUrl(data.results[0].url);
+           if (data.data && data.data.length > 0 && data.data[0].fileUrl) {
+              setGeneratedVideoUrl(data.data[0].fileUrl);
            } else {
               setErrorMsg('生成成功但未找到视频/图片URL');
            }
            setIsGenerating(false);
-        } else if (data && data.status === 'FAILED') {
+        } else if (data && (data.code === 804 || data.code === 813)) {
+           // RUNNING or QUEUED, just wait for the next tick
+        } else if (data && data.code === 805) {
            clearInterval(interval);
-           setErrorMsg(data.errorMessage || '生成失败');
+           setErrorMsg(data.data?.failedReason || '生成失败');
+           setIsGenerating(false);
+        } else if (data && data.code !== undefined) {
+           clearInterval(interval);
+           setErrorMsg(data.msg || data.message || '未知状态异常');
            setIsGenerating(false);
         }
-        // If RUNNING or QUEUED, just wait for the next tick
       } catch (err) {
         console.error('Polling error', err);
       }

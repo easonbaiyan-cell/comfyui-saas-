@@ -8,14 +8,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing taskId' }, { status: 400 });
     }
 
-    const payload = { taskId };
-    const apiKey = process.env.RUNNINGHUB_API_KEY || ''
+    const payload = { taskId, apiKey: 'aa0c44bf36314b1ebdc7937ddede6fae' };
 
-    const rhResponse = await fetch('https://www.runninghub.cn/openapi/v2/query', {
+    const rhResponse = await fetch('https://www.runninghub.cn/task/openapi/outputs', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(payload)
     });
