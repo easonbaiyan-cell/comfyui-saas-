@@ -53,7 +53,8 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
   const [elapsedTime, setElapsedTime] = useState(0);
   const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null);
   const [taskId, setTaskId] = useState<string | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<any>(null);
+  const [pollStatus, setPollStatus] = useState<string | null>(null);
 
   const user = useAuthStore((state) => state.user);
   const 积分余额 = useAuthStore((state) => state.积分余额);
@@ -285,6 +286,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
     setIsGenerating(true);
     setErrorMsg(null);
     setGeneratedVideoUrl(null);
+    setPollStatus(null);
 
     try {
       const token = sessionData?.session?.access_token;
@@ -369,13 +371,16 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
            setIsGenerating(false);
         } else if (data && (data.code === 804 || data.code === 813)) {
            // RUNNING or QUEUED, just wait for the next tick
+           setPollStatus(data.code === 804 ? '正在拼命生成中...' : '排队中...');
         } else if (data && data.code === 805) {
            clearInterval(interval);
-           setErrorMsg(data.data?.failedReason || '生成失败');
+           const errorData = data.data?.failedReason || '生成失败';
+           setErrorMsg(typeof errorData === 'object' ? JSON.stringify(errorData) : errorData);
            setIsGenerating(false);
         } else if (data && data.code !== undefined) {
            clearInterval(interval);
-           setErrorMsg(data.msg || data.message || '未知状态异常');
+           const errorData = data.msg || data.message || '未知状态异常';
+           setErrorMsg(typeof errorData === 'object' ? JSON.stringify(errorData) : errorData);
            setIsGenerating(false);
         }
       } catch (err) {
@@ -459,7 +464,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
 
 
                         {errorMsg && (
-              <p className="text-danger-red text-sm mb-4 text-center">{errorMsg}</p>
+              <p className="text-danger-red text-sm mb-4 text-center">{typeof errorMsg === 'object' ? JSON.stringify(errorMsg) : errorMsg}</p>
             )}
 
             {workflow?.rh_payload_template?.nodeInfoList && workflow.rh_payload_template.nodeInfoList.length > 0 ? (
@@ -528,7 +533,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
                 <div className="flex flex-col items-center justify-center text-primary-green">
                   <Loader2 className="h-10 w-10 animate-spin mb-4" />
                   <div className="flex flex-col items-center gap-2">
-                    <p className="text-sm font-medium animate-pulse">正在生成，请耐心等待...</p>
+                    <p className="text-sm font-medium animate-pulse">{pollStatus || '正在生成，请耐心等待...'}</p>
                     <div className="bg-primary-green/10 text-primary-green text-xs font-mono px-3 py-1 rounded-full border border-primary-green/20">
                       已用时间: {elapsedTime} 秒
                     </div>
