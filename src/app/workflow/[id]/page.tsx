@@ -249,6 +249,14 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
   }, [isGenerating]);
 
   const handleGenerate = async () => {
+    // 请在 fetch 请求发生前，优先执行以下拦截
+    if (!workflow || !workflow.rh_payload_template) {
+      console.error("拦截提交: workflow 数据丢失或 rh_payload_template 为 null", workflow);
+      // 触发 UI 提示（请根据项目中实际使用的提示库如 react-hot-toast 或 sonner 进行适配）
+      setErrorMsg("工作流配置尚未加载完毕或数据缺失，请刷新重试。");
+      return; // 强制阻断，绝对禁止向下执行 fetch
+    }
+
     setElapsedTime(0);
 
     // Fetch session first for accurate auth check
