@@ -454,7 +454,21 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
            localStorage.removeItem(`active_task_${workflowId}`);
            localStorage.removeItem(`task_start_${workflowId}`);
            if (data.data && data.data.length > 0 && data.data[0].fileUrl) {
-              setGeneratedMediaUrl(data.data[0].fileUrl);
+              const fileUrl = data.data[0].fileUrl;
+              setGeneratedMediaUrl(fileUrl);
+
+              // Persist generation asset into DB
+              if (user && user.id && workflowId) {
+                supabase.from('video_tasks').insert({
+                  user_id: user.id,
+                  workflow_id: workflowId,
+                  status: 'success',
+                  result_video_url: fileUrl,
+                  input_data: { taskId: currentTaskId }
+                }).then(({ error }) => {
+                  if (error) console.error("Failed to insert generation record:", error);
+                });
+              }
            } else {
               setErrorMsg('生成成功但未找到视频/图片URL');
            }

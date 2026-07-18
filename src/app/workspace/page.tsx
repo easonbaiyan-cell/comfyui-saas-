@@ -3,69 +3,92 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Header } from "@/components/Header";
 import { Download, Trash2, ArrowRight } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { useAuthStore } from "@/store/auth";
 
-// Mock data
-const mockCreations = [
-  {
-    id: "1",
-    imageUrl: "https://picsum.photos/600/800?random=1",
-    createdAt: "2024-05-18 14:23",
-    modelName: "FLUX.1 Pro Generator",
-  },
-  {
-    id: "2",
-    imageUrl: "https://picsum.photos/600/800?random=2",
-    createdAt: "2024-05-17 09:12",
-    modelName: "Video Upscaler 4K",
-  },
-  {
-    id: "3",
-    imageUrl: "https://picsum.photos/600/800?random=3",
-    createdAt: "2024-05-15 18:45",
-    modelName: "FLUX.1 Pro Generator",
-  },
-  {
-    id: "4",
-    imageUrl: "https://picsum.photos/600/800?random=4",
-    createdAt: "2024-05-12 11:30",
-    modelName: "Portrait Enhancer",
-  },
-  {
-    id: "5",
-    imageUrl: "https://picsum.photos/600/800?random=5",
-    createdAt: "2024-05-10 16:20",
-    modelName: "Anime Style Gen",
-  },
-];
+type Creation = {
+  id: string;
+  imageUrl: string;
+  createdAt: string;
+  modelName: string;
+};
 
 export default function WorkspacePage() {
-  const [creations, setCreations] = useState<typeof mockCreations>([]);
+  const [creations, setCreations] = useState<Creation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const user = useAuthStore((state) => state.user);
 
-  // Placeholder for fetching creations
   const fetchCreations = async () => {
-    // Simulate API call
-    setTimeout(() => {
-      setCreations(mockCreations);
+    if (!user) {
       setIsLoading(false);
-    }, 500);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('video_tasks')
+        .select('*, workflows(title)')
+        .eq('user_id', user.id)
+        .eq('status', 'success')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (data) {
+        const formattedData: Creation[] = data.map((item: any) => {
+           let modelName = 'Unknown Workflow';
+           if (item.workflows && Array.isArray(item.workflows)) {
+             modelName = item.workflows[0]?.title || modelName;
+           } else if (item.workflows && typeof item.workflows === 'object') {
+             modelName = item.workflows.title || modelName;
+           }
+
+           return {
+             id: item.id,
+             imageUrl: item.result_video_url || "",
+             createdAt: new Date(item.created_at).toLocaleString(),
+             modelName: modelName
+           };
+        });
+        setCreations(formattedData);
+      }
+    } catch (error) {
+      console.error("Error fetching creations:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // Placeholder for deleting a creation
-  const handleDelete = (id: string) => {
-    setCreations((prev) => prev.filter((item) => item.id !== id));
-    // Here you would also call Supabase to delete the item
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase.from('video_tasks').delete().eq('id', id);
+      if (error) {
+        console.error("Failed to delete creation:", error);
+        return;
+      }
+      setCreations((prev) => prev.filter((item) => item.id !== id));
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   useEffect(() => {
-    fetchCreations();
-  }, []);
+    if (user) {
+      fetchCreations();
+    } else {
+      setIsLoading(false);
+    }
+  }, [user]);
+
+  const isImageUrl = (url: string) => {
+    if (!url) return false;
+    const lowerUrl = url.toLowerCase();
+    return lowerUrl.endsWith('.png') || lowerUrl.endsWith('.jpg') || lowerUrl.endsWith('.jpeg') || lowerUrl.endsWith('.webp') || lowerUrl.endsWith('.gif');
+  };
 
   return (
     <div className="flex min-h-screen flex-col bg-[#0a0a0a] text-white">
-      <Header />
 
       <main className="flex-1 container mx-auto px-4 py-8 max-w-7xl">
         {/* Header Section */}
@@ -95,13 +118,22 @@ export default function WorkspacePage() {
                 key={item.id}
                 className="group relative aspect-[9/16] rounded-xl overflow-hidden border border-white/10 bg-[#1a1a1a] transition-all hover:border-white/20"
               >
-                <Image
-                  src={item.imageUrl}
-                  alt={item.modelName}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
-                />
+                {isImageUrl(item.imageUrl) ? (
+                  <img
+                    src={item.imageUrl}
+                    alt={item.modelName}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                ) : (
+                  <video
+                    src={item.imageUrl}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    muted
+                    loop
+                    playsInline
+                    autoPlay
+                  />
+                )}
 
                 {/* Default Bottom Info */}
                 <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
@@ -116,12 +148,15 @@ export default function WorkspacePage() {
                 {/* Hover Mask & Actions */}
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-end p-3">
                   <div className="flex flex-col gap-2">
-                    <button
+                    <a
+                      href={item.imageUrl}
+                      target="_blank"
+                      rel="noreferrer"
                       className="p-2 bg-white/10 hover:bg-primary-green text-white hover:text-black rounded-full backdrop-blur-md transition-colors"
                       title="下载"
                     >
                       <Download className="h-4 w-4" />
-                    </button>
+                    </a>
                     <button
                       onClick={() => handleDelete(item.id)}
                       className="p-2 bg-white/10 hover:bg-danger-red text-white rounded-full backdrop-blur-md transition-colors"
