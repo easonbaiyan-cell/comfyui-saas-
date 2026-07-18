@@ -54,7 +54,7 @@ export async function POST(req: Request) {
     );
     const { data: workflow, error: workflowError } = await supabaseAdmin
       .from('workflows')
-      .select('cost_points, r_app_id, status')
+      .select('cost_points, r_app_id, status, rh_payload_template')
       .eq('id', workflowId)
       .single();
 
@@ -100,11 +100,15 @@ if (updateError) {
       nodeInfoList = body.rh_payload_template.nodeInfoList;
     }
 
-    const payload = {
+    const payload: any = {
       webappId: workflow.r_app_id,
       apiKey: 'aa0c44bf36314b1ebdc7937ddede6fae',
       nodeInfoList: nodeInfoList
     };
+
+    if (body.rh_payload_template?.instanceType || workflow.rh_payload_template?.instanceType) {
+      payload.instanceType = body.rh_payload_template?.instanceType || workflow.rh_payload_template?.instanceType;
+    }
 
     console.log('Sending to RH:', JSON.stringify(payload));
 
@@ -147,21 +151,22 @@ if (updateError) {
       newPoints: newPoints
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Generate API Error:', error);
     try {
       const clonedReq = req.clone();
       const bodyText = await clonedReq.text();
       console.error('【请求 Payload 异常】:', bodyText);
-    } catch(e) {}
+    } catch(_e) {}
 
 
     // Zod Error formatting
-    if (error && error.name === 'ZodError') {
+    if (error && typeof error === 'object' && 'name' in error && error.name === 'ZodError') {
+      const zodError = error as any;
       return NextResponse.json({
         code: 400,
-        message: `校验失败: ${error.errors?.[0]?.message || '参数类型不匹配'}`,
-        details: error.errors
+        message: `校验失败: ${zodError.errors?.[0]?.message || '参数类型不匹配'}`,
+        details: zodError.errors
       }, { status: 400 });
     }
 
