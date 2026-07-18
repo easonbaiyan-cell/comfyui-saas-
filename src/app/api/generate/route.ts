@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     // Fetch workflow details
     const { data: workflow, error: workflowError } = await supabase
       .from('workflows')
-      .select('credit_cost, runninghub_id, rh_payload_template')
+      .select('cost_points, points_cost, credit_cost, runninghub_id, rh_payload_template')
       .eq('id', workflowId)
       .single();
 
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
       // return NextResponse.json({ error: 'Workflow not found' }, { status: 404 });
     }
 
-    const cost = workflow ? (Number(workflow.credit_cost) || 0) : 104;
+    const cost = workflow?.cost_points !== undefined ? Number(workflow.cost_points) : (workflow?.points_cost !== undefined ? Number(workflow.points_cost) : (workflow?.credit_cost ? Number(workflow.credit_cost) : 0));
 
     // Fetch profile points
     const { data: profile, error: profileError } = await supabase
@@ -97,8 +97,8 @@ if (updateError) {
         }
         return {
           nodeId: node.nodeId,
-          type: node.fieldName || node.type || "text",
-          value: value
+          fieldName: node.fieldName || node.type || "text",
+          fieldValue: value
         };
       });
     }
@@ -130,9 +130,16 @@ if (updateError) {
     const rhData = await rhResponse.json();
 
     if (!rhResponse.ok || rhData.code !== 0) {
-      // Refund points if generation fails?
-      console.error('RunningHub API Error:', rhData);
-      return NextResponse.json({ error: rhData.msg || '第三方接口调用失败', details: rhData }, { status: 500 });
+      // 核心修复：终结模糊报错，输出完整详细的错误结构
+      console.error('【RunningHub API 校验失败/报错】请求 Payload:', JSON.stringify(payload, null, 2));
+      console.error('【RunningHub API 错误响应】:', JSON.stringify(rhData, null, 2));
+
+      const errorMsg = rhData.msg || rhData.message || '第三方接口调用失败';
+      return NextResponse.json({
+        code: rhData.code || 400,
+        message: `校验失败: ${errorMsg}`,
+        details: rhData
+      }, { status: 400 });
     }
 
     const taskId = String(rhData.data.taskId);
@@ -143,8 +150,24 @@ if (updateError) {
       newPoints: newPoints
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Generate API Error:', error);
+    try {
+      const clonedReq = req.clone();
+      const bodyText = await clonedReq.text();
+      console.error('【请求 Payload 异常】:', bodyText);
+    } catch(e) {}
+
+
+    // Zod Error formatting
+    if (error && error.name === 'ZodError') {
+      return NextResponse.json({
+        code: 400,
+        message: `校验失败: ${error.errors?.[0]?.message || '参数类型不匹配'}`,
+        details: error.errors
+      }, { status: 400 });
+    }
+
     return NextResponse.json({ error: error instanceof Error ? error.message : 'Internal Server Error', details: String(error) }, { status: 500 });
   }
 }
