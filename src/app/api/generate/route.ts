@@ -96,9 +96,9 @@ if (updateError) {
           value = node.fieldValue !== undefined ? node.fieldValue : "";
         }
         return {
-          nodeId: node.nodeId,
-          fieldName: node.fieldName || node.type || "text",
-          fieldValue: value
+          nodeId: String(node.nodeId),
+          fieldName: String(node.fieldName || node.type || "text"),
+          fieldValue: typeof value === 'object' ? JSON.stringify(value) : String(value)
         };
       });
     }
