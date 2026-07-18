@@ -114,28 +114,26 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
     setErrorMsg(null);
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('apiKey', 'aa0c44bf36314b1ebdc7937ddede6fae');
-      formData.append('fileType', 'input');
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
 
-      const res = await fetch('/api/rh-upload', {
-        method: 'POST',
-        body: formData
-      });
+      const { data, error } = await supabase.storage
+        .from('site-assets')
+        .upload(fileName, file);
 
-      const data = await res.json();
-
-      if (!res.ok || data.code !== 0) {
-        throw new Error(data.msg || data.message || '上传失败');
+      if (error) {
+        throw error;
       }
 
-      const fileName = data.data?.fileName;
-      if (!fileName) {
-        throw new Error('服务器未返回文件路径');
+      const { data: { publicUrl } } = supabase.storage
+        .from('site-assets')
+        .getPublicUrl(fileName);
+
+      if (!publicUrl) {
+        throw new Error('获取文件链接失败');
       }
 
-      setDynamicFormValues(prev => ({ ...prev, [nodeId]: fileName }));
+      setDynamicFormValues(prev => ({ ...prev, [nodeId]: publicUrl }));
 
       const objectUrl = URL.createObjectURL(file);
       setPreviewUrls(prev => ({ ...prev, [nodeId]: objectUrl }));
