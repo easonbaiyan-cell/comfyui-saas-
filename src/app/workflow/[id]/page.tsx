@@ -310,7 +310,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "生成失败");
+        throw new Error(data.message || data.error || '生成失败，请查看控制台');
       }
 
       setTaskId(data.taskId);
