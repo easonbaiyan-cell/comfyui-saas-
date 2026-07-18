@@ -98,6 +98,8 @@ if (updateError) {
       nodeInfoList: nodeInfoList
     };
 
+    console.log('Sending to RH:', JSON.stringify(payload));
+
     const rhResponse = await fetch('https://www.runninghub.cn/task/openapi/ai-app/run', {
       method: 'POST',
       headers: {
@@ -106,12 +108,20 @@ if (updateError) {
       body: JSON.stringify(payload)
     });
 
+    const contentType = rhResponse.headers.get('content-type');
+
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await rhResponse.text();
+      console.error('RunningHub API Error (Non-JSON):', text);
+      return NextResponse.json({ error: 'RunningHub API 返回了非 JSON 格式数据', details: text }, { status: 500 });
+    }
+
     const rhData = await rhResponse.json();
 
-    if (rhData.code !== 0) {
+    if (!rhResponse.ok || rhData.code !== 0) {
       // Refund points if generation fails?
       console.error('RunningHub API Error:', rhData);
-      return NextResponse.json({ error: rhData.msg || 'Third-party API failed' }, { status: 500 });
+      return NextResponse.json({ error: rhData.msg || '第三方接口调用失败', details: rhData }, { status: 500 });
     }
 
     const taskId = String(rhData.data.taskId);
@@ -124,6 +134,6 @@ if (updateError) {
 
   } catch (error) {
     console.error('Generate API Error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Internal Server Error', details: String(error) }, { status: 500 });
   }
 }
