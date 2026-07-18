@@ -2,6 +2,7 @@
 
 
 import React, { useState, useEffect } from 'react';
+import toast, { Toaster } from 'react-hot-toast';
 import { Play, UploadCloud, HelpCircle, Minus, Plus, Zap, Heart, MessageCircle, Download, Trash2, Share2, X, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth';
@@ -53,7 +54,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
   const [elapsedTime, setElapsedTime] = useState(0);
   const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null);
   const [taskId, setTaskId] = useState<string | null>(null);
-  const [errorMsg, setErrorMsg] = useState<any>(null);
+
 
   const extractErrorMessage = (err: any): string => {
     if (!err) return '未知错误';
@@ -123,7 +124,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
     if (!file) return;
 
     setActiveUploads(prev => ({ ...prev, [nodeId]: true }));
-    setErrorMsg(null);
+
 
     try {
       const fileExt = file.name.split('.').pop();
@@ -151,7 +152,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
       setPreviewUrls(prev => ({ ...prev, [nodeId]: objectUrl }));
     } catch (err: unknown) {
       console.error('上传出错:', err);
-      setErrorMsg("上传失败，请重试");
+      toast.error("上传失败，请重试");
     } finally {
       setActiveUploads(prev => ({ ...prev, [nodeId]: false }));
     }
@@ -263,7 +264,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
     if (!workflow || !workflow.rh_payload_template) {
       console.error("拦截提交: workflow 数据丢失或 rh_payload_template 为 null", workflow);
       // 触发 UI 提示（请根据项目中实际使用的提示库如 react-hot-toast 或 sonner 进行适配）
-      setErrorMsg("工作流配置尚未加载完毕或数据缺失，请刷新重试。");
+      toast.error("工作流配置尚未加载完毕或数据缺失，请刷新重试。");
       return; // 强制阻断，绝对禁止向下执行 fetch
     }
 
@@ -281,21 +282,21 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
       });
 
       if (isMissingParams) {
-        setErrorMsg("请上传所有必需的图片/参数");
+        toast.error("请上传所有必需的图片/参数");
         return;
       }
     }
     if (!currentUser) {
-      setErrorMsg("请先登录");
+      toast.error("请先登录");
       return;
     }
     if (积分余额 < cost) {
-      setErrorMsg("积分不足，请先充值");
+      toast.error("积分不足，请先充值");
       return;
     }
 
     setIsGenerating(true);
-    setErrorMsg(null);
+
     setGeneratedVideoUrl(null);
     setPollStatus(null);
 
@@ -348,7 +349,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
       pollForResult(data.taskId);
 
     } catch (err: unknown) {
-      setErrorMsg((err instanceof Error ? err.message : String(err)));
+      toast.error((err instanceof Error ? err.message : String(err)));
       setIsGenerating(false);
     }
   };
@@ -359,7 +360,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
       attempts++;
       if (attempts >= 120) { // 10 minutes limit (120 * 5s = 600s)
         clearInterval(interval);
-        setErrorMsg('生成超时，请稍后重试');
+        toast.error('生成超时，请稍后重试');
         setIsGenerating(false);
         return;
       }
@@ -377,21 +378,43 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
            if (data.data && data.data.length > 0 && data.data[0].fileUrl) {
               setGeneratedVideoUrl(data.data[0].fileUrl);
            } else {
-              setErrorMsg('生成成功但未找到视频/图片URL');
+              toast.error('生成成功但未找到视频/图片URL');
            }
            setIsGenerating(false);
         } else if (data && (data.code === 804 || data.code === 813)) {
            // RUNNING or QUEUED, just wait for the next tick
            setPollStatus(data.code === 804 ? '正在拼命生成中...' : '排队中...');
         } else if (data && data.code === 805) {
+           let finalError = "生成失败，请稍后重试";
+           try {
+               // 应对 failedReason 可能是被字符串化的 JSON，或是对象的情况
+               const reason = typeof data.data?.failedReason === 'string'
+                   ? JSON.parse(data.data.failedReason)
+                   : data.data?.failedReason;
+
+               if (reason?.exception_message) {
+                   finalError = reason.exception_message;
+               } else if (data.errorMessage) {
+                   finalError = data.errorMessage;
+               } else if (data.msg) {
+                   finalError = data.msg;
+               }
+           } catch (e) {
+               finalError = data.errorMessage || data.msg || "任务执行失败";
+           }
+
+           // 1. 强制停止轮询定时器
            clearInterval(interval);
-           const errorData = data.data?.failedReason || '生成失败';
-           setErrorMsg(extractErrorMessage(errorData));
+
+           // 2. 恢复“立即生成”按钮的状态
            setIsGenerating(false);
+
+           // 3. 优雅地在右上角/顶部弹出纯文本
+           toast.error(finalError);
         } else if (data && data.code !== undefined) {
            clearInterval(interval);
            const errorData = data.msg || data.message || '未知状态异常';
-           setErrorMsg(extractErrorMessage(errorData));
+           toast.error(extractErrorMessage(errorData));
            setIsGenerating(false);
         }
       } catch (err) {
@@ -431,6 +454,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="h-[calc(100vh-64px)] bg-[#0a0a0a] text-white overflow-hidden">
+      <Toaster position="top-center" />
       <div className="grid grid-cols-1 lg:grid-cols-3 h-full w-full">
         {/* Left Column: Showcase Video */}
         <div className="border-r border-white/5 p-6 flex flex-col items-center justify-start overflow-y-auto">
@@ -474,9 +498,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
             <h1 className="text-lg font-semibold text-white mb-6 text-center">工作流详情与操作</h1>
 
 
-                        {errorMsg && (
-              <p className="text-danger-red text-sm mb-4 text-center">{errorMsg}</p>
-            )}
+
 
             {workflow?.rh_payload_template?.nodeInfoList && workflow.rh_payload_template.nodeInfoList.length > 0 ? (
               workflow.rh_payload_template.nodeInfoList.map(renderDynamicNode)
