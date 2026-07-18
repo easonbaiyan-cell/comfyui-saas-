@@ -293,6 +293,19 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
         throw new Error("未获取到认证信息");
       }
 
+      // Construct nodeInfoList keeping strict types (do not convert to string)
+      const constructedNodeInfoList = workflow.rh_payload_template.nodeInfoList.map((node: DynamicNode) => {
+        let value = dynamicFormValues[node.nodeId];
+        if (value === undefined) {
+          value = node.fieldValue !== undefined ? node.fieldValue : "";
+        }
+        return {
+          nodeId: String(node.nodeId),
+          fieldName: String(node.fieldName || node.type || "text"),
+          fieldValue: value
+        };
+      });
+
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: {
@@ -302,6 +315,10 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
         body: JSON.stringify({
           workflowId: workflowId,
           formValues: dynamicFormValues,
+          rh_payload_template: {
+            ...workflow.rh_payload_template,
+            nodeInfoList: constructedNodeInfoList
+          }
         })
       });
 
