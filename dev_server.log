@@ -1,0 +1,15 @@
+
+> temp_app@0.1.0 dev
+> next dev
+
+   ▲ Next.js 15.5.20
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.0.2:3000
+
+ ✓ Starting...
+ ✓ Ready in 2s
+ ○ Compiling /workflow/[id] ...
+ ✓ Compiled /workflow/[id] in 9.4s (700 modules)
+ GET /workflow/123 200 in 12492ms
+ GET /workflow/123 200 in 114ms
+ GET /workflow/123 200 in 111ms
