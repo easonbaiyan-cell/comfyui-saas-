@@ -93,16 +93,15 @@ if (updateError) {
     }
 
     const payload = {
-      workflowId: workflow.runninghub_id,
-      apiKey: process.env.RUNNINGHUB_API_KEY || '',
+      webappId: workflow.runninghub_id,
+      apiKey: 'aa0c44bf36314b1ebdc7937ddede6fae',
       nodeInfoList: nodeInfoList
     };
 
-    const rhResponse = await fetch('https://www.runninghub.cn/task/openapi/create', {
+    const rhResponse = await fetch('https://www.runninghub.cn/task/openapi/ai-app/run', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.RUNNINGHUB_API_KEY || ''}`
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(payload)
     });
