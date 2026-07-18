@@ -369,6 +369,35 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
     }, 5000); // Poll every 5 seconds
   };
 
+  if (loadingWorkflow) {
+    return (
+      <div className="h-[calc(100vh-64px)] bg-[#0a0a0a] text-white flex items-center justify-center flex-col">
+        <Loader2 className="w-10 h-10 animate-spin text-primary-green mb-4" />
+        <p className="text-gray-400">加载中...</p>
+      </div>
+    );
+  }
+
+  if (!workflow || !workflow.rh_payload_template) {
+    return (
+      <div className="h-[calc(100vh-64px)] bg-[#0a0a0a] text-white flex items-center justify-center flex-col">
+        <div className="bg-[#131622] p-8 rounded-2xl border border-white/10 shadow-xl max-w-md w-full text-center">
+          <HelpCircle className="w-16 h-16 text-danger-red mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-white mb-2">数据加载异常</h2>
+          <p className="text-gray-400 text-sm mb-6">
+            抱歉，该工作流的数据已损坏或配置不完整，无法继续操作。请返回重试或联系管理员。
+          </p>
+          <button
+            onClick={() => window.location.href = '/'}
+            className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors text-sm font-medium"
+          >
+            返回首页
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-[calc(100vh-64px)] bg-[#0a0a0a] text-white overflow-hidden">
       <div className="grid grid-cols-1 lg:grid-cols-3 h-full w-full">
