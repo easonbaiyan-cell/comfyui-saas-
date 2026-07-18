@@ -54,6 +54,17 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
   const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null);
   const [taskId, setTaskId] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<any>(null);
+
+  const extractErrorMessage = (err: any): string => {
+    if (!err) return '未知错误';
+    if (typeof err === 'string') return err;
+    if (err instanceof Error) return err.message;
+    try {
+      return JSON.stringify(err);
+    } catch (e) {
+      return String(err);
+    }
+  };
   const [pollStatus, setPollStatus] = useState<string | null>(null);
 
   const user = useAuthStore((state) => state.user);
@@ -375,12 +386,12 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
         } else if (data && data.code === 805) {
            clearInterval(interval);
            const errorData = data.data?.failedReason || '生成失败';
-           setErrorMsg(typeof errorData === 'object' ? JSON.stringify(errorData) : errorData);
+           setErrorMsg(extractErrorMessage(errorData));
            setIsGenerating(false);
         } else if (data && data.code !== undefined) {
            clearInterval(interval);
            const errorData = data.msg || data.message || '未知状态异常';
-           setErrorMsg(typeof errorData === 'object' ? JSON.stringify(errorData) : errorData);
+           setErrorMsg(extractErrorMessage(errorData));
            setIsGenerating(false);
         }
       } catch (err) {
@@ -464,7 +475,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
 
 
                         {errorMsg && (
-              <p className="text-danger-red text-sm mb-4 text-center">{typeof errorMsg === 'object' ? JSON.stringify(errorMsg) : errorMsg}</p>
+              <p className="text-danger-red text-sm mb-4 text-center">{errorMsg}</p>
             )}
 
             {workflow?.rh_payload_template?.nodeInfoList && workflow.rh_payload_template.nodeInfoList.length > 0 ? (
