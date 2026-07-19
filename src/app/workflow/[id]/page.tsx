@@ -429,7 +429,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
     }
   };
 
-  const pollForResult = async (currentTaskId: string) => {
+  async function pollForResult(currentTaskId: string) {
     if (!currentTaskId) return;
     let attempts = 0;
     const interval = setInterval(async () => {
@@ -456,27 +456,41 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
            if (data.data && data.data.length > 0 && data.data[0].fileUrl) {
               const fileUrl = data.data[0].fileUrl;
               setGeneratedMediaUrl(fileUrl);
+              setIsGenerating(false);
 
-              // Persist generation asset into DB
-              if (user && user.id && workflowId) {
-                supabase.from('video_tasks').insert({
-                  user_id: user.id,
-                  workflow_id: workflowId,
-                  status: 'success',
-                  result_url: fileUrl,
-                  result_video_url: fileUrl,
-                  input_data: { taskId: currentTaskId }
-                }).then(({ error }) => {
-                  if (error) {
-                    console.error("Failed to insert generation record:", error);
-                    setToastMessage({ text: '保存生成结果失败', type: 'error' });
-                  }
-                });
+              // ==== 核心入库逻辑开始 ====
+              if (!user || !user.id) {
+                  console.error("❌ 严重错误: 找不到当前登录用户信息，无法入库");
+                  setToastMessage({ text: "保存失败：未获取到用户信息", type: "error" });
+                  return;
               }
+
+              console.log("⏳ 准备将资产写入 video_tasks 表...");
+
+              // 发起 Supabase Insert
+              const { error: insertError } = await supabase
+                  .from('video_tasks')
+                  .insert({
+                      user_id: user.id,
+                      workflow_id: workflowId,
+                      result_url: fileUrl,
+                      task_id: currentTaskId,
+                      status: 'SUCCESS'
+                  });
+
+              if (insertError) {
+                  console.error("❌ 数据库写入彻底失败 (请检查字段名称和 RLS 策略):", insertError);
+                  setToastMessage({ text: `云端保存失败: ${insertError.message || '未知错误'}`, type: "error" });
+              } else {
+                  console.log("✅ 资产已成功写入 video_tasks 表！");
+                  setToastMessage({ text: "生成成功！已保存至我的创作", type: "success" });
+              }
+              // ==== 核心入库逻辑结束 ====
+
            } else {
               setErrorMsg('生成成功但未找到视频/图片URL');
+              setIsGenerating(false);
            }
-           setIsGenerating(false);
         } else if (data && (data.code === 804 || data.code === 813)) {
            // RUNNING or QUEUED, just wait for the next tick
            setPollStatus(data.code === 804 ? '正在拼命生成中...' : '排队中...');
