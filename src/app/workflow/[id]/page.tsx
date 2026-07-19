@@ -459,19 +459,29 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
               setIsGenerating(false);
 
               // ==== 核心入库逻辑开始 ====
-              if (!user || !user.id) {
-                  console.error("❌ 严重错误: 找不到当前登录用户信息，无法入库");
-                  setToastMessage({ text: "保存失败：未获取到用户信息", type: "error" });
-                  return;
-              }
-
               console.log("⏳ 准备将资产写入 video_tasks 表...");
 
-              // 发起 Supabase Insert
+              // 1. 防弹级实时获取当前用户 (绕过 React 闭包陷阱)
+              let finalUserId = user?.id; // 先尝试拿 state 里的
+              if (!finalUserId) {
+                  // 如果 state 里没有，强行向 Supabase 要最新状态
+                  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                  finalUserId = session?.user?.id;
+                  if (sessionError) console.error("获取 Session 异常:", sessionError);
+              }
+
+              // 2. 最终校验
+              if (!finalUserId) {
+                  console.error("❌ 严重错误: 实时从 Supabase 获取用户依然失败，无法入库");
+                  setToastMessage({ text: "云端保存失败：登录状态异常，请刷新重试", type: "error" });
+                  return; // 终止执行
+              }
+
+              // 3. 执行入库
               const { error: insertError } = await supabase
                   .from('video_tasks')
                   .insert({
-                      user_id: user.id,
+                      user_id: finalUserId,   // 使用实时获取到的真实 ID
                       workflow_id: workflowId,
                       result_url: fileUrl,
                       task_id: currentTaskId,
@@ -479,8 +489,8 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
                   });
 
               if (insertError) {
-                  console.error("❌ 数据库写入彻底失败 (请检查字段名称和 RLS 策略):", insertError);
-                  setToastMessage({ text: `云端保存失败: ${insertError.message || '未知错误'}`, type: "error" });
+                  console.error("❌ 数据库写入彻底失败:", insertError);
+                  setToastMessage({ text: `云端保存失败: ${insertError.message}`, type: "error" });
               } else {
                   console.log("✅ 资产已成功写入 video_tasks 表！");
                   setToastMessage({ text: "生成成功！已保存至我的创作", type: "success" });
