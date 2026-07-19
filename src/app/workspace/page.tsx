@@ -11,7 +11,6 @@ type Creation = {
   id: string;
   result_video_url: string;
   createdAt: string;
-  modelName: string;
   status?: string;
 };
 
@@ -29,26 +28,20 @@ export default function WorkspacePage() {
     try {
       const { data, error } = await supabase
         .from('video_tasks')
-        .select('*, workflows(title)')
+        .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
+
+      console.log("Workspace Data fetched:", data, error);
 
       if (error) throw error;
 
       if (data) {
         const formattedData: Creation[] = data.map((item: any) => {
-           let modelName = 'Unknown Workflow';
-           if (item.workflows && Array.isArray(item.workflows)) {
-             modelName = item.workflows[0]?.title || modelName;
-           } else if (item.workflows && typeof item.workflows === 'object') {
-             modelName = item.workflows.title || modelName;
-           }
-
            return {
              id: item.id,
              result_video_url: item.result_video_url || "",
              createdAt: new Date(item.created_at).toLocaleString(),
-             modelName: modelName,
              status: item.status
            };
         });
@@ -114,7 +107,6 @@ export default function WorkspacePage() {
                  ) : (
                     <video src={item.result_video_url} className="w-full h-full object-cover" muted loop playsInline autoPlay />
                  )}
-                 <p className="absolute bottom-4 left-4 z-20 text-white font-bold bg-black/50 px-2 py-1 rounded">Workflow: {item.modelName}</p>
                  <button
                       onClick={() => handleDelete(item.id)}
                       className="absolute top-4 right-4 z-20 p-2 bg-black/50 hover:bg-danger-red text-white rounded-full backdrop-blur-md transition-colors"
