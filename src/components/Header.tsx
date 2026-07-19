@@ -6,7 +6,7 @@ import { InviteModal } from "./InviteModal";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
-import { Bell, HeadphonesIcon, LogOut, User as UserIcon, Zap, Home, Video, CreditCard, Settings, X, Crown, Coins, Download } from "lucide-react";
+import { Bell, HeadphonesIcon, LogOut, User as UserIcon, Zap, Home, Video, CreditCard, Settings, X, Crown, Coins, Download, Trash } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { AuthModal } from "./AuthModal";
 import type { User } from "@supabase/supabase-js";
@@ -74,6 +74,21 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
 
 
   const set积分余额 = useAuthStore(state => state.set积分余额);
+
+  const handleDeleteTask = async (taskId: string) => {
+    // Optimistic update
+    setVideoTasks(prev => prev.filter(t => t.id !== taskId));
+
+    const { error } = await supabase
+      .from('video_tasks')
+      .delete()
+      .eq('id', taskId);
+
+    if (error) {
+      console.error("Delete task failed", error);
+    }
+  };
+
 
   useEffect(() => {
     // 强制切除 406 污染源
@@ -376,6 +391,14 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
 
                     return (
                       <div key={task.id} className="bg-[#1a1a1a] rounded-xl overflow-hidden border border-white/10 flex flex-col group relative">
+
+                        <button
+                          onClick={() => handleDeleteTask(task.id)}
+                          className="absolute top-2 right-2 bg-black/60 hover:bg-danger-red text-white p-1.5 rounded-full z-20 transition-colors"
+                        >
+                          <Trash className="w-3.5 h-3.5" />
+                        </button>
+
                         {isSuccess && task.result_video_url ? (
                           <div className="relative w-full aspect-video bg-black flex-shrink-0 border-b border-white/10">
                             {isImageUrl(task.result_video_url) ? (
