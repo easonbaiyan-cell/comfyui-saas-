@@ -3,14 +3,66 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Download, ArrowRight } from "lucide-react";
+import { Download, ArrowRight, X, CheckCircle2, Circle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
+
+
+const isImageUrl = (url: string) => {
+  if (!url) return false;
+  const lowerUrl = url.toLowerCase();
+  return lowerUrl.endsWith('.png') || lowerUrl.endsWith('.jpg') || lowerUrl.endsWith('.jpeg') || lowerUrl.endsWith('.webp') || lowerUrl.endsWith('.gif');
+};
 
 export default function WorkspacePage() {
   const [videoTasks, setVideoTasks] = useState<any[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [previewItem, setPreviewItem] = useState<string | null>(null);
+  const [isManaging, setIsManaging] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  const handleBatchDelete = async () => {
+    if (!selectedIds.length) return;
+
+    // Optimistic UI update
+    setVideoTasks(prev => prev.filter(t => !selectedIds.includes(t.id)));
+
+    const { error } = await supabase
+      .from('video_tasks')
+      .delete()
+      .in('id', selectedIds);
+
+    if (error) {
+      console.error("Delete failed", error);
+      // Optional: Refetch or revert state here if needed
+    } else {
+      setSelectedIds([]);
+      setIsManaging(false);
+    }
+  };
+
+  const handleBatchDownload = () => {
+    if (!selectedIds.length) return;
+
+    selectedIds.forEach(id => {
+      const task = videoTasks.find(t => t.id === id);
+      if (task && task.result_video_url) {
+        // Create an invisible anchor to trigger download
+        const a = document.createElement('a');
+        a.href = task.result_video_url;
+        a.download = '';
+        a.target = '_blank';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+    });
+
+    setSelectedIds([]);
+    setIsManaging(false);
+  };
+
 
   useEffect(() => {
     // Initial fetch
@@ -57,7 +109,24 @@ export default function WorkspacePage() {
 
   return (
     <div className="w-full relative z-10 p-6 bg-[#0B0F19] min-h-screen">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+      {/* Page Header */}
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-white">我的创作</h1>
+        <button
+          onClick={() => {
+            setIsManaging(!isManaging);
+            if (isManaging) setSelectedIds([]);
+          }}
+          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+            isManaging ? 'bg-white text-black hover:bg-gray-200' : 'bg-primary-green text-black hover:bg-primary-green/90'
+          }`}
+        >
+          {isManaging ? '完成' : '管理'}
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 lg:gap-6">
         {videoTasks.map((task) => {
           const isSuccess = !!task.result_video_url || task.status === 'success';
           const isFailed = task.status === 'failed';
@@ -69,24 +138,46 @@ export default function WorkspacePage() {
           }
 
           return (
-            <div key={task.id} className="relative flex flex-col rounded-xl overflow-hidden bg-[#1a1a1a] border border-white/10 group">
+            <div key={task.id} className="relative flex flex-col rounded-xl overflow-hidden bg-[#1a1a1a] border border-white/10 group aspect-[9/16] cursor-pointer" onClick={() => {
+              if (isManaging) {
+                setSelectedIds(prev => prev.includes(task.id) ? prev.filter(id => id !== task.id) : [...prev, task.id]);
+              } else if (isSuccess && task.result_video_url) {
+                setPreviewItem(task.result_video_url);
+              }
+            }}>
+
+               {/* Selection Indicator */}
+               {isManaging && (
+                 <div className="absolute top-2 right-2 z-20">
+                   {selectedIds.includes(task.id) ? (
+                     <CheckCircle2 className="w-6 h-6 text-primary-green fill-white/10" />
+                   ) : (
+                     <Circle className="w-6 h-6 text-white/50" />
+                   )}
+                 </div>
+               )}
+
                {isSuccess && task.result_video_url ? (
-                  <div className="relative w-full aspect-video bg-black flex-shrink-0 border-b border-white/10">
-                    <img src={task.result_video_url} alt="Result" className="w-full h-full object-cover" />
+                  <div className="relative w-full h-full bg-black flex-shrink-0">
+                    {isImageUrl(task.result_video_url) ? (
+                      <img src={task.result_video_url} alt="Result" className="w-full h-full object-cover" />
+                    ) : (
+                      <video src={task.result_video_url} className="w-full h-full object-cover" autoPlay muted loop playsInline />
+                    )}
 
                     {/* Hover overlay for actions */}
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
-                      <a href={task.result_video_url} target="_blank" rel="noreferrer" className="p-2 bg-white/20 hover:bg-white hover:text-black rounded-full backdrop-blur transition-all">
+                      <a href={task.result_video_url} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="p-2 bg-white/20 hover:bg-white hover:text-black rounded-full backdrop-blur transition-all pointer-events-auto">
                         <Download className="h-4 w-4" />
                       </a>
                     </div>
                   </div>
                ) : (
-                  <div className="w-full aspect-video bg-black flex-shrink-0 border-b border-white/10 flex items-center justify-center text-gray-500">
+                  <div className="w-full h-full bg-black flex-shrink-0 flex items-center justify-center text-gray-500">
                     {isFailed ? '生成失败' : '生成中...'}
                   </div>
                )}
-               <div className="p-4">
+               <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 to-transparent z-10 pointer-events-none">
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="text-sm font-semibold text-white truncate max-w-[150px]">{modelName}</span>
                     <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
@@ -107,6 +198,72 @@ export default function WorkspacePage() {
           );
         })}
       </div>
+
+
+      {/* Management Action Bar */}
+      {isManaging && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-[#1a1a1a] border border-white/10 rounded-full px-6 py-3 flex items-center gap-6 shadow-2xl backdrop-blur-md">
+          <span className="text-sm text-gray-400">已选 {selectedIds.length} 项</span>
+
+          <div className="w-px h-4 bg-white/10"></div>
+
+          <button
+            onClick={() => {
+              setIsManaging(false);
+              setSelectedIds([]);
+            }}
+            className="text-sm text-gray-300 hover:text-white transition-colors"
+          >
+            取消
+          </button>
+
+          <button
+            onClick={() => {
+              if (selectedIds.length === videoTasks.length) {
+                setSelectedIds([]);
+              } else {
+                setSelectedIds(videoTasks.map(t => t.id));
+              }
+            }}
+            className="text-sm text-gray-300 hover:text-white transition-colors"
+          >
+            全选
+          </button>
+
+          <button
+            onClick={handleBatchDownload}
+            disabled={selectedIds.length === 0}
+            className="text-sm text-white hover:text-white/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+          >
+            <Download className="w-4 h-4" />
+            下载
+          </button>
+
+          <button
+            onClick={handleBatchDelete}
+            disabled={selectedIds.length === 0}
+            className="text-sm text-danger-red hover:text-danger-red/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            删除
+          </button>
+        </div>
+      )}
+
+      {/* Lightbox Modal */}
+      {previewItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4" onClick={() => setPreviewItem(null)}>
+          <button className="absolute top-6 right-6 text-white bg-black/50 hover:bg-black/80 rounded-full p-2 transition-colors z-50">
+            <X className="w-6 h-6" />
+          </button>
+          <div className="relative w-full h-full max-w-5xl max-h-[90vh] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            {isImageUrl(previewItem) ? (
+              <img src={previewItem} alt="Preview" className="w-full h-full object-contain" />
+            ) : (
+              <video src={previewItem} className="w-full h-full object-contain" autoPlay muted loop controls />
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
