@@ -3,106 +3,109 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Download, Trash2, ArrowRight } from "lucide-react";
+import { Download, ArrowRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { useAuthStore } from "@/store/auth";
-
-type Creation = {
-  id: string;
-  result_video_url: string;
-  created_at: string;
-  status?: string;
-};
+import type { User } from "@supabase/supabase-js";
 
 export default function WorkspacePage() {
-  const [creations, setCreations] = useState<Creation[]>([]);
+  const [videoTasks, setVideoTasks] = useState<any[]>([]);
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const user = useAuthStore((state) => state.user);
-
-  const fetchCreations = async () => {
-    if (!user?.id) {
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('video_tasks')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      console.log("Workspace Data fetched:", data, error);
-
-      if (error) throw error;
-
-      if (data) {
-        const formattedData: Creation[] = data.map((item: any) => {
-           return {
-             id: item.id,
-             result_video_url: item.result_video_url || "",
-             created_at: item.created_at,
-             status: item.status
-           };
-        });
-
-        setCreations(formattedData);
-      }
-    } catch (error) {
-      console.error("Error fetching creations:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      const { error } = await supabase.from('video_tasks').delete().eq('id', id);
-      if (error) {
-        console.error("Failed to delete creation:", error);
-        return;
-      }
-      setCreations((prev) => prev.filter((item) => item.id !== id));
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
   useEffect(() => {
-    if (!user?.id) {
-      setIsLoading(false);
-      return;
-    }
-    fetchCreations();
-  }, [user?.id]);
+    // Initial fetch
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user || null);
+    });
 
-  const isImageUrl = (url: string) => {
-    if (!url) return false;
-    const lowerUrl = url.toLowerCase();
-    return lowerUrl.endsWith('.png') || lowerUrl.endsWith('.jpg') || lowerUrl.endsWith('.jpeg') || lowerUrl.endsWith('.webp') || lowerUrl.endsWith('.gif');
-  };
+    // Subscribe to auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (user) {
+      // initial fetch
+      const fetchTasks = async () => {
+        const { data } = await supabase
+          .from('video_tasks')
+          .select('*, workflows(title)')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+        if (data) setVideoTasks(data);
+        setIsLoading(false);
+      };
+
+      fetchTasks();
+
+      interval = setInterval(fetchTasks, 5000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [user]);
 
   // 在 render 阶段，强行互斥
   if (isLoading) return <div className="p-10 text-white">加载中...</div>;
-  if (!creations || creations.length === 0) return <EmptyState />;
+  if (!videoTasks || videoTasks.length === 0) return <EmptyState />;
   // 只要代码走到这里，说明绝对有数据，屏幕上绝对不允许再出现 EmptyState 的 DOM！
 
   return (
     <div className="w-full relative z-10 p-6 bg-[#0B0F19] min-h-screen">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {creations.map((item) => (
-          <div key={item.id} className="relative flex flex-col rounded-xl overflow-hidden bg-gray-800 border border-gray-700 shadow-lg block">
-             {/* 严禁使用 absolute 强行定位图片，必须使用普通流布局 */}
-             {item.result_video_url ? (
-                <img src={item.result_video_url} alt="result" className="w-full h-auto aspect-video object-cover relative z-20" />
-             ) : (
-                <div className="w-full aspect-video bg-gray-900 flex items-center justify-center text-gray-500">解析中...</div>
-             )}
-             <div className="p-4">
-                <p className="text-sm text-gray-400 truncate">Time: {new Date(item.created_at).toLocaleString()}</p>
-             </div>
-          </div>
-        ))}
+        {videoTasks.map((task) => {
+          const isSuccess = !!task.result_video_url || task.status === 'success';
+          const isFailed = task.status === 'failed';
+          let modelName = 'Unknown Workflow';
+          if (task.workflows && Array.isArray(task.workflows)) {
+            modelName = task.workflows[0]?.title || modelName;
+          } else if (task.workflows && typeof task.workflows === 'object') {
+            modelName = task.workflows.title || modelName;
+          }
+
+          return (
+            <div key={task.id} className="relative flex flex-col rounded-xl overflow-hidden bg-[#1a1a1a] border border-white/10 group">
+               {isSuccess && task.result_video_url ? (
+                  <div className="relative w-full aspect-video bg-black flex-shrink-0 border-b border-white/10">
+                    <img src={task.result_video_url} alt="Result" className="w-full h-full object-cover" />
+
+                    {/* Hover overlay for actions */}
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                      <a href={task.result_video_url} target="_blank" rel="noreferrer" className="p-2 bg-white/20 hover:bg-white hover:text-black rounded-full backdrop-blur transition-all">
+                        <Download className="h-4 w-4" />
+                      </a>
+                    </div>
+                  </div>
+               ) : (
+                  <div className="w-full aspect-video bg-black flex-shrink-0 border-b border-white/10 flex items-center justify-center text-gray-500">
+                    {isFailed ? '生成失败' : '生成中...'}
+                  </div>
+               )}
+               <div className="p-4">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-sm font-semibold text-white truncate max-w-[150px]">{modelName}</span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                      isSuccess ? 'bg-primary-green/20 text-primary-green' :
+                      isFailed ? 'bg-danger-red/20 text-danger-red' :
+                      'bg-yellow-500/20 text-yellow-500 animate-pulse'
+                    }`}>
+                      {isSuccess ? '已完成' : isFailed ? '失败' : '生成中'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-gray-500 font-mono truncate max-w-[120px]">{task.id}</span>
+                    <span className="text-[10px] text-gray-500">{new Date(task.created_at).toLocaleString()}</span>
+                  </div>
+               </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
