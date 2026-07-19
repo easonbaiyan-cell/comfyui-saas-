@@ -127,9 +127,10 @@ export default function WorkspacePage() {
   // 只要代码走到这里，说明绝对有数据，屏幕上绝对不允许再出现 EmptyState 的 DOM！
 
   return (
-    <div className="w-full relative z-10 p-6 bg-[#0B0F19] min-h-screen">
+    <>
+      <div className="w-full relative z-10 p-6 bg-[#0B0F19] min-h-screen">
 
-      {/* Page Header */}
+        {/* Page Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-white">我的创作</h1>
         <button
@@ -272,9 +273,11 @@ export default function WorkspacePage() {
         </div>
       )}
 
+      </div>
+
       {/* Lightbox Modal */}
       {previewItem && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4" onClick={() => setPreviewItem(null)}>
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/90 p-4" onClick={() => setPreviewItem(null)}>
           <button onClick={() => setPreviewItem(null)} className="absolute top-6 right-6 text-white bg-black/50 hover:bg-black/80 rounded-full p-2 transition-colors z-50">
             <X className="w-6 h-6" />
           </button>
@@ -287,7 +290,7 @@ export default function WorkspacePage() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
