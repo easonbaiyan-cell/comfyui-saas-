@@ -1,0 +1,15 @@
+
+> temp_app@0.1.0 dev
+> next dev
+
+   ▲ Next.js 15.5.20
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.0.2:3000
+
+ ✓ Starting...
+ ✓ Ready in 2s
+ ○ Compiling /workspace ...
+ ✓ Compiled /workspace in 11.4s (928 modules)
+ GET /workspace 200 in 13512ms
+ ✓ Compiled in 411ms (369 modules)
+ GET /workspace 200 in 125ms

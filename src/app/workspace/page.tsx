@@ -165,12 +165,6 @@ export default function WorkspacePage() {
                       <video src={task.result_video_url} className="w-full h-full object-cover" autoPlay muted loop playsInline />
                     )}
 
-                    {/* Hover overlay for actions */}
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
-                      <a href={task.result_video_url} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="p-2 bg-white/20 hover:bg-white hover:text-black rounded-full backdrop-blur transition-all pointer-events-auto">
-                        <Download className="h-4 w-4" />
-                      </a>
-                    </div>
                   </div>
                ) : (
                   <div className="w-full h-full bg-black flex-shrink-0 flex items-center justify-center text-gray-500">
@@ -180,13 +174,26 @@ export default function WorkspacePage() {
                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 to-transparent z-10 pointer-events-none">
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="text-sm font-semibold text-white truncate max-w-[150px]">{modelName}</span>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                      isSuccess ? 'bg-primary-green/20 text-primary-green' :
-                      isFailed ? 'bg-danger-red/20 text-danger-red' :
-                      'bg-yellow-500/20 text-yellow-500 animate-pulse'
-                    }`}>
-                      {isSuccess ? '已完成' : isFailed ? '失败' : '生成中'}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                        isSuccess ? 'bg-primary-green/20 text-primary-green' :
+                        isFailed ? 'bg-danger-red/20 text-danger-red' :
+                        'bg-yellow-500/20 text-yellow-500 animate-pulse'
+                      }`}>
+                        {isSuccess ? '已完成' : isFailed ? '失败' : '生成中'}
+                      </span>
+                      {isSuccess && task.result_video_url && (
+                        <a
+                          href={task.result_video_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="pointer-events-auto text-white hover:text-white/80 transition-colors"
+                        >
+                          <Download className="w-4 h-4" />
+                        </a>
+                      )}
+                    </div>
                   </div>
 
                   <div className="flex items-center justify-between">
@@ -252,7 +259,7 @@ export default function WorkspacePage() {
       {/* Lightbox Modal */}
       {previewItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4" onClick={() => setPreviewItem(null)}>
-          <button className="absolute top-6 right-6 text-white bg-black/50 hover:bg-black/80 rounded-full p-2 transition-colors z-50">
+          <button onClick={() => setPreviewItem(null)} className="absolute top-6 right-6 text-white bg-black/50 hover:bg-black/80 rounded-full p-2 transition-colors z-50">
             <X className="w-6 h-6" />
           </button>
           <div className="relative w-full h-full max-w-5xl max-h-[90vh] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
