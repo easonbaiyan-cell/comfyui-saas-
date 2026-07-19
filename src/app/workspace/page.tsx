@@ -9,7 +9,7 @@ import { useAuthStore } from "@/store/auth";
 
 type Creation = {
   id: string;
-  imageUrl: string;
+  result_video_url: string;
   createdAt: string;
   modelName: string;
 };
@@ -28,9 +28,8 @@ export default function WorkspacePage() {
     try {
       const { data, error } = await supabase
         .from('video_tasks')
-        .select('*, workflows(title)')
+        .select('*')
         .eq('user_id', user.id)
-        .eq('status', 'success')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -46,7 +45,7 @@ export default function WorkspacePage() {
 
            return {
              id: item.id,
-             imageUrl: item.result_video_url || "",
+             result_video_url: item.result_video_url || "",
              createdAt: new Date(item.created_at).toLocaleString(),
              modelName: modelName
            };
@@ -118,15 +117,15 @@ export default function WorkspacePage() {
                 key={item.id}
                 className="group relative aspect-[9/16] rounded-xl overflow-hidden border border-white/10 bg-[#1a1a1a] transition-all hover:border-white/20"
               >
-                {isImageUrl(item.imageUrl) ? (
+                {isImageUrl(item.result_video_url) ? (
                   <img
-                    src={item.imageUrl}
+                    src={item.result_video_url}
                     alt={item.modelName}
                     className="absolute inset-0 w-full h-full object-cover"
                   />
                 ) : (
                   <video
-                    src={item.imageUrl}
+                    src={item.result_video_url}
                     className="absolute inset-0 w-full h-full object-cover"
                     muted
                     loop
@@ -149,7 +148,7 @@ export default function WorkspacePage() {
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-end p-3">
                   <div className="flex flex-col gap-2">
                     <a
-                      href={item.imageUrl}
+                      href={item.result_video_url}
                       target="_blank"
                       rel="noreferrer"
                       className="p-2 bg-white/10 hover:bg-primary-green text-white hover:text-black rounded-full backdrop-blur-md transition-colors"
