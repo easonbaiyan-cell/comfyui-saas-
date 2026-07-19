@@ -448,6 +448,10 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ taskId: currentTaskId })
         });
+        if (!res.ok) {
+            console.warn('网络波动，跳过本次解析');
+            return; // 遇到 500 直接 return，等待下次轮询，绝不准崩！
+        }
         const data = await res.json();
 
         if (data && data.code === 0) {
@@ -519,8 +523,8 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
            setErrorMsg(extractErrorMessage(errorData));
            setIsGenerating(false);
         }
-      } catch (err) {
-        console.error('Polling error', err);
+      } catch (error) {
+        console.warn('请求阻断，跳过本次', error);
       }
     }, 5000); // Poll every 5 seconds
   };
