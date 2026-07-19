@@ -21,7 +21,7 @@ export default function WorkspacePage() {
   const user = useAuthStore((state) => state.user);
 
   const fetchCreations = async () => {
-    if (!user) {
+    if (!user?.id) {
       setIsLoading(false);
       return;
     }
@@ -116,8 +116,7 @@ export default function WorkspacePage() {
           /* Grid Layout */
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
             {creations.map((item) => {
-              const isSuccess = !!item.result_video_url || item.status === 'success';
-              const isFailed = item.status === 'failed';
+              const isSuccess = !!item.result_video_url;
 
               return (
               <div
@@ -128,14 +127,13 @@ export default function WorkspacePage() {
                 <div className="absolute top-3 left-3 z-10">
                   <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium shadow-md ${
                     isSuccess ? 'bg-primary-green/90 text-black' :
-                    isFailed ? 'bg-danger-red/90 text-white' :
                     'bg-yellow-500/90 text-black animate-pulse'
                   }`}>
-                    {isSuccess ? '已完成' : isFailed ? '失败' : '生成中'}
+                    {isSuccess ? '已完成' : '生成中'}
                   </span>
                 </div>
 
-                {isSuccess && item.result_video_url ? (
+                {isSuccess ? (
                   isImageUrl(item.result_video_url) ? (
                     <img
                       src={item.result_video_url}
@@ -154,17 +152,10 @@ export default function WorkspacePage() {
                   )
                 ) : (
                    <div className="flex flex-col items-center justify-center opacity-50">
-                      {isFailed ? (
-                        <div className="text-danger-red text-center">
-                          <span className="block text-2xl mb-2">!</span>
-                          <span className="text-sm">生成失败</span>
-                        </div>
-                      ) : (
                          <div className="text-yellow-500 text-center animate-pulse">
                            <div className="w-8 h-8 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
                            <span className="text-sm">生成中...</span>
                          </div>
-                      )}
                    </div>
                 )}
 
