@@ -15,7 +15,7 @@ const isImageUrl = (url: string) => {
 };
 
 export default function WorkspacePage() {
-  const [videoTasks, setVideoTasks] = useState<any[]>([]);
+  const [videoTasks, setVideoTasks] = useState<any[]>([]); // eslint-disable-line @typescript-eslint/no-explicit-any
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [previewItem, setPreviewItem] = useState<string | null>(null);
