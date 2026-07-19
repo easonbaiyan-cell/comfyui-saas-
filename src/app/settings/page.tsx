@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, ChangeEvent } from "react";
-import Image from "next/image";
 import { X } from "lucide-react";
 import { BaseModal } from "../../components/BaseModal";
 import { useRouter } from "next/navigation";
@@ -187,8 +186,8 @@ export default function SettingsPage() {
   const isSecurityDisabled = !currentPassword || !newPassword || !confirmPassword || !securityCode || isUpdatingPassword;
 
   return (
-    <div className="min-h-screen bg-black text-white pt-24 pb-12 px-4 sm:px-6">
-      <div className="max-w-3xl mx-auto space-y-8">
+    <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4 overflow-y-auto">
+      <div className="w-full max-w-3xl mx-auto space-y-8 bg-[#0a0a0a] border border-white/10 rounded-3xl p-6 sm:p-10 relative my-auto">
 
         {/* Header */}
         <div className="relative">
@@ -198,7 +197,7 @@ export default function SettingsPage() {
           </div>
           <button
             onClick={() => router.back()}
-            className="absolute top-0 right-0 p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+            className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors z-10"
           >
             <X className="w-6 h-6" />
           </button>
@@ -212,11 +211,10 @@ export default function SettingsPage() {
             {/* Avatar Row */}
             <div className="flex items-center gap-6">
               <div className="relative w-20 h-20 rounded-full overflow-hidden border border-white/20">
-                <Image
-                  src={avatar}
+                <img
+                  src={avatar || "https://picsum.photos/160/160?random=1"}
                   alt="Avatar"
-                  fill
-                  className="object-cover"
+                  className="w-full h-full object-cover rounded-full"
                 />
               </div>
               <div className="flex gap-3">
@@ -315,7 +313,7 @@ export default function SettingsPage() {
                     type="text"
                     value={bindCode}
                     onChange={(e) => setBindCode(e.target.value)}
-                    className="flex-1 bg-[#1a1a1a] border border-white/10 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary-green focus:ring-1 focus:ring-primary-green transition-all placeholder:text-gray-500"
+                    className="flex-1 bg-[#1C1C1E] border-none text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary-green transition-all placeholder:text-gray-500"
                     placeholder="请输入验证码"
                   />
                   <button
@@ -418,13 +416,12 @@ export default function SettingsPage() {
       <BaseModal isOpen={isAvatarModalOpen} onClose={handleCloseAvatarModal} className="bg-[#111] p-6 max-w-md w-full">
             <h3 className="text-xl font-semibold mb-6">编辑头像</h3>
 
-            <div className="relative w-full aspect-square bg-[#1a1a1a] rounded-xl overflow-hidden mb-6 border border-white/5">
+            <div className="relative w-20 h-20 rounded-full mx-auto bg-[#1a1a1a] overflow-hidden mb-6 border border-white/5">
               {previewUrl && (
-                <Image
+                <img
                   src={previewUrl}
                   alt="Avatar Preview"
-                  fill
-                  className="object-cover"
+                  className="w-full h-full object-cover rounded-full"
                 />
               )}
             </div>
