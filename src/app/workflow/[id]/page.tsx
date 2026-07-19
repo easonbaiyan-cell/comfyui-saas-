@@ -463,10 +463,14 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
                   user_id: user.id,
                   workflow_id: workflowId,
                   status: 'success',
+                  result_url: fileUrl,
                   result_video_url: fileUrl,
                   input_data: { taskId: currentTaskId }
                 }).then(({ error }) => {
-                  if (error) console.error("Failed to insert generation record:", error);
+                  if (error) {
+                    console.error("Failed to insert generation record:", error);
+                    setToastMessage({ text: '保存生成结果失败', type: 'error' });
+                  }
                 });
               }
            } else {

@@ -46,7 +46,7 @@ export default function WorkspacePage() {
 
            return {
              id: item.id,
-             imageUrl: item.result_video_url || "",
+             imageUrl: item.result_url || item.result_video_url || "",
              createdAt: new Date(item.created_at).toLocaleString(),
              modelName: modelName
            };
@@ -186,8 +186,8 @@ export default function WorkspacePage() {
               暂无创作，去释放你的灵感吧
             </p>
             <Link
-              href="/#workflows"
-              className="inline-flex items-center gap-2 bg-primary-green hover:bg-primary-green text-white px-6 py-3 rounded-full font-medium transition-colors"
+              href="/"
+              className="inline-flex items-center gap-2 bg-primary-green hover:bg-primary-green text-black px-6 py-3 rounded-full font-medium transition-colors"
             >
               立即生成
               <ArrowRight className="h-4 w-4" />
