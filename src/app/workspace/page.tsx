@@ -12,6 +12,7 @@ type Creation = {
   result_video_url: string;
   createdAt: string;
   modelName: string;
+  status?: string;
 };
 
 export default function WorkspacePage() {
@@ -28,7 +29,7 @@ export default function WorkspacePage() {
     try {
       const { data, error } = await supabase
         .from('video_tasks')
-        .select('*')
+        .select('*, workflows(title)')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -47,12 +48,12 @@ export default function WorkspacePage() {
              id: item.id,
              result_video_url: item.result_video_url || "",
              createdAt: new Date(item.created_at).toLocaleString(),
-             modelName: modelName
+             modelName: modelName,
+             status: item.status
            };
         });
-        // Ensure we only set creations that have a valid result_video_url to fix empty state logic
-        const validCreations = formattedData.filter(c => !!c.result_video_url);
-        setCreations(validCreations);
+
+        setCreations(formattedData);
       }
     } catch (error) {
       console.error("Error fetching creations:", error);
@@ -114,50 +115,83 @@ export default function WorkspacePage() {
         ) : creations.length > 0 ? (
           /* Grid Layout */
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
-            {creations.map((item) => (
+            {creations.map((item) => {
+              const isSuccess = !!item.result_video_url || item.status === 'success';
+              const isFailed = item.status === 'failed';
+
+              return (
               <div
                 key={item.id}
-                className="group relative aspect-[9/16] rounded-xl overflow-hidden border border-white/10 bg-[#1a1a1a] transition-all hover:border-white/20"
+                className="group relative aspect-[9/16] rounded-xl overflow-hidden border border-white/10 bg-[#1a1a1a] transition-all hover:border-white/20 flex flex-col items-center justify-center"
               >
-                {isImageUrl(item.result_video_url) ? (
-                  <img
-                    src={item.result_video_url}
-                    alt={item.modelName}
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
+                {/* Status Tag (Top Left) */}
+                <div className="absolute top-3 left-3 z-10">
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium shadow-md ${
+                    isSuccess ? 'bg-primary-green/90 text-black' :
+                    isFailed ? 'bg-danger-red/90 text-white' :
+                    'bg-yellow-500/90 text-black animate-pulse'
+                  }`}>
+                    {isSuccess ? '已完成' : isFailed ? '失败' : '生成中'}
+                  </span>
+                </div>
+
+                {isSuccess && item.result_video_url ? (
+                  isImageUrl(item.result_video_url) ? (
+                    <img
+                      src={item.result_video_url}
+                      alt={item.modelName}
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                  ) : (
+                    <video
+                      src={item.result_video_url}
+                      className="absolute inset-0 w-full h-full object-cover"
+                      muted
+                      loop
+                      playsInline
+                      autoPlay
+                    />
+                  )
                 ) : (
-                  <video
-                    src={item.result_video_url}
-                    className="absolute inset-0 w-full h-full object-cover"
-                    muted
-                    loop
-                    playsInline
-                    autoPlay
-                  />
+                   <div className="flex flex-col items-center justify-center opacity-50">
+                      {isFailed ? (
+                        <div className="text-danger-red text-center">
+                          <span className="block text-2xl mb-2">!</span>
+                          <span className="text-sm">生成失败</span>
+                        </div>
+                      ) : (
+                         <div className="text-yellow-500 text-center animate-pulse">
+                           <div className="w-8 h-8 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                           <span className="text-sm">生成中...</span>
+                         </div>
+                      )}
+                   </div>
                 )}
 
                 {/* Default Bottom Info */}
                 <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
-                  <div className="text-xs text-gray-300 font-medium truncate mb-1">
+                  <div className="text-xs text-gray-300 font-medium truncate mb-1 shadow-black drop-shadow-md">
                     {item.modelName}
                   </div>
-                  <div className="text-[10px] text-gray-500">
+                  <div className="text-[10px] text-gray-400 drop-shadow-md">
                     {item.createdAt}
                   </div>
                 </div>
 
                 {/* Hover Mask & Actions */}
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-end p-3">
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-end p-3 pt-12">
                   <div className="flex flex-col gap-2">
-                    <a
-                      href={item.result_video_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="p-2 bg-white/10 hover:bg-primary-green text-white hover:text-black rounded-full backdrop-blur-md transition-colors"
-                      title="下载"
-                    >
-                      <Download className="h-4 w-4" />
-                    </a>
+                    {isSuccess && item.result_video_url && (
+                      <a
+                        href={item.result_video_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="p-2 bg-white/10 hover:bg-primary-green text-white hover:text-black rounded-full backdrop-blur-md transition-colors"
+                        title="下载"
+                      >
+                        <Download className="h-4 w-4" />
+                      </a>
+                    )}
                     <button
                       onClick={() => handleDelete(item.id)}
                       className="p-2 bg-white/10 hover:bg-danger-red text-white rounded-full backdrop-blur-md transition-colors"
@@ -168,7 +202,7 @@ export default function WorkspacePage() {
                   </div>
                 </div>
               </div>
-            ))}
+            )})}
           </div>
         ) : (
           /* Empty State */

@@ -384,11 +384,15 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
       // REMOVED: set积分余额(data.newPoints); // DO NOT blindly trust API
 
       // Fetch latest points directly from profiles table
-      const { data: profileData } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('points')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
+
+      if (profileError) {
+        console.warn('获取积分失败(可能无记录或RLS拦截), 已使用兜底:', profileError);
+      }
 
       if (profileData && profileData.points !== undefined) {
         set积分余额(profileData.points);
@@ -508,11 +512,15 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
                   setToastMessage({ text: "生成成功！已保存至我的创作", type: "success" });
 
                   // Fetch and sync points after task completion
-                  const { data: profileData } = await supabase
+                  const { data: profileData, error: profileError } = await supabase
                     .from('profiles')
                     .select('points')
                     .eq('id', finalUserId)
-                    .single();
+                    .maybeSingle();
+
+                  if (profileError) {
+                    console.warn('任务完成后获取积分失败, 已使用兜底:', profileError);
+                  }
 
                   if (profileData && profileData.points !== undefined) {
                     set积分余额(profileData.points);
