@@ -383,22 +383,6 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
 
       // REMOVED: set积分余额(data.newPoints); // DO NOT blindly trust API
 
-      // Fetch latest points directly from profiles table
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('points')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      if (profileError) {
-        console.warn('获取积分失败(可能无记录或RLS拦截), 已使用兜底:', profileError);
-      }
-
-      if (profileData && profileData.points !== undefined) {
-        set积分余额(profileData.points);
-      }
-
-
       // Store in local storage to prevent loss on refresh
       localStorage.setItem(`active_task_${workflowId}`, data.taskId);
       localStorage.setItem(`task_start_${workflowId}`, Date.now().toString());
@@ -510,21 +494,6 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
               } else {
                   console.log("✅ 资产已成功写入 video_tasks 表！");
                   setToastMessage({ text: "生成成功！已保存至我的创作", type: "success" });
-
-                  // Fetch and sync points after task completion
-                  const { data: profileData, error: profileError } = await supabase
-                    .from('profiles')
-                    .select('points')
-                    .eq('id', finalUserId)
-                    .maybeSingle();
-
-                  if (profileError) {
-                    console.warn('任务完成后获取积分失败, 已使用兜底:', profileError);
-                  }
-
-                  if (profileData && profileData.points !== undefined) {
-                    set积分余额(profileData.points);
-                  }
               }
               // ==== 核心入库逻辑结束 ====
 
