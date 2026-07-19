@@ -9,8 +9,6 @@
  ✓ Starting...
  ✓ Ready in 2s
  ○ Compiling /workspace ...
- ✓ Compiled /workspace in 10.8s (922 modules)
- GET /workspace 200 in 13054ms
- ○ Compiling /favicon.ico ...
- ✓ Compiled /favicon.ico in 888ms (573 modules)
- GET /favicon.ico 200 in 1120ms
+ ✓ Compiled /workspace in 11.5s (928 modules)
+ GET /workspace 200 in 13835ms
+ GET /workspace 200 in 136ms

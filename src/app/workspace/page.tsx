@@ -14,6 +14,25 @@ const isImageUrl = (url: string) => {
   return lowerUrl.endsWith('.png') || lowerUrl.endsWith('.jpg') || lowerUrl.endsWith('.jpeg') || lowerUrl.endsWith('.webp') || lowerUrl.endsWith('.gif');
 };
 
+const handleDownload = async (e: React.MouseEvent, url: string, filename: string = 'creation.png') => {
+  e.stopPropagation(); // 必须阻止冒泡，防止触发外层的放大预览
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(blobUrl);
+  } catch (error) {
+    console.error('下载失败，尝试在新窗口打开:', error);
+    window.open(url, '_blank'); // 兜底方案
+  }
+};
+
 export default function WorkspacePage() {
   const [videoTasks, setVideoTasks] = useState<any[]>([]); // eslint-disable-line @typescript-eslint/no-explicit-any
   const [user, setUser] = useState<User | null>(null);
@@ -183,15 +202,12 @@ export default function WorkspacePage() {
                         {isSuccess ? '已完成' : isFailed ? '失败' : '生成中'}
                       </span>
                       {isSuccess && task.result_video_url && (
-                        <a
-                          href={task.result_video_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          onClick={(e) => e.stopPropagation()}
+                        <button
+                          onClick={(e) => handleDownload(e, task.result_video_url)}
                           className="pointer-events-auto text-white hover:text-white/80 transition-colors"
                         >
                           <Download className="w-4 h-4" />
-                        </a>
+                        </button>
                       )}
                     </div>
                   </div>
@@ -258,7 +274,7 @@ export default function WorkspacePage() {
 
       {/* Lightbox Modal */}
       {previewItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4" onClick={() => setPreviewItem(null)}>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4" onClick={() => setPreviewItem(null)}>
           <button onClick={() => setPreviewItem(null)} className="absolute top-6 right-6 text-white bg-black/50 hover:bg-black/80 rounded-full p-2 transition-colors z-50">
             <X className="w-6 h-6" />
           </button>
