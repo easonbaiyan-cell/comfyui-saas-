@@ -483,8 +483,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
                   .insert({
                       user_id: finalUserId,   // 使用实时获取到的真实 ID
                       workflow_id: workflowId,
-                      result_url: fileUrl,
-                      task_id: currentTaskId,
+                      result_video_url: fileUrl,
                       status: 'SUCCESS'
                   });
 
