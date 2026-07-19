@@ -46,7 +46,7 @@ export default function WorkspacePage() {
 
            return {
              id: item.id,
-             imageUrl: item.result_url || item.result_video_url || "",
+             imageUrl: item.result_video_url || "",
              createdAt: new Date(item.created_at).toLocaleString(),
              modelName: modelName
            };
