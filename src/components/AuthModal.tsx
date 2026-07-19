@@ -74,8 +74,17 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       
       if (authError) {
         if (authError.message.includes("Invalid login credentials") || authError.message.includes("not found") || authError.message.includes("Invalid")) {
-          // Attempt sign up
-          const { error: signUpError } = await supabase.auth.signUp(signInOptions);
+          // Attempt sign up with random nickname
+          const defaultNicknames = ['啪啪爸爸', '啪啪妈妈', '啪啪嘎嘎', '啪啪拉拉', '啪啪利波', '啪啪祖', '啪啪伯', '啪啪贝尔', '啪啪布莱特', '啪啪布拉伯'];
+          const randomNickname = defaultNicknames[Math.floor(Math.random() * defaultNicknames.length)];
+          const { error: signUpError } = await supabase.auth.signUp({
+            ...signInOptions,
+            options: {
+              data: {
+                nickname: randomNickname,
+              }
+            }
+          });
           if (signUpError) {
              throw signUpError;
           }

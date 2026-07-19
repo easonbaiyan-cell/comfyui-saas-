@@ -1,8 +1,9 @@
 import { create } from 'zustand';
+import type { User } from "@supabase/supabase-js";
 
 interface AuthState {
-  user: { id: string; email?: string; phone?: string } | null;
-  setUser: (user: { id: string; email?: string; phone?: string } | null) => void;
+  user: User | null;
+  setUser: (user: User | null) => void;
   积分余额: number;
   set积分余额: (balance: number) => void;
 }
