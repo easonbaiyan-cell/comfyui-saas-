@@ -7,20 +7,19 @@ import { BaseModal } from "../../components/BaseModal";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "../../store/auth";
 import { useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function SettingsPage() {
   const router = useRouter();
   const { user } = useAuthStore();
 
-  // Derived state from useAuthStore for accountType and email
-  const derivedAccountType = user?.email ? 'email' : 'phone';
+  // Dynamic Auth Logic based on user state
+  const isEmailUser = !!user?.email;
+  const accountType = isEmailUser ? 'email' : 'phone';
   const derivedEmail = user?.email || user?.phone || "";
 
-  // Global Mock State
-  const [accountType, setAccountType] = useState<'phone' | 'email'>(derivedAccountType);
-
   // Profile Mock State
-  const [nickname, setNickname] = useState("");
+  const [nickname, setNickname] = useState(user?.user_metadata?.nickname || "");
   const [email, setEmail] = useState(derivedEmail);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
@@ -30,20 +29,21 @@ export default function SettingsPage() {
     // or just let derived values flow naturally. Since these are state vars, we sync them.
     const t = setTimeout(() => {
       if (user?.email) {
-        setAccountType('email');
         setEmail(user.email);
       } else if (user?.phone) {
-        setAccountType('phone');
         setEmail(user.phone);
       }
+      setNickname(user?.user_metadata?.nickname || "");
     }, 0);
     return () => clearTimeout(t);
   }, [user]);
 
   // Avatar Upload State
-  const [avatar, setAvatar] = useState("https://picsum.photos/160/160?random=1");
+  const [avatar, setAvatar] = useState(user?.user_metadata?.avatar_url || "https://picsum.photos/160/160?random=1");
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [previewUrl, setPreviewUrl] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Binding Mock State
@@ -71,6 +71,7 @@ export default function SettingsPage() {
     const file = e.target.files?.[0];
     if (file) {
       const url = URL.createObjectURL(file);
+      setSelectedFile(file);
       setPreviewUrl(url);
       setIsAvatarModalOpen(true);
     }
@@ -83,20 +84,69 @@ export default function SettingsPage() {
   const handleCloseAvatarModal = () => {
     setIsAvatarModalOpen(false);
     setPreviewUrl("");
+    setSelectedFile(null);
   };
 
-  const handleSaveAvatar = () => {
-    setAvatar(previewUrl);
-    setIsAvatarModalOpen(false);
-    setPreviewUrl("");
+  const handleSaveAvatar = async () => {
+    if (!selectedFile || !user) return;
+    setIsUploadingAvatar(true);
+    try {
+      const fileExt = selectedFile.name.split('.').pop();
+      const fileName = `avatar-${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('site-assets')
+        .upload(fileName, selectedFile);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('site-assets')
+        .getPublicUrl(fileName);
+
+      if (!publicUrl) throw new Error('Failed to get public URL');
+
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: { avatar_url: publicUrl }
+      });
+
+      if (updateError) throw updateError;
+
+      const { data: { user: updatedUser } } = await supabase.auth.getUser();
+      useAuthStore.getState().setUser(updatedUser);
+
+      setAvatar(publicUrl);
+      showToast("头像已更新成功", "success");
+    } catch (err: unknown) {
+      const error = err as Error;
+      showToast(error.message || "头像上传失败", "error");
+    } finally {
+      setIsUploadingAvatar(false);
+      setIsAvatarModalOpen(false);
+      setPreviewUrl("");
+      setSelectedFile(null);
+    }
   };
 
   const handleUpdateProfile = async () => {
     setIsSavingProfile(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSavingProfile(false);
-    alert("基础信息已保存成功");
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: { nickname }
+      });
+
+      if (error) throw error;
+
+      const { data: { user: updatedUser } } = await supabase.auth.getUser();
+      useAuthStore.getState().setUser(updatedUser);
+
+      showToast("基础信息已保存成功", "success");
+    } catch (err: unknown) {
+      const error = err as Error;
+      showToast(error.message || "保存失败", "error");
+    } finally {
+      setIsSavingProfile(false);
+    }
   };
 
   const handleSendCode = (_type: 'bind' | 'security') => {
@@ -217,7 +267,7 @@ export default function SettingsPage() {
               <button
                 onClick={handleUpdateProfile}
                 disabled={isSavingProfile}
-                className="bg-primary-green text-black px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-primary-green transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                className="bg-[#D0FF2A] text-black hover:bg-[#bceb24] font-medium rounded-lg px-6 py-2.5 text-sm transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isSavingProfile ? "保存中..." : "保存更改"}
               </button>
@@ -240,10 +290,10 @@ export default function SettingsPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">
-                  {accountType === "phone" ? "新邮箱" : "新手机号"}
+                  {isEmailUser ? "新手机号" : "新邮箱"}
                 </label>
                 <div className="relative">
-                  {accountType === "email" && (
+                  {isEmailUser && (
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                       <span className="text-sm text-gray-400">+86</span>
                     </div>
@@ -252,8 +302,8 @@ export default function SettingsPage() {
                     type="text"
                     value={bindInput}
                     onChange={(e) => setBindInput(e.target.value)}
-                    className={`w-full bg-[#1a1a1a] border border-white/10 rounded-lg py-2.5 text-sm focus:outline-none focus:border-primary-green focus:ring-1 focus:ring-primary-green transition-all placeholder:text-gray-500 ${accountType === 'email' ? 'pl-12 pr-4' : 'px-4'}`}
-                    placeholder={accountType === "phone" ? "请输入新邮箱" : "请输入新手机号"}
+                    className={`w-full bg-[#1a1a1a] border border-white/10 rounded-lg py-2.5 text-sm focus:outline-none focus:border-primary-green focus:ring-1 focus:ring-primary-green transition-all placeholder:text-gray-500 ${isEmailUser ? 'pl-12 pr-4' : 'px-4'}`}
+                    placeholder={isEmailUser ? "请输入新手机号" : "请输入新邮箱"}
                   />
                 </div>
               </div>
@@ -272,7 +322,7 @@ export default function SettingsPage() {
                     onClick={() => handleSendCode('bind')}
                     className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-sm font-medium hover:bg-white/10 transition-colors whitespace-nowrap"
                   >
-                    {accountType === "phone" ? "获取邮箱验证码" : "获取短信验证码"}
+                    {isEmailUser ? "获取短信验证码" : "获取邮箱验证码"}
                   </button>
                 </div>
               </div>
@@ -282,7 +332,7 @@ export default function SettingsPage() {
               <button
                 onClick={handleBindAccount}
                 disabled={isBindDisabled}
-                className="bg-primary-green text-black px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-primary-green transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                className="bg-[#D0FF2A] text-black hover:bg-[#bceb24] font-medium rounded-lg px-6 py-2.5 text-sm transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isBinding ? "绑定中..." : "绑定"}
               </button>
@@ -337,13 +387,13 @@ export default function SettingsPage() {
                     value={securityCode}
                     onChange={(e) => setSecurityCode(e.target.value)}
                     className="flex-1 bg-[#1a1a1a] border border-white/10 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary-green focus:ring-1 focus:ring-primary-green transition-all placeholder:text-gray-500"
-                    placeholder={accountType === 'phone' ? "请输入手机验证码" : "请输入邮箱验证码"}
+                    placeholder={isEmailUser ? "请输入邮箱验证码" : "请输入手机验证码"}
                   />
                   <button
                     onClick={() => handleSendCode('security')}
                     className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-sm font-medium hover:bg-white/10 transition-colors whitespace-nowrap"
                   >
-                    {accountType === 'phone' ? "获取短信验证码" : "获取邮箱验证码"}
+                    {isEmailUser ? "获取邮箱验证码" : "获取短信验证码"}
                   </button>
                 </div>
               </div>
@@ -354,7 +404,7 @@ export default function SettingsPage() {
               <button
                 onClick={handleUpdatePassword}
                 disabled={isSecurityDisabled}
-                className="bg-primary-green text-black px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-primary-green transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                className="bg-[#D0FF2A] text-black hover:bg-[#bceb24] font-medium rounded-lg px-6 py-2.5 text-sm transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isUpdatingPassword ? "更新中..." : "更新密码"}
               </button>
@@ -388,9 +438,10 @@ export default function SettingsPage() {
               </button>
               <button
                 onClick={handleSaveAvatar}
-                className="flex-1 py-3 text-sm font-semibold bg-primary-green text-black rounded-lg hover:bg-primary-green transition-colors"
+                disabled={isUploadingAvatar}
+                className="flex-1 py-3 text-sm font-semibold bg-primary-green text-black rounded-lg hover:bg-primary-green transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                保存头像
+                {isUploadingAvatar ? "保存中..." : "保存头像"}
               </button>
             </div>
                 </BaseModal>

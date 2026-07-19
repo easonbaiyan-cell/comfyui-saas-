@@ -45,7 +45,8 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [videoTasks, setVideoTasks] = useState<any[]>([]);
   
-  const [user, setUser] = useState<User | null>(null);
+  const user = useAuthStore(state => state.user);
+  const setUser = useAuthStore(state => state.setUser);
 
 
   useEffect(() => {
@@ -125,7 +126,7 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [setUser]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -211,7 +212,11 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
                     <span className="text-sm font-bold text-white">{points.toLocaleString()}</span>
                   </div>
                   <div className="w-6 h-6 rounded-full border border-white/20 overflow-hidden flex items-center justify-center bg-gray-800">
-                    <UserIcon className="h-3 w-3 text-gray-400" />
+                    {user?.user_metadata?.avatar_url ? (
+                      <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <UserIcon className="h-3 w-3 text-gray-400" />
+                    )}
                   </div>
                 </div>
 
@@ -223,10 +228,24 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
                     />
                     <div className="absolute right-0 mt-2 w-80 bg-[#0a0a0a] rounded-xl border border-white/10 shadow-2xl p-3 z-[100]">
                       {/* 1. 基础账号信息 */}
-                      <div className="px-2 pb-3 mb-3 border-b border-white/10">
-                        <p className="text-sm font-semibold text-white truncate">
-                          {user?.phone || user?.email || "Guest"}
-                        </p>
+                      <div className="px-2 pb-3 mb-3 border-b border-white/10 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full border border-white/20 overflow-hidden flex items-center justify-center bg-gray-800 shrink-0">
+                          {user?.user_metadata?.avatar_url ? (
+                            <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                          ) : (
+                            <UserIcon className="h-5 w-5 text-gray-400" />
+                          )}
+                        </div>
+                        <div className="overflow-hidden">
+                          {user?.user_metadata?.nickname && (
+                            <p className="text-sm font-semibold text-white truncate">
+                              {user.user_metadata.nickname}
+                            </p>
+                          )}
+                          <p className="text-xs text-gray-400 truncate">
+                            {user?.phone || user?.email || "Guest"}
+                          </p>
+                        </div>
                       </div>
 
                       {/* 2. 会员状态卡片 */}
