@@ -50,7 +50,9 @@ export default function WorkspacePage() {
              modelName: modelName
            };
         });
-        setCreations(formattedData);
+        // Ensure we only set creations that have a valid result_video_url to fix empty state logic
+        const validCreations = formattedData.filter(c => !!c.result_video_url);
+        setCreations(validCreations);
       }
     } catch (error) {
       console.error("Error fetching creations:", error);
@@ -73,12 +75,12 @@ export default function WorkspacePage() {
   };
 
   useEffect(() => {
-    if (user) {
-      fetchCreations();
-    } else {
+    if (!user?.id) {
       setIsLoading(false);
+      return;
     }
-  }, [user]);
+    fetchCreations();
+  }, [user?.id]);
 
   const isImageUrl = (url: string) => {
     if (!url) return false;

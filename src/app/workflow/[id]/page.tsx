@@ -380,7 +380,20 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
       }
 
       setTaskId(data.taskId);
-      set积分余额(data.newPoints);
+
+      // REMOVED: set积分余额(data.newPoints); // DO NOT blindly trust API
+
+      // Fetch latest points directly from profiles table
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('points')
+        .eq('id', user.id)
+        .single();
+
+      if (profileData && profileData.points !== undefined) {
+        set积分余额(profileData.points);
+      }
+
 
       // Store in local storage to prevent loss on refresh
       localStorage.setItem(`active_task_${workflowId}`, data.taskId);
@@ -493,6 +506,17 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
               } else {
                   console.log("✅ 资产已成功写入 video_tasks 表！");
                   setToastMessage({ text: "生成成功！已保存至我的创作", type: "success" });
+
+                  // Fetch and sync points after task completion
+                  const { data: profileData } = await supabase
+                    .from('profiles')
+                    .select('points')
+                    .eq('id', finalUserId)
+                    .single();
+
+                  if (profileData && profileData.points !== undefined) {
+                    set积分余额(profileData.points);
+                  }
               }
               // ==== 核心入库逻辑结束 ====
 

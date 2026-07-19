@@ -6,7 +6,7 @@ import { InviteModal } from "./InviteModal";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
-import { Bell, HeadphonesIcon, LogOut, User as UserIcon, Zap, Home, Video, CreditCard, Settings, X, Crown, Coins } from "lucide-react";
+import { Bell, HeadphonesIcon, LogOut, User as UserIcon, Zap, Home, Video, CreditCard, Settings, X, Crown, Coins, Download } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { AuthModal } from "./AuthModal";
 import type { User } from "@supabase/supabase-js";
@@ -19,6 +19,12 @@ interface NavLink {
   url?: string;
   content?: string;
 }
+
+const isImageUrl = (url: string) => {
+  if (!url) return false;
+  const lowerUrl = url.toLowerCase();
+  return lowerUrl.endsWith('.png') || lowerUrl.endsWith('.jpg') || lowerUrl.endsWith('.jpeg') || lowerUrl.endsWith('.webp') || lowerUrl.endsWith('.gif');
+};
 
 export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) {
   const points = useAuthStore(state => state.积分余额);
@@ -49,7 +55,7 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
       const fetchTasks = async () => {
         const { data } = await supabase
           .from('video_tasks')
-          .select('*')
+          .select('*, workflows(title)')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
           .limit(10);
@@ -65,6 +71,28 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
       if (interval) clearInterval(interval);
     };
   }, [isMessageOpen, user]);
+
+
+  const set积分余额 = useAuthStore(state => state.set积分余额);
+
+  useEffect(() => {
+    if (user?.id) {
+      const fetchPoints = async () => {
+        const { data } = await supabase
+          .from('profiles')
+          .select('points')
+          .eq('id', user.id)
+          .single();
+        if (data && data.points !== undefined) {
+          set积分余额(data.points);
+        }
+      };
+
+      fetchPoints();
+      const intervalId = setInterval(fetchPoints, 10000); // sync every 10s
+      return () => clearInterval(intervalId);
+    }
+  }, [user?.id, set积分余额]);
 
   useEffect(() => {
     // Initial fetch
@@ -335,21 +363,55 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
                 {videoTasks.length === 0 ? (
                   <div className="text-center text-gray-500 text-sm mt-10">暂无生成任务</div>
                 ) : (
-                  videoTasks.map(task => (
-                    <div key={task.id} className="bg-[#1a1a1a] rounded-lg p-3 border border-white/5">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs text-gray-400 font-mono truncate max-w-[140px]">{task.id}</span>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                          task.status === 'success' ? 'bg-primary-green/20 text-primary-green' :
-                          task.status === 'failed' ? 'bg-danger-red/20 text-danger-red' :
-                          'bg-yellow-500/20 text-yellow-500 animate-pulse'
-                        }`}>
-                          {task.status === 'success' ? '已完成' : task.status === 'failed' ? '失败' : '生成中'}
-                        </span>
+                  videoTasks.map(task => {
+                    const isSuccess = !!task.result_video_url || task.status === 'success';
+                    const isFailed = task.status === 'failed';
+                    let modelName = 'Unknown Workflow';
+                    if (task.workflows && Array.isArray(task.workflows)) {
+                      modelName = task.workflows[0]?.title || modelName;
+                    } else if (task.workflows && typeof task.workflows === 'object') {
+                      modelName = task.workflows.title || modelName;
+                    }
+
+                    return (
+                      <div key={task.id} className="bg-[#1a1a1a] rounded-xl overflow-hidden border border-white/10 flex flex-col group relative">
+                        {isSuccess && task.result_video_url ? (
+                          <div className="relative w-full aspect-video bg-black flex-shrink-0 border-b border-white/10">
+                            {isImageUrl(task.result_video_url) ? (
+                              <img src={task.result_video_url} alt="Result" className="w-full h-full object-cover" />
+                            ) : (
+                              <video src={task.result_video_url} className="w-full h-full object-cover" autoPlay muted loop playsInline />
+                            )}
+
+                            {/* Hover overlay for actions */}
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                              <a href={task.result_video_url} target="_blank" rel="noreferrer" className="p-2 bg-white/20 hover:bg-white hover:text-black rounded-full backdrop-blur transition-all">
+                                <Download className="h-4 w-4" />
+                              </a>
+                            </div>
+                          </div>
+                        ) : null}
+
+                        <div className="p-3">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-sm font-semibold text-white truncate max-w-[120px]">{modelName}</span>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                              isSuccess ? 'bg-primary-green/20 text-primary-green' :
+                              isFailed ? 'bg-danger-red/20 text-danger-red' :
+                              'bg-yellow-500/20 text-yellow-500 animate-pulse'
+                            }`}>
+                              {isSuccess ? '已完成' : isFailed ? '失败' : '生成中'}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] text-gray-500 font-mono truncate max-w-[100px]">{task.id}</span>
+                            <span className="text-[10px] text-gray-500">{new Date(task.created_at).toLocaleString()}</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-[10px] text-gray-500">{new Date(task.created_at).toLocaleString()}</div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             )}
