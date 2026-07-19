@@ -484,7 +484,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
                       user_id: finalUserId,   // 使用实时获取到的真实 ID
                       workflow_id: workflowId,
                       result_video_url: fileUrl,
-                      status: 'SUCCESS'
+                      cost_points: 0
                   });
 
               if (insertError) {
