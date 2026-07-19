@@ -2,80 +2,82 @@
 
 import { Header } from "@/components/Header";
 import { Copy, Calendar, ChevronDown } from "lucide-react";
-import { useState } from "react";
-
-const mockTasks = [
-  {
-    id: "9823749812739812",
-    startTime: "2026-07-09 14:28:42",
-    name: "赛博朋克城市漫游",
-    status: "成功",
-    duration: "01:35",
-    points: 38,
-  },
-  {
-    id: "9823749812739813",
-    startTime: "2026-07-09 13:15:00",
-    name: "未来太空站内部景观",
-    status: "运行中",
-    duration: "00:45",
-    points: 15,
-  },
-  {
-    id: "9823749812739814",
-    startTime: "2026-07-09 12:00:22",
-    name: "复古机械键盘特写",
-    status: "排队中",
-    duration: "--:--",
-    points: 10,
-  },
-  {
-    id: "9823749812739815",
-    startTime: "2026-07-08 22:45:11",
-    name: "自然风景延时摄影",
-    status: "失败",
-    duration: "00:12",
-    points: 0,
-  },
-  {
-    id: "9823749812739816",
-    startTime: "2026-07-08 19:30:05",
-    name: "二次元少女角色设定",
-    status: "已取消",
-    duration: "00:00",
-    points: 0,
-  },
-  {
-    id: "9823749812739817",
-    startTime: "2026-07-07 09:12:33",
-    name: "产品发布会宣传片",
-    status: "成功",
-    duration: "02:10",
-    points: 55,
-  },
-];
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "成功":
-      return "bg-primary-green";
-    case "运行中":
-      return "bg-primary-green";
-    case "排队中":
-      return "bg-primary-green";
-    case "失败":
-      return "bg-danger-red";
-    case "已取消":
-      return "bg-gray-500";
-    default:
-      return "bg-gray-500";
-  }
-};
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
+import type { User } from "@supabase/supabase-js";
 
 export default function BillingPage() {
+  const router = useRouter();
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState("全部状态");
-  const statuses = ["全部状态", "成功", "运行中", "排队中", "失败", "已取消"];
+  const statuses = ["全部状态", "成功", "运行中", "失败"];
+
+  const [user, setUser] = useState<User | null>(null);
+  const [tasks, setTasks] = useState<any[]>([]); // eslint-disable-line @typescript-eslint/no-explicit-any
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user || null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
+      }
+      try {
+        const { data, error } = await supabase
+          .from('video_tasks')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error("Error fetching tasks:", error);
+        } else {
+          setTasks(data || []);
+        }
+      } catch (err) {
+        console.error("Fetch exception:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTasks();
+  }, [user?.id]);
+
+  // Calculate summary stats
+  const totalTasks = tasks.length;
+  const totalPoints = tasks.reduce((sum, task) => sum + (task.cost_points || 0), 0);
+
+  const handleCopyId = (id: string) => {
+    navigator.clipboard.writeText(id).catch(console.error);
+    // Could add a toast here
+  };
+
+  const filteredTasks = tasks.filter((task) => {
+    if (selectedStatus === "全部状态") return true;
+
+    let taskStatusStr = "失败";
+    if (task.status === "success" || task.result_video_url) {
+      taskStatusStr = "成功";
+    } else if (task.status === "processing" || task.status === "running") {
+      taskStatusStr = "运行中";
+    }
+
+    return taskStatusStr === selectedStatus;
+  });
 
   return (
     <div className="flex min-h-screen flex-col bg-[#0a0a0a] font-sans tracking-wide">
@@ -90,9 +92,9 @@ export default function BillingPage() {
 
         {/* Summary Bar */}
         <div className="bg-[#111111] border border-white/10 rounded-xl p-4 flex flex-wrap items-center gap-8 mb-8 text-xs text-gray-400 font-medium">
-          <span>共 128 条记录</span>
-          <span>计费时长合计 12:34:56</span>
-          <span>积分消耗合计 4580</span>
+          <span>共 {totalTasks} 条记录</span>
+          <span>计费时长合计 -</span>
+          <span>积分消耗合计 {totalPoints}</span>
         </div>
 
         {/* Filters Area */}
@@ -131,7 +133,7 @@ export default function BillingPage() {
           <div className="flex items-center gap-4">
             <span className="text-xs text-gray-500">日期范围 默认展示最新任务...</span>
             <div className="flex items-center gap-2 bg-[#111111] border border-white/10 px-4 py-2.5 rounded-lg text-sm text-gray-300">
-              <span>2026-06-09 至 2026-07-09</span>
+              <span>全量数据</span>
               <Calendar className="w-4 h-4 text-gray-500 ml-2" />
             </div>
           </div>
@@ -153,43 +155,90 @@ export default function BillingPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {mockTasks.map((task) => (
-                  <tr key={task.id} className="hover:bg-white/[0.02] transition-colors group">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2 text-sm text-gray-400">
-                        {task.id}
-                        <button className="text-gray-600 hover:text-white transition-colors">
-                          <Copy className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-400 whitespace-nowrap">
-                      {task.startTime}
-                    </td>
-                    <td className="px-6 py-4 text-sm whitespace-nowrap">
-                      <button className="text-gray-300 underline underline-offset-4 decoration-white/20 hover:text-white hover:decoration-white transition-all cursor-pointer">
-                        {task.name}
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 text-sm whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <span className={`w-1.5 h-1.5 rounded-full ${getStatusColor(task.status)}`} />
-                        <span className="text-gray-300">{task.status}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-400 whitespace-nowrap">
-                      {task.duration}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-300 font-medium whitespace-nowrap">
-                      {task.points}
-                    </td>
-                    <td className="px-6 py-4 text-right whitespace-nowrap">
-                      <button className="text-primary-green hover:text-primary-green text-sm font-medium transition-colors hover:scale-105 transform">
-                        再次生成
-                      </button>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-8 text-center text-sm text-gray-500">
+                      加载中...
                     </td>
                   </tr>
-                ))}
+                ) : filteredTasks.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-8 text-center text-sm text-gray-500">
+                      暂无账单记录
+                    </td>
+                  </tr>
+                ) : (
+                  filteredTasks.map((task) => {
+                    const isSuccess = task.status === 'success' || !!task.result_video_url;
+                    const isProcessing = task.status === 'processing' || task.status === 'running';
+
+                    let statusColor = "bg-danger-red";
+                    let statusText = "失败";
+                    if (isSuccess) {
+                      statusColor = "bg-primary-green";
+                      statusText = "成功";
+                    } else if (isProcessing) {
+                      statusColor = "bg-yellow-500";
+                      statusText = "运行中";
+                    }
+
+                    const workflowName = task.workflow_id ? `工作流 ${task.workflow_id.substring(0, 8)}` : "AI 视频生成";
+
+                    return (
+                      <tr key={task.id} className="hover:bg-white/[0.02] transition-colors group">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2 text-sm text-gray-400">
+                            {task.id.substring(0, 8)}
+                            <button
+                              onClick={() => handleCopyId(task.id)}
+                              className="text-gray-600 hover:text-white transition-colors"
+                              title="复制完整ID"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-400 whitespace-nowrap">
+                          {new Date(task.created_at).toLocaleString()}
+                        </td>
+                        <td className="px-6 py-4 text-sm whitespace-nowrap">
+                          {task.workflow_id ? (
+                            <button
+                              onClick={() => router.push('/workflow/' + task.workflow_id)}
+                              className="text-gray-300 underline underline-offset-4 decoration-white/20 hover:text-white hover:decoration-white transition-all cursor-pointer"
+                            >
+                              {workflowName}
+                            </button>
+                          ) : (
+                            <span className="text-gray-300">{workflowName}</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-sm whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            <span className={`w-1.5 h-1.5 rounded-full ${statusColor}`} />
+                            <span className="text-gray-300">{statusText}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-400 whitespace-nowrap">
+                          -
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-300 font-medium whitespace-nowrap">
+                          {task.cost_points ?? '-'}
+                        </td>
+                        <td className="px-6 py-4 text-right whitespace-nowrap">
+                          {task.workflow_id && (
+                            <button
+                              onClick={() => router.push('/workflow/' + task.workflow_id)}
+                              className="text-primary-green hover:text-primary-green text-sm font-medium transition-colors hover:scale-105 transform"
+                            >
+                              再次生成
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
