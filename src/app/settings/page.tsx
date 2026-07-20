@@ -315,10 +315,10 @@ export default function SettingsPage() {
                 <div className="flex gap-3">
                   <input
                     type="text"
-                    value={bindCode} autoComplete="off"
+                    value={bindCode} autoComplete="new-password"
                     onChange={(e) => setBindCode(e.target.value)}
                     className="flex-1 bg-[#1C1C1E] border-none text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary-green transition-all placeholder:text-gray-500"
-                    placeholder="请输入验证码"
+                    placeholder="请输入短信验证码"
                   />
                   <button
                     onClick={() => handleSendCode('bind')}

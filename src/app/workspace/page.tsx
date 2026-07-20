@@ -129,6 +129,17 @@ export default function WorkspacePage() {
   return (
     <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-6 md:p-12">
       <div className="relative w-full max-w-6xl max-h-[85vh] overflow-y-auto bg-[#1C1C1E] rounded-2xl">
+        <button
+          onClick={() => {
+            setIsManaging(!isManaging);
+            if (isManaging) setSelectedIds([]);
+          }}
+          className={`absolute top-6 right-20 z-50 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+            isManaging ? 'bg-white text-black hover:bg-gray-200' : 'bg-primary-green text-black hover:bg-primary-green/90'
+          }`}
+        >
+          {isManaging ? '完成' : '管理'}
+        </button>
         <button onClick={() => window.history.back()} className="absolute top-6 right-6 p-2 text-gray-400 hover:text-white bg-black/20 hover:bg-black/40 rounded-full transition-colors z-50">
           <X className="w-6 h-6" />
         </button>
@@ -137,17 +148,6 @@ export default function WorkspacePage() {
         {/* Page Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-white">我的创作</h1>
-        <button
-          onClick={() => {
-            setIsManaging(!isManaging);
-            if (isManaging) setSelectedIds([]);
-          }}
-          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-            isManaging ? 'bg-white text-black hover:bg-gray-200' : 'bg-primary-green text-black hover:bg-primary-green/90'
-          }`}
-        >
-          {isManaging ? '完成' : '管理'}
-        </button>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 lg:gap-6">
