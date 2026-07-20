@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import Link from "next/link";
-import { Lock } from "lucide-react";
+import { Lock, Video } from "lucide-react";
 
 
 interface Category {
@@ -52,19 +52,31 @@ function VideoCard({ workflow }: { workflow: Workflow }) {
   return (
     <Link href={`/workflow/${workflow.id}`} className="block w-full">
       <div
-        className="relative w-full aspect-[9/16] rounded-xl overflow-hidden bg-[#111]"
+        className="relative w-full aspect-[9/16] rounded-xl overflow-hidden bg-gray-800"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <video
-          ref={videoRef}
-          src={workflow.referenceVideoUrl || ""}
-          className="absolute inset-0 w-full h-full object-cover"
-          muted
-          loop
-          playsInline
-          poster={workflow.coverImageUrl || undefined}
-        />
+        {!workflow.referenceVideoUrl && !workflow.coverImageUrl ? (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
+            <Video className="w-10 h-10 text-gray-500" />
+          </div>
+        ) : !workflow.referenceVideoUrl && workflow.coverImageUrl ? (
+          <img
+            src={workflow.coverImageUrl}
+            className="absolute inset-0 w-full h-full object-cover"
+            alt={workflow.title}
+          />
+        ) : (
+          <video
+            ref={videoRef}
+            src={workflow.referenceVideoUrl || ""}
+            className="absolute inset-0 w-full h-full object-cover"
+            muted
+            loop
+            playsInline
+            poster={workflow.coverImageUrl || undefined}
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3">
           <h3 className="text-white text-sm font-medium truncate mb-1">
             {workflow.title}

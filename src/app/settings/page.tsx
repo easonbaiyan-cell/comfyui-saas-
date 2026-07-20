@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, ChangeEvent } from "react";
-import { X } from "lucide-react";
+import { X, User } from "lucide-react";
 import { BaseModal } from "../../components/BaseModal";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "../../store/auth";
@@ -38,7 +38,7 @@ export default function SettingsPage() {
   }, [user]);
 
   // Avatar Upload State
-  const [avatar, setAvatar] = useState(user?.user_metadata?.avatar_url || "https://picsum.photos/160/160?random=1");
+  const [avatar, setAvatar] = useState(user?.user_metadata?.avatar_url || "");
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [previewUrl, setPreviewUrl] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -210,12 +210,16 @@ export default function SettingsPage() {
           <div className="space-y-6">
             {/* Avatar Row */}
             <div className="flex items-center gap-6">
-              <div className="relative w-20 h-20 rounded-full overflow-hidden border border-white/20">
-                <img
-                  src={avatar || "https://picsum.photos/160/160?random=1"}
-                  alt="Avatar"
-                  className="w-full h-full object-cover rounded-full"
-                />
+              <div className="relative w-20 h-20 rounded-full overflow-hidden border border-white/20 bg-gray-800 flex items-center justify-center">
+                {avatar ? (
+                  <img
+                    src={avatar}
+                    alt="Avatar"
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                ) : (
+                  <User className="h-8 w-8 text-gray-400" />
+                )}
               </div>
               <div className="flex gap-3">
                 <button
@@ -416,13 +420,15 @@ export default function SettingsPage() {
       <BaseModal isOpen={isAvatarModalOpen} onClose={handleCloseAvatarModal} className="bg-[#111] p-6 max-w-md w-full">
             <h3 className="text-xl font-semibold mb-6">编辑头像</h3>
 
-            <div className="relative w-20 h-20 rounded-full mx-auto bg-[#1a1a1a] overflow-hidden mb-6 border border-white/5">
-              {previewUrl && (
+            <div className="relative w-20 h-20 rounded-full mx-auto bg-gray-800 flex items-center justify-center overflow-hidden mb-6 border border-white/5">
+              {previewUrl ? (
                 <img
                   src={previewUrl}
                   alt="Avatar Preview"
                   className="w-full h-full object-cover rounded-full"
                 />
+              ) : (
+                <User className="h-8 w-8 text-gray-400" />
               )}
             </div>
 
