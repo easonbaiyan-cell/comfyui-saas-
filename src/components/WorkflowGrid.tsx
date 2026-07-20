@@ -98,12 +98,6 @@ function VideoCard({ workflow }: { workflow: Workflow }) {
 export function WorkflowGrid({ workflows, categories }: { workflows: Workflow[], categories: Category[] }) {
   const [activeCategory, setActiveCategory] = useState(categories.length > 0 ? categories[0].name : "");
 
-  const tierLabelMap: Record<string, string> = {
-    monthly: "包月专享",
-    continuous_monthly: "连续包月",
-    yearly: "包年专享",
-  };
-
   const filteredWorkflows = activeCategory
     ? workflows.filter(w => w.category === activeCategory)
     : workflows;
@@ -124,13 +118,13 @@ export function WorkflowGrid({ workflows, categories }: { workflows: Workflow[],
               }`}>
                 {cat.name}
               </span>
-              {cat.requiredTier !== "free" && (
+              {cat.requiredTier && cat.requiredTier !== "free" && cat.requiredTier !== "免费" && (
                 <div className="relative flex items-center">
                   <Lock className={`w-4 h-4 transition-colors ${
                     activeCategory === cat.name ? 'text-white' : 'text-gray-400 group-hover:text-white'
                   }`} />
                   <span className="absolute -top-3 -right-11 text-[8px] bg-gradient-to-r from-pink-400 to-yellow-300 text-black font-medium px-1 py-[1px] rounded-t-full rounded-br-full rounded-bl-none whitespace-nowrap">
-                    {tierLabelMap[cat.requiredTier] || "专属特权"}
+                    {cat.requiredTier}
                   </span>
                 </div>
               )}
