@@ -8,7 +8,8 @@ import { useAuthStore } from "@/store/auth";
 const TIER_MAP: Record<string, string> = {
   month: '包月',
   continuous_month: '连续包月',
-  yearly: '包年'
+  yearly: '包年',
+  year: '包年'
 };
 
 interface Category {
@@ -124,7 +125,7 @@ export function WorkflowGrid({ workflows, categories }: { workflows: Workflow[],
   return (
     <div className="w-full flex flex-col gap-4">
       {/* Category Navigation */}
-      <div className="flex w-full overflow-x-auto no-scrollbar gap-6 border-b border-white/5 pb-2">
+      <div className="flex w-full overflow-x-auto no-scrollbar gap-6 border-b border-white/5 pt-6 pb-2">
         {categories.map((cat) => (
           <div
             key={cat.id}
