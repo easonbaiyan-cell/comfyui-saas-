@@ -10,7 +10,7 @@ import { supabase } from "@/lib/supabase";
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { user } = useAuthStore();
+  const { user, setUser } = useAuthStore();
 
   // Dynamic Auth Logic based on user state
   const isEmailUser = !!user?.email;
@@ -49,6 +49,7 @@ export default function SettingsPage() {
   const [bindInput, setBindInput] = useState("");
   const [bindCode, setBindCode] = useState("");
   const [isBinding, setIsBinding] = useState(false);
+  const [bindCountdown, setBindCountdown] = useState(0);
 
   // Security Mock State
   const [currentPassword, setCurrentPassword] = useState("");
@@ -64,6 +65,19 @@ export default function SettingsPage() {
     setToastMessage({ text, type });
     setTimeout(() => setToastMessage(null), 3000);
   };
+
+  // Countdown Timer Logic
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (bindCountdown > 0) {
+      timer = setTimeout(() => {
+        setBindCountdown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [bindCountdown]);
 
   // Handlers
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -148,19 +162,57 @@ export default function SettingsPage() {
     }
   };
 
-  const handleSendCode = (_type: 'bind' | 'security') => {
-    showToast("验证码已发送 (模拟)", 'success');
+  const handleSendCode = async (type: 'bind' | 'security') => {
+    if (type === 'bind') {
+      if (!bindInput) {
+        showToast("请输入新手机号或邮箱", "error");
+        return;
+      }
+      let phone = bindInput;
+      if (isEmailUser && !phone.startsWith("+86")) {
+        phone = `+86${phone}`;
+      }
+
+      try {
+        const { error } = await supabase.auth.signInWithOtp({ phone });
+        if (error) throw error;
+        setBindCountdown(60);
+        showToast("验证码已发送", "success");
+      } catch (err: unknown) {
+        const error = err as Error;
+        showToast(error.message || "发送验证码失败", "error");
+      }
+    } else {
+      showToast("验证码已发送 (模拟)", 'success');
+    }
   };
 
   const handleBindAccount = async () => {
     if (!bindInput || !bindCode) return;
     setIsBinding(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsBinding(false);
-    showToast("账号绑定成功", 'success');
-    setBindInput("");
-    setBindCode("");
+
+    let phone = bindInput;
+    if (isEmailUser && !phone.startsWith("+86")) {
+      phone = `+86${phone}`;
+    }
+
+    try {
+      const { error } = await supabase.auth.verifyOtp({ phone, token: bindCode, type: 'sms' });
+      if (error) throw error;
+
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user || null);
+
+      showToast("账号绑定成功", 'success');
+      setBindInput("");
+      setBindCode("");
+      setBindCountdown(0);
+    } catch (err: unknown) {
+      const error = err as Error;
+      showToast(error.message || "绑定失败", "error");
+    } finally {
+      setIsBinding(false);
+    }
   };
 
   const handleUpdatePassword = async () => {
@@ -322,9 +374,10 @@ export default function SettingsPage() {
                   />
                   <button
                     onClick={() => handleSendCode('bind')}
-                    className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-sm font-medium hover:bg-white/10 transition-colors whitespace-nowrap"
+                    disabled={bindCountdown > 0}
+                    className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-sm font-medium hover:bg-white/10 transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed w-36 text-center"
                   >
-                    {isEmailUser ? "获取短信验证码" : "获取邮箱验证码"}
+                    {bindCountdown > 0 ? `重新获取(${bindCountdown}s)` : isEmailUser ? "获取短信验证码" : "获取邮箱验证码"}
                   </button>
                 </div>
               </div>
