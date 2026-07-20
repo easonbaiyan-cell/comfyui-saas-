@@ -1,7 +1,6 @@
 "use client";
 
-import { Header } from "@/components/Header";
-import { Copy, Calendar, ChevronDown } from "lucide-react";
+import { Copy, Calendar, ChevronDown, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
@@ -80,10 +79,14 @@ export default function BillingPage() {
   });
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#0a0a0a] font-sans tracking-wide">
-      <Header />
+    <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-6 md:p-12">
+      <div className="relative w-full max-w-5xl max-h-[85vh] overflow-y-auto bg-[#1C1C1E] rounded-2xl p-6 sm:p-10">
+        <button onClick={() => router.back()} className="absolute top-6 right-6 p-2 text-gray-400 hover:text-white bg-black/20 hover:bg-black/40 rounded-full transition-colors z-50">
+          <X className="w-6 h-6" />
+        </button>
+    <div className="flex flex-col bg-transparent font-sans tracking-wide">
 
-      <main className="flex-1 container mx-auto px-4 py-12 max-w-6xl">
+      <main className="flex-1 container mx-auto max-w-6xl">
         {/* Header Title */}
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight mb-3">积分与账单</h1>
@@ -244,6 +247,8 @@ export default function BillingPage() {
           </div>
         </div>
       </main>
+    </div>
+      </div>
     </div>
   );
 }

@@ -127,8 +127,12 @@ export default function WorkspacePage() {
   // 只要代码走到这里，说明绝对有数据，屏幕上绝对不允许再出现 EmptyState 的 DOM！
 
   return (
-    <>
-      <div className="w-full relative z-10 p-6 bg-[#0B0F19] min-h-screen">
+    <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-6 md:p-12">
+      <div className="relative w-full max-w-6xl max-h-[85vh] overflow-y-auto bg-[#1C1C1E] rounded-2xl">
+        <button onClick={() => window.history.back()} className="absolute top-6 right-6 p-2 text-gray-400 hover:text-white bg-black/20 hover:bg-black/40 rounded-full transition-colors z-50">
+          <X className="w-6 h-6" />
+        </button>
+      <div className="w-full relative z-10 p-6 sm:p-10 bg-transparent min-h-full">
 
         {/* Page Header */}
       <div className="flex items-center justify-between mb-6">
@@ -290,7 +294,8 @@ export default function WorkspacePage() {
           </div>
         </div>
       )}
-    </>
+      </div>
+    </div>
   );
 }
 

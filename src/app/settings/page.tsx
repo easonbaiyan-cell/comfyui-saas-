@@ -186,8 +186,8 @@ export default function SettingsPage() {
   const isSecurityDisabled = !currentPassword || !newPassword || !confirmPassword || !securityCode || isUpdatingPassword;
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="w-full max-w-3xl mx-auto space-y-8 bg-[#0a0a0a] border border-white/10 rounded-3xl p-6 sm:p-10 relative my-auto">
+    <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-6 md:p-12">
+      <div className="relative w-full max-w-5xl max-h-[85vh] overflow-y-auto bg-[#1C1C1E] rounded-2xl p-6 sm:p-10 space-y-8">
 
         {/* Header */}
         <div className="relative">
@@ -197,7 +197,7 @@ export default function SettingsPage() {
           </div>
           <button
             onClick={() => router.back()}
-            className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors z-10"
+            className="absolute top-6 right-6 p-2 text-gray-400 hover:text-white bg-black/20 hover:bg-black/40 rounded-full transition-colors z-50 fixed-close-btn"
           >
             <X className="w-6 h-6" />
           </button>
@@ -315,7 +315,7 @@ export default function SettingsPage() {
                 <div className="flex gap-3">
                   <input
                     type="text"
-                    value={bindCode}
+                    value={bindCode} autoComplete="off"
                     onChange={(e) => setBindCode(e.target.value)}
                     className="flex-1 bg-[#1C1C1E] border-none text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary-green transition-all placeholder:text-gray-500"
                     placeholder="请输入验证码"
