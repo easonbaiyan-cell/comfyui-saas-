@@ -26,14 +26,14 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
         {/* Header Section */}
         <div className="mb-8">
           <div className="w-8 h-[3px] bg-primary-green mb-6"></div>
-          <h2 className="text-3xl font-bold text-white mb-2">邀请好友，获取丰厚现金与积分</h2>
+          <h2 className="text-3xl font-bold text-white mb-2">邀请好友，各得 500 积分</h2>
           <p className="text-sm text-gray-400">
-            好友通过你的链接注册，首月立享 9 折或获赠 10,000 积分。双向奔赴，轻松裂变。
+            送好友 500 积分体验礼！好友通过链接成功注册后，你与好友将各自获得 500 积分奖励。邀请越多，奖励上不封顶！
           </p>
         </div>
 
         {/* Copy Link Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Left Card: Invite Code */}
           <div className="flex flex-col rounded-2xl border border-white/10 bg-[#111111] p-6 hover:border-white/20 transition-all duration-300">
             <div className="flex items-center justify-between mb-6">
@@ -58,58 +58,17 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
               <span className="text-white font-medium">邀请好友链接</span>
               <Button
                 className="bg-primary-green hover:bg-primary-green/80 text-black rounded-full h-8 px-4 text-xs font-medium transition-colors shadow-lg shadow-primary-green/20"
-                onClick={() => handleCopy("宝子们，我发现一个AI视频宝藏产品 Papagaga！每天发布数百个超有趣好用的AI工作流。打开链接：https://papagaga.com?inviteCode=c19wfslk 注册即可领取 10,000 积分免费生成视频！", "link")}
+                onClick={() => handleCopy("你有空试一下这个，AI生成出来的视频超级真实，现在有活动，你进去注册就送积分，可以免费生成试一下：https://papagaga.com?inviteCode=c19wfslk", "link")}
               >
                 {copiedType === "link" ? "已复制" : "复制分享链接 ➔"}
               </Button>
             </div>
             <div className="bg-[#1a1a1a] rounded-xl p-4 border border-white/5 text-sm text-gray-400 leading-relaxed mt-auto">
-              宝子们，我发现一个AI视频宝藏产品 Papagaga！每天发布数百个超有趣好用的AI工作流。打开链接：https://papagaga.com?inviteCode=c19wfslk 注册即可领取 10,000 积分免费生成视频！
+              你有空试一下这个，AI生成出来的视频超级真实，现在有活动，你进去注册就送积分，可以免费生成试一下：https://papagaga.com?inviteCode=c19wfslk
             </div>
           </div>
         </div>
 
-        {/* Reward Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Card 1: 青铜推手 */}
-          <div className="relative flex flex-col rounded-2xl border border-white/10 bg-[#111111] p-6">
-            <div className="mb-4">
-              <h3 className="text-lg font-medium text-gray-300">累计拉新 1-4 人</h3>
-            </div>
-            <div className="mb-2">
-              <span className="text-3xl font-bold text-white">返现 20%</span>
-            </div>
-            <div className="mt-auto pt-4 text-sm text-gray-500">
-              每单赚 ¥136
-            </div>
-          </div>
-
-          {/* Card 2: 白银推手 */}
-          <div className="relative flex flex-col rounded-2xl border border-primary-green/30 bg-gradient-to-b from-[#1a1025] to-[#111111] p-6">
-            <div className="mb-4">
-              <h3 className="text-lg font-medium text-primary-green">累计拉新 5-9 人</h3>
-            </div>
-            <div className="mb-2">
-              <span className="text-3xl font-bold text-white">返现 30%</span>
-            </div>
-            <div className="mt-auto pt-4 text-sm text-primary-green/70">
-              每单赚 ¥204
-            </div>
-          </div>
-
-          {/* Card 3: 黄金推手 */}
-          <div className="relative flex flex-col rounded-2xl border border-primary-green/40 bg-gradient-to-b from-[#251e0a] to-[#111111] p-6">
-            <div className="mb-4">
-              <h3 className="text-lg font-medium text-primary-green">累计拉新 10 人+</h3>
-            </div>
-            <div className="mb-2">
-              <span className="text-3xl font-bold text-white">返现 40%</span>
-            </div>
-            <div className="mt-auto pt-4 text-sm text-primary-green/80">
-              每单赚 ¥272 + 赠满配会员
-            </div>
-          </div>
-        </div>
           </BaseModal>
   );
 }
