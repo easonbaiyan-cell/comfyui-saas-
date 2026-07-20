@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { BaseModal } from "./BaseModal";
+import { useSettingsStore } from "@/store/settings";
 
 // Check Icon Component (custom SVG based on your screenshot's style)
 function CheckIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -31,12 +32,13 @@ interface PricingModalProps {
 }
 
 export default function PricingModal({ onClose, currentPlan = 0 }: PricingModalProps) {
+  const { settings } = useSettingsStore();
   const [selectedPlan, setSelectedPlan] = useState<number>(2); // Default to the middle plan
 
-  const plans = [
-    { id: 1, price: 1280 },
-    { id: 2, price: 680 },
-    { id: 3, price: 6800 },
+  const plans = settings?.membership_packages && settings.membership_packages.length > 0 ? settings.membership_packages : [
+    { id: 1, price: 1280, original_price: 1680, title: "基础包月", points_per_month: 72000, features: ["无自动续费", "1积分=0.018元", "每月生成约180个视频", "每个视频约7元"] },
+    { id: 2, price: 680, original_price: 1280, title: "连续包月", points_per_month: 72000, features: ["每月自动扣费，可随时取消", "1积分=0.009元", "每月生成约180个视频", "每个视频约3.7元"] },
+    { id: 3, price: 6800, original_price: 15360, title: "连续包年", points_per_month: 72000, features: ["每年自动扣费，可随时取消", "1积分=0.007元", "相当于买10个月送2个月", "每月生成约180个视频"] },
   ];
 
   const [purchaseLoading, setPurchaseLoading] = useState<number | null>(null);
