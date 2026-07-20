@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { BaseModal } from "./BaseModal";
+import { useAuthStore } from "@/store/auth";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -19,6 +20,14 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const { setUser } = useAuthStore();
+  const [toastMessage, setToastMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
+
+  const showToast = (text: string, type: 'success' | 'error') => {
+    setToastMessage({ text, type });
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (countdown > 0) {
@@ -31,31 +40,41 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     };
   }, [countdown]);
 
-  const handleGetCode = () => {
+  const handleGetCode = async () => {
     if (!account) {
       setError("请输入手机号");
       return;
     }
     setError(null);
-    setCountdown(60);
+
+    try {
+      const formattedAccount = account.startsWith("+") ? account : `+86${account}`;
+      const { error } = await supabase.auth.signInWithOtp({ phone: formattedAccount });
+      if (error) throw error;
+      setCountdown(60);
+      showToast("验证码已发送", "success");
+    } catch (err: unknown) {
+      const e = err as Error;
+      showToast(e.message || "发送验证码失败", "error");
+    }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (loginMode === "phone-otp") {
-      setError("短信服务暂未配置，请使用密码或邮箱登录");
-      return;
-    }
-
     if (!account) {
       setError(loginMode === "email-password" ? "请输入邮箱" : "请输入手机号");
       return;
     }
 
-    if (!password) {
+    if (loginMode !== "phone-otp" && !password) {
       setError("请输入密码");
+      return;
+    }
+
+    if (loginMode === "phone-otp" && !code) {
+      setError("请输入验证码");
       return;
     }
 
@@ -66,30 +85,55 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         ? account
         : (account.startsWith("+") ? account : `+86${account}`);
 
-      const signInOptions = loginMode === "email-password"
-        ? { email: account, password }
-        : { phone: formattedAccount, password };
+      if (loginMode === "phone-otp") {
+        const { error: authError } = await supabase.auth.verifyOtp({
+          phone: formattedAccount,
+          token: code,
+          type: 'sms'
+        });
 
-      const { error: authError } = await supabase.auth.signInWithPassword(signInOptions);
-      
-      if (authError) {
-        if (authError.message.includes("Invalid login credentials") || authError.message.includes("not found") || authError.message.includes("Invalid")) {
-          // Attempt sign up with random nickname
-          const defaultNicknames = ['啪啪爸爸', '啪啪妈妈', '啪啪嘎嘎', '啪啪拉拉', '啪啪利波', '啪啪祖', '啪啪伯', '啪啪贝尔', '啪啪布莱特', '啪啪布拉伯'];
-          const randomNickname = defaultNicknames[Math.floor(Math.random() * defaultNicknames.length)];
-          const { error: signUpError } = await supabase.auth.signUp({
-            ...signInOptions,
-            options: {
-              data: {
-                nickname: randomNickname,
+        if (authError) throw authError;
+
+        // Fetch updated session and set user
+        const { data: sessionData } = await supabase.auth.getSession();
+        setUser(sessionData.session?.user || null);
+
+        showToast("登录成功", "success");
+        setTimeout(() => {
+          setAccount("");
+          setPassword("");
+          setCode("");
+          setLoginMode("phone-password");
+          setCountdown(0);
+          setError(null);
+          onClose();
+        }, 1000);
+      } else {
+        const signInOptions = loginMode === "email-password"
+          ? { email: account, password }
+          : { phone: formattedAccount, password };
+
+        const { error: authError } = await supabase.auth.signInWithPassword(signInOptions);
+
+        if (authError) {
+          if (authError.message.includes("Invalid login credentials") || authError.message.includes("not found") || authError.message.includes("Invalid")) {
+            // Attempt sign up with random nickname
+            const defaultNicknames = ['啪啪爸爸', '啪啪妈妈', '啪啪嘎嘎', '啪啪拉拉', '啪啪利波', '啪啪祖', '啪啪伯', '啪啪贝尔', '啪啪布莱特', '啪啪布拉伯'];
+            const randomNickname = defaultNicknames[Math.floor(Math.random() * defaultNicknames.length)];
+            const { error: signUpError } = await supabase.auth.signUp({
+              ...signInOptions,
+              options: {
+                data: {
+                  nickname: randomNickname,
+                }
               }
+            });
+            if (signUpError) {
+               throw signUpError;
             }
-          });
-          if (signUpError) {
-             throw signUpError;
+          } else {
+            throw authError;
           }
-        } else {
-          throw authError;
         }
       }
 
@@ -105,6 +149,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   if (!isOpen) return null;
 
   return (
+    <>
     <BaseModal isOpen={isOpen} onClose={() => {
       setAccount("");
       setPassword("");
@@ -240,5 +285,13 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           </div>
         </form>
     </BaseModal>
+
+    {/* Toast */}
+    {toastMessage && (
+      <div className={`fixed top-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg text-sm font-medium z-[99999] transition-all ${toastMessage.type === 'error' ? 'bg-danger-red text-white' : 'bg-primary-green text-black'}`}>
+        {toastMessage.text}
+      </div>
+    )}
+    </>
   );
 }
