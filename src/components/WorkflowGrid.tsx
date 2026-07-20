@@ -3,7 +3,13 @@
 import { useState, useRef } from "react";
 import Link from "next/link";
 import { Lock, Video } from "lucide-react";
+import { useAuthStore } from "@/store/auth";
 
+const TIER_MAP: Record<string, string> = {
+  month: '包月',
+  continuous_month: '连续包月',
+  yearly: '包年'
+};
 
 interface Category {
   id: string;
@@ -96,7 +102,20 @@ function VideoCard({ workflow }: { workflow: Workflow }) {
 }
 
 export function WorkflowGrid({ workflows, categories }: { workflows: Workflow[], categories: Category[] }) {
+  const { user } = useAuthStore();
+  const userTier = user?.user_metadata?.subscription_tier || "free";
+
+  if (categories.length === 0) {
+    categories = [
+      { id: '1', name: '免费专区 (Mock)', requiredTier: 'free' },
+      { id: '2', name: '包月专区 (Mock)', requiredTier: 'month' },
+      { id: '3', name: '包年专区 (Mock)', requiredTier: 'yearly' },
+    ];
+  }
+
   const [activeCategory, setActiveCategory] = useState(categories.length > 0 ? categories[0].name : "");
+
+  const activeCategoryObj = categories.find(c => c.name === activeCategory);
 
   const filteredWorkflows = activeCategory
     ? workflows.filter(w => w.category === activeCategory)
@@ -112,21 +131,21 @@ export function WorkflowGrid({ workflows, categories }: { workflows: Workflow[],
             className="relative cursor-pointer py-2 group flex-shrink-0"
             onClick={() => setActiveCategory(cat.name)}
           >
-            <div className="flex items-center gap-1">
+            <div className="relative flex items-center gap-1 pr-2">
               <span className={`text-base font-medium transition-colors ${
                 activeCategory === cat.name ? 'text-white' : 'text-gray-400 group-hover:text-white'
               }`}>
                 {cat.name}
               </span>
               {cat.requiredTier && cat.requiredTier !== "free" && cat.requiredTier !== "免费" && (
-                <div className="relative flex items-center">
+                <>
                   <Lock className={`w-4 h-4 transition-colors ${
                     activeCategory === cat.name ? 'text-white' : 'text-gray-400 group-hover:text-white'
                   }`} />
-                  <span className="absolute -top-3 -right-11 text-[8px] bg-gradient-to-r from-pink-400 to-yellow-300 text-black font-medium px-1 py-[1px] rounded-t-full rounded-br-full rounded-bl-none whitespace-nowrap">
-                    {cat.requiredTier}
+                  <span className="absolute -top-3 -right-6 px-1.5 py-0.5 text-[10px] font-bold text-black bg-gradient-to-r from-[#FF9A9E] to-[#FECFEF] rounded-full whitespace-nowrap scale-90">
+                    {TIER_MAP[cat.requiredTier] || cat.requiredTier}
                   </span>
-                </div>
+                </>
               )}
             </div>
 
@@ -139,7 +158,21 @@ export function WorkflowGrid({ workflows, categories }: { workflows: Workflow[],
       </div>
 
       {/* Grid Layout */}
-      {!filteredWorkflows.length ? (
+      {activeCategoryObj?.requiredTier && activeCategoryObj.requiredTier !== "free" && activeCategoryObj.requiredTier !== "免费" && userTier === "free" ? (
+        <div className="flex min-h-[400px] flex-col items-center justify-center rounded-xl border border-dashed border-white/10 text-center text-muted-foreground mt-4 gap-4 bg-[#1a1a1a]">
+          <Lock className="w-12 h-12 text-gray-500 mb-2" />
+          <div className="space-y-1">
+            <p className="text-lg font-medium text-white">🔒 权限不足</p>
+            <p className="text-sm">该分类为专属工作流，请升级会员后解锁体验。</p>
+          </div>
+          <Link
+            href="/pricing"
+            className="bg-primary-green text-black px-6 py-2 rounded-full font-medium text-sm hover:bg-primary-green/90 transition-colors mt-2"
+          >
+            去升级 (Upgrade)
+          </Link>
+        </div>
+      ) : !filteredWorkflows.length ? (
         <div className="flex min-h-[400px] flex-col items-center justify-center rounded-xl border border-dashed border-white/10 text-center text-muted-foreground mt-4">
           <p>暂无可用工作流。</p>
           <p className="text-sm">请稍后再来看看，或在后台进行配置。</p>
