@@ -2,7 +2,7 @@
 
 
 import React, { useState, useEffect } from 'react';
-import { Play, UploadCloud, HelpCircle, Minus, Plus, Zap, Heart, MessageCircle, Download, Trash2, Share2, X, Loader2 } from 'lucide-react';
+import { Play, UploadCloud, HelpCircle, Minus, Plus, Zap, Heart, MessageCircle, Download, Trash2, Share2, X, Loader2, Video } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth';
 
@@ -572,17 +572,30 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
             <h1 className="text-lg font-semibold text-white mb-6 text-center">参考视频</h1>
 
             {/* Video Placeholder */}
-            <div className="bg-[#131622] rounded-2xl aspect-[9/16] w-full relative flex items-center justify-center shadow-xl overflow-hidden group">
-              <video
-                  src={workflow?.reference_video_url || workflow?.video_url || ""}
+            <div className="bg-[#131622] rounded-2xl aspect-[9/16] w-full relative flex items-center justify-center shadow-xl overflow-hidden group bg-gray-800">
+              {!(workflow?.reference_video_url || workflow?.video_url) && !(workflow?.cover_image_url || workflow?.cover_url) ? (
+                <div className="flex flex-col items-center text-gray-500">
+                  <Video className="w-10 h-10 mb-2" />
+                  <span className="text-sm">暂无演示视频</span>
+                </div>
+              ) : !(workflow?.reference_video_url || workflow?.video_url) && (workflow?.cover_image_url || workflow?.cover_url) ? (
+                <img
+                  src={workflow?.cover_image_url || workflow?.cover_url || ""}
                   className="absolute inset-0 w-full h-full object-cover"
-                  poster={workflow?.cover_image_url || workflow?.cover_url || undefined}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  controls
-              />
+                  alt="Cover"
+                />
+              ) : (
+                <video
+                    src={workflow?.reference_video_url || workflow?.video_url || ""}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    poster={workflow?.cover_image_url || workflow?.cover_url || undefined}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    controls
+                />
+              )}
             </div>
 
             <div className="flex flex-row gap-2 items-center mb-2 mt-4">
