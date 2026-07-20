@@ -133,9 +133,9 @@ export default function BillingPage() {
           </div>
 
           {/* Date Range Picker */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 relative z-[101] pointer-events-auto">
             <span className="text-xs text-gray-500">日期范围 默认展示最新任务...</span>
-            <div className="flex items-center gap-2 bg-[#111111] border border-white/10 px-4 py-2.5 rounded-lg text-sm text-gray-300">
+            <div className="flex items-center gap-2 bg-[#111111] border border-white/10 px-4 py-2.5 rounded-lg text-sm text-gray-300 cursor-pointer hover:bg-white/5 transition-colors">
               <span>全量数据</span>
               <Calendar className="w-4 h-4 text-gray-500 ml-2" />
             </div>
