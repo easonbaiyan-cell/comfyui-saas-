@@ -142,7 +142,7 @@ export function WorkflowGrid({ workflows, categories }: { workflows: Workflow[],
                   <Lock className={`w-4 h-4 transition-colors ${
                     activeCategory === cat.name ? 'text-white' : 'text-gray-400 group-hover:text-white'
                   }`} />
-                  <span className="absolute -top-3 -right-6 px-1.5 py-0.5 text-[10px] font-bold text-black bg-gradient-to-r from-[#FF9A9E] to-[#FECFEF] rounded-full whitespace-nowrap scale-90">
+                  <span className={`absolute -top-4 -right-8 px-1.5 py-0.5 text-[10px] font-bold text-black whitespace-nowrap scale-90 rounded-t-full rounded-r-full rounded-bl-none ${cat.requiredTier === 'yearly' ? 'bg-gradient-to-r from-[#FF758C] to-[#FF7EB3]' : 'bg-gradient-to-r from-[#F9D423] to-[#8EFAEF]'}`}>
                     {TIER_MAP[cat.requiredTier] || cat.requiredTier}
                   </span>
                 </>
