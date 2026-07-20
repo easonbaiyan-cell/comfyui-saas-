@@ -7,16 +7,8 @@
    - Network:      http://192.168.0.2:3000
 
  ✓ Starting...
- ✓ Ready in 2s
- ○ Compiling /workspace ...
- ✓ Compiled /workspace in 12.3s (928 modules)
- GET /workspace 200 in 14240ms
- ✓ Compiled in 794ms (928 modules)
- GET /workspace 200 in 670ms
- ✓ Compiled in 438ms (928 modules)
- GET /workspace 200 in 340ms
- ✓ Compiled /favicon.ico in 418ms (576 modules)
- GET /favicon.ico 200 in 675ms
- ✓ Compiled in 532ms (945 modules)
- GET /workspace 200 in 531ms
- ✓ Compiled in 505ms (928 modules)
+ ✓ Ready in 2.1s
+ ○ Compiling / ...
+ ✓ Compiled / in 3.5s (892 modules)
+ GET / 200 in 18459ms
+ ✓ Compiled in 734ms (892 modules)
