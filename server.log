@@ -2,17 +2,27 @@
 > temp_app@0.1.0 dev
 > next dev
 
+ ⚠ Port 3000 is in use by an unknown process, using available port 3003 instead.
    ▲ Next.js 15.5.20
-   - Local:        http://localhost:3000
-   - Network:      http://192.168.0.2:3000
+   - Local:        http://localhost:3003
+   - Network:      http://192.168.0.2:3003
 
  ✓ Starting...
- ✓ Ready in 1965ms
- ○ Compiling / ...
- ✓ Compiled / in 7.8s (897 modules)
- GET / 200 in 9193ms
+ ✓ Ready in 2.3s
+ ○ Compiling /admin ...
+ ✓ Compiled /admin in 11.8s (910 modules)
+ GET /admin 200 in 14218ms
+ GET /admin 200 in 151ms
+ ○ Compiling /admin/workflows ...
+ ✓ Compiled /admin/workflows in 3.3s (1046 modules)
  ○ Compiling /admin/settings ...
- ✓ Compiled /admin/settings in 980ms (916 modules)
- ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
- GET /admin/settings 200 in 1743ms
- GET / 200 in 77ms
+ GET /admin/workflows 200 in 2643ms
+ ✓ Compiled /admin/settings in 1638ms (1049 modules)
+ GET /admin/workflows 200 in 1505ms
+ GET /admin/settings 200 in 2333ms
+ GET /admin 200 in 214ms
+ GET /admin 200 in 153ms
+ GET /admin/workflows 200 in 16ms
+ GET /admin/workflows 200 in 77ms
+ GET /admin/workflows 200 in 70ms
+ GET /admin/settings 200 in 132ms

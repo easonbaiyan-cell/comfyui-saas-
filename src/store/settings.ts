@@ -1,5 +1,23 @@
 import { create } from 'zustand';
 
+export interface MembershipPackage {
+  id?: number;
+  name?: string;
+  current_price?: number;
+  original_price?: number;
+  points_per_month?: number;
+  enable_countdown?: boolean;
+  countdown_deadline?: string;
+  features?: string[];
+}
+
+export interface PointsTopupPackage {
+  id?: string;
+  points?: number;
+  price?: number;
+}
+
+
 export interface GlobalSettings {
   banner_enabled: boolean;
   banner_text: string;
@@ -8,8 +26,8 @@ export interface GlobalSettings {
   banner_countdown_end: string | null;
   cs_qrcode_url: string;
   cs_wechat_id: string;
-  membership_packages: any[];
-  points_topup_packages: any[];
+  membership_packages: MembershipPackage[];
+  points_topup_packages: PointsTopupPackage[];
 }
 
 interface SettingsState {

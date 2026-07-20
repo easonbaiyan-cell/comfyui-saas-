@@ -5,12 +5,30 @@ import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Trash2, Plus, UploadCloud, Loader2, X } from 'lucide-react';
 
+export interface MembershipPackage {
+  id?: number;
+  name?: string;
+  current_price?: number;
+  original_price?: number;
+  points_per_month?: number;
+  enable_countdown?: boolean;
+  countdown_deadline?: string;
+  features?: string[];
+}
+
+export interface PointsTopupPackage {
+  id?: string;
+  points?: number;
+  price?: number;
+}
+
+
 
 export default function SettingsPage() {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [membershipPackages, setMembershipPackages] = useState<any[]>([]);
-  const [pointsTopupPackages, setPointsTopupPackages] = useState<any[]>([]);
+  const [membershipPackages, setMembershipPackages] = useState<MembershipPackage[]>([]);
+  const [pointsTopupPackages, setPointsTopupPackages] = useState<PointsTopupPackage[]>([]);
   const [isUploadingQR, setIsUploadingQR] = useState(false);
 
 
@@ -32,28 +50,76 @@ export default function SettingsPage() {
 
   const fetchSettings = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('global_settings')
-      .select('*')
-      .eq('id', 1)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('global_settings')
+        .select('*')
+        .eq('id', 1)
+        .maybeSingle();
 
-    if (data) {
-      setFormData({
-        banner_enabled: data.banner_enabled ?? true,
-        banner_text: data.banner_text || '',
-        banner_highlight_tag: data.banner_highlight_tag || '',
-        banner_discount_text: data.banner_discount_text || '',
-        banner_countdown_end: data.banner_countdown_end ? new Date(data.banner_countdown_end).toISOString().slice(0, 16) : '',
-        cs_qrcode_url: data.cs_qrcode_url || '',
-        cs_wechat_id: data.cs_wechat_id || '',
-        membership_packages: data.membership_packages ? JSON.stringify(data.membership_packages, null, 2) : '',
-        points_topup_packages: data.points_topup_packages ? JSON.stringify(data.points_topup_packages, null, 2) : ''
-      });
-      setMembershipPackages(data.membership_packages || []);
-      setPointsTopupPackages(data.points_topup_packages || []);
+      if (error) throw error;
+
+      if (data) {
+        setFormData({
+          banner_enabled: data.banner_enabled ?? true,
+          banner_text: data.banner_text || '',
+          banner_highlight_tag: data.banner_highlight_tag || '',
+          banner_discount_text: data.banner_discount_text || '',
+          banner_countdown_end: data.banner_countdown_end ? new Date(data.banner_countdown_end).toISOString().slice(0, 16) : '',
+          cs_qrcode_url: data.cs_qrcode_url || '',
+          cs_wechat_id: data.cs_wechat_id || '',
+          membership_packages: data.membership_packages ? JSON.stringify(data.membership_packages, null, 2) : '',
+          points_topup_packages: data.points_topup_packages ? JSON.stringify(data.points_topup_packages, null, 2) : ''
+        });
+        setMembershipPackages(data.membership_packages || []);
+        setPointsTopupPackages(data.points_topup_packages || []);
+      }
+    } catch (err) {
+      console.error('Error fetching global settings:', err);
+      // fallback for local testing
+      setMembershipPackages([
+        {
+          "id": 1,
+          "name": "基础包月",
+          "current_price": 1280,
+          "original_price": 1680,
+          "points_per_month": 72000,
+          "enable_countdown": false,
+          "countdown_deadline": "",
+          "features": ["不含水印", "单任务时长 20 分钟", "无插队权益", "并发数 2"]
+        },
+        {
+          "id": 2,
+          "name": "连续包月",
+          "current_price": 680,
+          "original_price": 3400,
+          "points_per_month": 72000,
+          "enable_countdown": true,
+          "countdown_deadline": "2025-12-31T23:59",
+          "features": ["不含水印", "单任务时长 60 分钟", "享受插队权益", "并发数 5"]
+        },
+        {
+          "id": 3,
+          "name": "连续包年",
+          "current_price": 6800,
+          "original_price": 40800,
+          "points_per_month": 72000,
+          "enable_countdown": true,
+          "countdown_deadline": "2025-12-31T23:59",
+          "features": ["不含水印", "单任务时长 60 分钟", "享受插队权益", "并发数 5"]
+        }
+      ]);
+      setPointsTopupPackages([
+        {"id": "tier-1", "points": 1000, "price": 10},
+        {"id": "tier-2", "points": 2000, "price": 20},
+        {"id": "tier-3", "points": 5000, "price": 50},
+        {"id": "tier-4", "points": 10000, "price": 100},
+        {"id": "tier-5", "points": 20000, "price": 200},
+        {"id": "tier-6", "points": 50000, "price": 500}
+      ]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleSave = async () => {
@@ -95,6 +161,8 @@ export default function SettingsPage() {
       current_price: 0,
       original_price: 0,
       points_per_month: 0,
+      enable_countdown: false,
+      countdown_deadline: '',
       features: []
     }]);
   };
@@ -188,7 +256,7 @@ export default function SettingsPage() {
     }
   };
 
-  if (loading) return <div className="p-8 text-white">Loading...</div>;
+  if (loading) return <div className="p-8 text-white">Loading Admin Settings...</div>;
 
   return (
     <div className="p-8 space-y-8 text-white max-w-4xl">
@@ -350,6 +418,31 @@ export default function SettingsPage() {
                   className="bg-gray-900 border border-gray-700 rounded p-2 text-sm text-white"
                 />
               </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mr-8 mt-4">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id={`enable_countdown_${index}`}
+                  checked={pkg.enable_countdown || false}
+                  onChange={(e) => handleMembershipChange(index, 'enable_countdown', e.target.checked)}
+                  className="w-4 h-4 rounded bg-gray-900 border-gray-700 text-primary-green focus:ring-primary-green focus:ring-offset-gray-800"
+                />
+                <label htmlFor={`enable_countdown_${index}`} className="text-xs text-gray-400 cursor-pointer">开启限时抢购折扣标签</label>
+              </div>
+
+              {pkg.enable_countdown && (
+                <div className="flex flex-col space-y-1">
+                  <label className="text-xs text-gray-400">倒计时截止时间</label>
+                  <input
+                    type="datetime-local"
+                    value={pkg.countdown_deadline || ''}
+                    onChange={(e) => handleMembershipChange(index, 'countdown_deadline', e.target.value)}
+                    className="bg-gray-900 border border-gray-700 rounded p-2 text-sm text-white"
+                  />
+                </div>
+              )}
             </div>
 
             <div className="space-y-2 mt-4 pt-4 border-t border-gray-700">
