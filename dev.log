@@ -1,0 +1,21 @@
+
+> temp_app@0.1.0 dev
+> next dev
+
+   ▲ Next.js 15.5.20
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.0.2:3000
+
+ ✓ Starting...
+ ✓ Ready in 1985ms
+ ○ Compiling /admin/settings ...
+ ✓ Compiled /admin/settings in 11.4s (914 modules)
+ GET /admin/settings 200 in 13587ms
+ ○ Compiling / ...
+ ✓ Compiled / in 1155ms (926 modules)
+ GET / 200 in 1488ms
+ GET / 200 in 77ms
+ GET /admin/settings 200 in 508ms
+ GET / 200 in 54ms
+ GET / 200 in 195ms
+ GET /admin/settings 200 in 190ms
