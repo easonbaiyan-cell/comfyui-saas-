@@ -12,6 +12,7 @@ import { AuthModal } from "./AuthModal";
 import type { User } from "@supabase/supabase-js";
 
 import { useAuthStore } from "@/store/auth";
+import { useSettingsStore } from "@/store/settings";
 
 interface NavLink {
   label: string;
@@ -27,6 +28,7 @@ const isImageUrl = (url: string) => {
 };
 
 export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) {
+  const { settings } = useSettingsStore();
   const points = useAuthStore(state => state.积分余额);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   // 新增：控制定价页面弹窗的开关
@@ -182,9 +184,18 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
               {isCustomerServiceOpen && (
                 <div className="absolute mt-2 right-0 z-50 bg-[#0a0a0a] border border-white/10 rounded-xl p-4 shadow-2xl w-48">
                   <div className="text-center text-xs text-gray-400">扫码添加专属客服</div>
-                  <div className="w-32 h-32 bg-white rounded-md mx-auto mt-2 flex items-center justify-center text-black/50 text-xs">
-                    二维码占位
-                  </div>
+                  {settings?.cs_qrcode_url ? (
+                    <img src={settings.cs_qrcode_url} alt="QR Code" className="w-32 h-32 rounded-md mx-auto mt-2 object-cover" />
+                  ) : (
+                    <div className="w-32 h-32 bg-white rounded-md mx-auto mt-2 flex items-center justify-center text-black/50 text-xs">
+                      二维码占位
+                    </div>
+                  )}
+                  {settings?.cs_wechat_id && (
+                    <div className="mt-2 text-center text-xs text-white">
+                      微信: {settings.cs_wechat_id}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

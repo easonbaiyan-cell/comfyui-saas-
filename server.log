@@ -7,7 +7,12 @@
    - Network:      http://192.168.0.2:3000
 
  ✓ Starting...
- ✓ Ready in 2.1s
+ ✓ Ready in 1965ms
  ○ Compiling / ...
- ✓ Compiled / in 12s (892 modules)
- GET / 200 in 14552ms
+ ✓ Compiled / in 7.8s (897 modules)
+ GET / 200 in 9193ms
+ ○ Compiling /admin/settings ...
+ ✓ Compiled /admin/settings in 980ms (916 modules)
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /admin/settings 200 in 1743ms
+ GET / 200 in 77ms

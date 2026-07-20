@@ -3,6 +3,7 @@ import './globals.css';
 import { PromoBanner } from "@/components/PromoBanner";
 import { Header } from "@/components/Header";
 import { createClient } from '@supabase/supabase-js';
+import { SettingsInitializer } from '@/components/SettingsInitializer';
 
 export const metadata: Metadata = {
   title: 'papagaga',
@@ -15,6 +16,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   let siteSettings = null;
+  let globalSettings = null;
 
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -30,6 +32,14 @@ export default async function RootLayout({
           .single();
 
         siteSettings = settingsData;
+
+        const { data: globalData } = await supabase
+          .from('global_settings')
+          .select('*')
+          .eq('id', 1)
+          .single();
+
+        globalSettings = globalData;
     }
   } catch (error) {
     console.error("Error fetching data from Supabase:", error);
@@ -66,6 +76,7 @@ export default async function RootLayout({
         className={`bg-background text-foreground min-h-screen antialiased`}
         style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif' }}
       >
+        <SettingsInitializer settings={globalSettings} />
         <PromoBanner text={bannerText} countdownUntil={bannerCountdown as Date} />
         <Header logoUrl={logoUrl} navLinks={navLinks} />
         {children}

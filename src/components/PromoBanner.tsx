@@ -2,8 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
+import { useSettingsStore } from "@/store/settings";
 
-export function PromoBanner({ text, countdownUntil }: { text?: string, countdownUntil?: Date }) {
+export function PromoBanner({ text: propText, countdownUntil: propCountdown }: { text?: string, countdownUntil?: Date }) {
+  const { settings } = useSettingsStore();
+  const text = settings?.banner_text || propText;
+  const countdownEndStr = settings?.banner_countdown_end;
+  const countdownUntil = countdownEndStr ? new Date(countdownEndStr) : propCountdown;
+  const highlightTag = settings?.banner_highlight_tag || "首发特惠";
+  const discountText = settings?.banner_discount_text || "5 折";
+  const enabled = settings ? settings.banner_enabled : true;
   const [timeLeft, setTimeLeft] = useState<string>("");
   const [isVisible, setIsVisible] = useState(true);
 
@@ -31,11 +39,11 @@ export function PromoBanner({ text, countdownUntil }: { text?: string, countdown
     return () => clearInterval(interval);
   }, [countdownUntil]);
 
-  if (!text || !isVisible) return null;
+  if (!text || !isVisible || !enabled) return null;
 
   // Function to highlight promotional keywords
   const highlightKeywords = (originalText: string) => {
-    const keywords = ["限时 37 折", "0.37元/秒", "37 折", "首发特惠", "5 折"];
+    const keywords = ["限时 37 折", "0.37元/秒", "37 折", "首发特惠", "5 折", highlightTag, discountText].filter(Boolean);
     
     let parts: (string | React.ReactNode)[] = [originalText];
     keywords.forEach(kw => {
