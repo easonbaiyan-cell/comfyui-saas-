@@ -1,4 +1,6 @@
+const fs = require('fs');
 
+let code = `
 "use client";
 
 import { useEffect, useState } from "react";
@@ -20,7 +22,7 @@ export function PromoBanner({ text: propText, countdownUntil: propCountdown }: {
   useEffect(() => {
     setIsClient(true);
     if (!countdownUntil) return;
-    
+
     const interval = setInterval(() => {
       const now = new Date().getTime();
       const distance = new Date(countdownUntil).getTime() - now;
@@ -36,7 +38,7 @@ export function PromoBanner({ text: propText, countdownUntil: propCountdown }: {
       const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-      setTimeLeft(`${days}天 ${hours}时 ${minutes}分 ${seconds}秒`);
+      setTimeLeft(\`\${days}天 \${hours}时 \${minutes}分 \${seconds}秒\`);
     }, 1000);
 
     return () => clearInterval(interval);
@@ -47,7 +49,7 @@ export function PromoBanner({ text: propText, countdownUntil: propCountdown }: {
   // Function to highlight promotional keywords
   const highlightKeywords = (originalText: string) => {
     const keywords = ["限时 37 折", "0.37元/秒", "37 折", "首发特惠", "5 折", highlightTag, discountText].filter(Boolean) as string[];
-    
+
     let parts: (string | React.ReactNode)[] = [originalText];
     keywords.forEach(kw => {
       parts = parts.flatMap(part => {
@@ -55,11 +57,11 @@ export function PromoBanner({ text: propText, countdownUntil: propCountdown }: {
         const split = part.split(kw);
         return split.reduce((acc: (string | React.ReactNode)[], current, idx) => {
           if (idx === 0) return [current];
-          return [...acc, <span key={`${kw}-${idx}`} className="bg-primary-green text-black px-2 py-0.5 rounded-md mx-1 font-bold">{kw}</span>, current];
+          return [...acc, <span key={\`\${kw}-\${idx}\`} className="bg-primary-green text-black px-2 py-0.5 rounded-md mx-1 font-bold">{kw}</span>, current];
         }, []);
       });
     });
-    
+
     return parts;
   };
 
@@ -82,7 +84,7 @@ export function PromoBanner({ text: propText, countdownUntil: propCountdown }: {
           </div>
         )}
       </div>
-      <button 
+      <button
         onClick={() => setIsVisible(false)}
         className="absolute right-4 p-1 hover:bg-black/20 rounded-full transition-colors flex-shrink-0 text-white"
         aria-label="Close banner"
@@ -92,3 +94,5 @@ export function PromoBanner({ text: propText, countdownUntil: propCountdown }: {
     </div>
   );
 }
+`;
+fs.writeFileSync('src/components/PromoBanner.tsx', code);

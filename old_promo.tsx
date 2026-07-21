@@ -1,26 +1,15 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
-import { useSettingsStore } from "@/store/settings";
 
-export function PromoBanner({ text: propText, countdownUntil: propCountdown }: { text?: string, countdownUntil?: Date }) {
-  const { settings } = useSettingsStore();
-  const text = settings?.banner_text || propText;
-  const countdownEndStr = settings?.banner_countdown_end;
-  const countdownUntil = countdownEndStr ? new Date(countdownEndStr) : propCountdown;
-  const highlightTag = settings?.banner_highlight_tag;
-  const discountText = settings?.banner_discount_text;
-  const enabled = settings ? settings.banner_enabled : true;
+export function PromoBanner({ text, countdownUntil }: { text?: string, countdownUntil?: Date }) {
   const [timeLeft, setTimeLeft] = useState<string>("");
   const [isVisible, setIsVisible] = useState(true);
-  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    setIsClient(true);
     if (!countdownUntil) return;
-    
+
     const interval = setInterval(() => {
       const now = new Date().getTime();
       const distance = new Date(countdownUntil).getTime() - now;
@@ -42,12 +31,12 @@ export function PromoBanner({ text: propText, countdownUntil: propCountdown }: {
     return () => clearInterval(interval);
   }, [countdownUntil]);
 
-  if (!text || !isVisible || !enabled) return null;
+  if (!text || !isVisible) return null;
 
   // Function to highlight promotional keywords
   const highlightKeywords = (originalText: string) => {
-    const keywords = ["限时 37 折", "0.37元/秒", "37 折", "首发特惠", "5 折", highlightTag, discountText].filter(Boolean) as string[];
-    
+    const keywords = ["限时 37 折", "0.37元/秒", "37 折", "首发特惠", "5 折"];
+
     let parts: (string | React.ReactNode)[] = [originalText];
     keywords.forEach(kw => {
       parts = parts.flatMap(part => {
@@ -59,30 +48,19 @@ export function PromoBanner({ text: propText, countdownUntil: propCountdown }: {
         }, []);
       });
     });
-    
+
     return parts;
   };
 
   return (
     <div className="relative bg-fuchsia-600 text-white py-2 px-10 text-center text-sm font-medium flex items-center justify-center min-h-[40px]">
       <div className="flex-1 flex items-center justify-center flex-wrap gap-2">
-        {highlightTag && (
-          <span className="bg-white/20 text-white px-2 py-0.5 rounded-md text-xs font-bold mr-1">{highlightTag}</span>
-        )}
         <span>{highlightKeywords(text)}</span>
-        {discountText && (
-          <span>- {discountText}</span>
-        )}
         {countdownUntil && (
-          <div className="flex items-center gap-2">
-            <span className="mx-2">|</span>
-            <span className="font-bold tabular-nums tracking-wider bg-black/20 px-2 py-0.5 rounded-md text-white min-w-[120px] min-h-[24px] inline-flex items-center justify-center transition-opacity duration-300">
-              {isClient && timeLeft ? timeLeft : <span className="opacity-0">0天 0时 0分 0秒</span>}
-            </span>
-          </div>
+          <span className="font-bold tabular-nums tracking-wider bg-black/20 px-2 py-0.5 rounded-md text-white">{timeLeft}</span>
         )}
       </div>
-      <button 
+      <button
         onClick={() => setIsVisible(false)}
         className="absolute right-4 p-1 hover:bg-black/20 rounded-full transition-colors flex-shrink-0 text-white"
         aria-label="Close banner"
