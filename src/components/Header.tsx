@@ -30,7 +30,7 @@ const isImageUrl = (url: string) => {
 export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) {
   const { settings } = useSettingsStore();
   const points = useAuthStore(state => state.积分余额);
-  const { isAuthOpen, setIsAuthOpen, setIsDistributor } = useAuthStore();
+  const { isAuthOpen, setIsAuthOpen, isDistributor, setIsDistributor } = useAuthStore();
   // 新增：控制定价页面弹窗的开关
   const [isPricingOpen, setIsPricingOpen] = useState(false);
   const [isPointsOpen, setIsPointsOpen] = useState(false);
@@ -339,6 +339,13 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
                           <Settings className="h-4 w-4" />
                           <span>个人设置</span>
                         </Link>
+
+                        {isDistributor && (
+                          <Link href="/affiliate" onClick={() => setIsProfileDropdownOpen(false)} className="flex items-center gap-3 px-2 py-2.5 text-sm text-[#D0FF2A] hover:text-black hover:bg-[#D0FF2A] rounded-lg transition-colors cursor-pointer focus:bg-[#D0FF2A] focus:text-black w-full">
+                            <Crown className="h-4 w-4" />
+                            <span>分销中心</span>
+                          </Link>
+                        )}
 
                         <hr className="border-white/5 my-1" />
 
