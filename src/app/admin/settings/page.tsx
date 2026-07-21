@@ -190,13 +190,13 @@ export default function SettingsPage() {
 
   const handleRemoveFeature = (pkgIndex: number, featureIndex: number) => {
     const newPkgs = [...membershipPackages];
-    newPkgs[pkgIndex].features.splice(featureIndex, 1);
+    if (newPkgs[pkgIndex].features) newPkgs[pkgIndex].features!.splice(featureIndex, 1);
     setMembershipPackages(newPkgs);
   };
 
   const handleFeatureChange = (pkgIndex: number, featureIndex: number, value: string) => {
     const newPkgs = [...membershipPackages];
-    newPkgs[pkgIndex].features[featureIndex] = value;
+    if (newPkgs[pkgIndex].features) newPkgs[pkgIndex].features![featureIndex] = value;
     setMembershipPackages(newPkgs);
   };
 

@@ -49,7 +49,7 @@ export function PromoBanner({ text: propText, countdownUntil: propCountdown }: {
     keywords.forEach(kw => {
       parts = parts.flatMap(part => {
         if (typeof part !== 'string') return [part];
-        const split = part.split(kw);
+        const split = part.split(kw as string);
         return split.reduce((acc: (string | React.ReactNode)[], current, idx) => {
           if (idx === 0) return [current];
           return [...acc, <span key={`${kw}-${idx}`} className="bg-primary-green text-black px-2 py-0.5 rounded-md mx-1 font-bold">{kw}</span>, current];

@@ -372,14 +372,14 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
       }
 
       // Construct nodeInfoList keeping strict types (do not convert to string)
-      const constructedNodeInfoList = workflow.rh_payload_template.nodeInfoList.map((node: DynamicNode) => {
+      const constructedNodeInfoList = workflow.rh_payload_template?.nodeInfoList?.map((node: DynamicNode) => {
         let value = dynamicFormValues[node.nodeId];
         if (value === undefined) {
           value = node.fieldValue !== undefined ? node.fieldValue : "";
         }
         return {
           nodeId: String(node.nodeId),
-          fieldName: String(node.fieldName || node.type || "text"),
+          fieldName: String(node.fieldName || (node as any).type || "text"),
           fieldValue: value
         };
       });
@@ -653,7 +653,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
             )}
 
             {workflow?.rh_payload_template?.nodeInfoList && workflow.rh_payload_template.nodeInfoList.length > 0 ? (
-              workflow.rh_payload_template.nodeInfoList.map(renderDynamicNode)
+              workflow.rh_payload_template?.nodeInfoList?.map(renderDynamicNode)
             ) : (
               <div className="text-gray-500 text-sm text-center py-10">该工作流暂无配置参数</div>
             )}

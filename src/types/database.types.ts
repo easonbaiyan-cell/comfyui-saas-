@@ -26,4 +26,22 @@ export interface Commission {
   order_amount: number;
   commission_amount: number;
   created_at: string;
+  commission_rate?: number;
+  status?: 'pending' | 'settled' | 'revoked';
+}
+
+export interface AffiliateRule {
+  id: string;
+  min_invites: number;
+  max_invites: number | null;
+  commission_rate: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface InviteRelationship {
+  id: string;
+  inviter_id: string;
+  invitee_id: string;
+  created_at: string;
 }
