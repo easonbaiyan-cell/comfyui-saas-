@@ -8,6 +8,8 @@ interface AuthState {
   set积分余额: (balance: number) => void;
   isAuthOpen: boolean;
   setIsAuthOpen: (isOpen: boolean) => void;
+  isDistributor: boolean;
+  setIsDistributor: (isDistributor: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -17,4 +19,6 @@ export const useAuthStore = create<AuthState>((set) => ({
   set积分余额: (balance) => set({ 积分余额: balance }),
   isAuthOpen: false,
   setIsAuthOpen: (isOpen) => set({ isAuthOpen: isOpen }),
+  isDistributor: false,
+  setIsDistributor: (isDistributor) => set({ isDistributor }),
 }));
