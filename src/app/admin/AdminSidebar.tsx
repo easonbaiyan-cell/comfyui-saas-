@@ -3,9 +3,16 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
+import { logoutAdmin } from './actions/auth';
+import { LogOut } from 'lucide-react';
 
 export function AdminSidebar() {
   const pathname = usePathname();
+
+  // Hide sidebar on login page
+  if (pathname === '/admin/login') {
+    return null;
+  }
 
   const links = [
     { href: '/admin', label: '数据大盘 (Dashboard)' },
@@ -43,8 +50,19 @@ export function AdminSidebar() {
           );
         })}
       </nav>
-      <div className="p-4 border-t border-gray-800 text-sm text-gray-500 text-center">
-        &copy; 2024 Platform Admin
+      <div className="p-4 border-t border-gray-800 flex flex-col gap-4">
+        <form action={logoutAdmin}>
+          <button
+            type="submit"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg transition-colors font-medium text-sm"
+          >
+            <LogOut className="w-4 h-4" />
+            退出登录 (Logout)
+          </button>
+        </form>
+        <div className="text-sm text-gray-500 text-center">
+          &copy; 2024 Platform Admin
+        </div>
       </div>
     </aside>
   );
