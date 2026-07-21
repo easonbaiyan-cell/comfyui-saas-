@@ -27,7 +27,7 @@ export function PromoBanner({ text: propText, countdownUntil: propCountdown }: {
 
       if (distance < 0) {
         clearInterval(interval);
-        setTimeLeft("已结束");
+        setTimeLeft("00:00:00");
         return;
       }
 
@@ -44,49 +44,45 @@ export function PromoBanner({ text: propText, countdownUntil: propCountdown }: {
 
   if (!text || !isVisible || !enabled) return null;
 
-  // Function to highlight promotional keywords
-  const highlightKeywords = (originalText: string) => {
-    const keywords = ["限时 37 折", "0.37元/秒", "37 折", "首发特惠", "5 折", highlightTag, discountText].filter(Boolean) as string[];
-    
-    let parts: (string | React.ReactNode)[] = [originalText];
-    keywords.forEach(kw => {
-      parts = parts.flatMap(part => {
-        if (typeof part !== 'string') return [part];
-        const split = part.split(kw);
-        return split.reduce((acc: (string | React.ReactNode)[], current, idx) => {
-          if (idx === 0) return [current];
-          return [...acc, <span key={`${kw}-${idx}`} className="bg-primary-green text-black px-2 py-0.5 rounded-md mx-1 font-bold">{kw}</span>, current];
-        }, []);
-      });
-    });
-    
-    return parts;
-  };
-
   return (
-    <div className="relative bg-fuchsia-600 text-white py-2 px-10 text-center text-sm font-medium flex items-center justify-center min-h-[40px]">
-      <div className="flex-1 flex items-center justify-center flex-wrap gap-2">
+    <div className="w-full bg-[#B200FF] px-4 py-2 flex items-center justify-center text-sm text-white relative">
+      <div className="flex items-center flex-wrap justify-center gap-2">
+        {/* 主文案 */}
+        {text && <span>{text}</span>}
+
+        {/* 高亮标签 (荧光黄底黑字) */}
         {highlightTag && (
-          <span className="bg-white/20 text-white px-2 py-0.5 rounded-md text-xs font-bold mr-1">{highlightTag}</span>
+          <span className="bg-[#D4FF00] text-black px-2 py-0.5 rounded-md font-bold whitespace-nowrap">
+            {highlightTag}
+          </span>
         )}
-        <span>{highlightKeywords(text)}</span>
+
+        {/* 优惠文案 (荧光黄底黑字) */}
         {discountText && (
-          <span>- {discountText}</span>
+          <span className="bg-[#D4FF00] text-black px-2 py-0.5 rounded-md font-bold whitespace-nowrap">
+            {discountText}
+          </span>
         )}
+
+        {/* 分隔符与倒计时 */}
         {countdownUntil && (
-          <div className="flex items-center gap-2">
-            <span className="mx-2">|</span>
-            <span className="font-bold tabular-nums tracking-wider bg-black/20 px-2 py-0.5 rounded-md text-white min-w-[120px] min-h-[24px] inline-flex items-center justify-center transition-opacity duration-300">
-              {isClient && timeLeft ? timeLeft : <span className="opacity-0">0天 0时 0分 0秒</span>}
-            </span>
+          <div className="flex items-center gap-2 ml-2 pl-2 border-l border-white/40">
+            {isClient ? (
+               /* 倒计时的深色半透明背景 */
+               <span className="bg-black/20 px-2 py-1 rounded font-mono tracking-wider">
+                 {timeLeft}
+               </span>
+            ) : (
+               <span className="bg-black/20 px-2 py-1 rounded opacity-0 inline-block w-20">
+                 00:00:00
+               </span>
+            )}
           </div>
         )}
       </div>
-      <button 
-        onClick={() => setIsVisible(false)}
-        className="absolute right-4 p-1 hover:bg-black/20 rounded-full transition-colors flex-shrink-0 text-white"
-        aria-label="Close banner"
-      >
+
+      {/* 关闭按钮 */}
+      <button onClick={() => setIsVisible(false)} className="absolute right-4 hover:opacity-75">
         <X size={16} />
       </button>
     </div>
