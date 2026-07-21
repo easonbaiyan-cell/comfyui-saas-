@@ -260,7 +260,7 @@ export default function SettingsPage() {
 
   return (
     <div className="p-8 space-y-8 text-white max-w-4xl">
-      <h1 className="text-3xl font-bold">全局设置 (Settings)</h1>
+      <h1 className="text-3xl font-bold text-gray-900">全局设置 (Settings)</h1>
 
       <div className="space-y-4 border border-gray-700 p-6 rounded-xl bg-gray-900/50">
         <h2 className="text-xl font-semibold border-b border-gray-700 pb-2">顶部公告栏 (Top Banner Settings)</h2>
@@ -276,7 +276,7 @@ export default function SettingsPage() {
           <label htmlFor="banner_enabled">显示公告栏 (Banner Enabled)</label>
         </div>
         <div className="flex flex-col space-y-2">
-          <label className="text-sm text-gray-400">主文案 (Banner Text)</label>
+          <label className="text-sm text-gray-100">主文案 (Banner Text)</label>
           <input
             type="text"
             name="banner_text"
@@ -287,7 +287,7 @@ export default function SettingsPage() {
           />
         </div>
         <div className="flex flex-col space-y-2">
-          <label className="text-sm text-gray-400">高亮标签 (Highlight Tag)</label>
+          <label className="text-sm text-gray-100">高亮标签 (Highlight Tag)</label>
           <input
             type="text"
             name="banner_highlight_tag"
@@ -298,7 +298,7 @@ export default function SettingsPage() {
           />
         </div>
         <div className="flex flex-col space-y-2">
-          <label className="text-sm text-gray-400">优惠文案 (Discount Text)</label>
+          <label className="text-sm text-gray-100">优惠文案 (Discount Text)</label>
           <input
             type="text"
             name="banner_discount_text"
@@ -309,7 +309,7 @@ export default function SettingsPage() {
           />
         </div>
         <div className="flex flex-col space-y-2">
-          <label className="text-sm text-gray-400">倒计时截止时间 (Countdown End)</label>
+          <label className="text-sm text-gray-100">倒计时截止时间 (Countdown End)</label>
           <input
             type="datetime-local"
             name="banner_countdown_end"
@@ -323,7 +323,7 @@ export default function SettingsPage() {
       <div className="space-y-4 border border-gray-700 p-6 rounded-xl bg-gray-900/50">
         <h2 className="text-xl font-semibold border-b border-gray-700 pb-2">专属客服设置 (Customer Service Settings)</h2>
         <div className="flex flex-col space-y-2">
-          <label className="text-sm text-gray-400">客服二维码 (QR Code Image)</label>
+          <label className="text-sm text-gray-100">客服二维码 (QR Code Image)</label>
           {formData.cs_qrcode_url ? (
             <div className="relative w-32 h-32 group">
               <img src={formData.cs_qrcode_url} alt="QR Code" className="w-full h-full object-cover rounded-md border border-gray-700" />
@@ -338,11 +338,11 @@ export default function SettingsPage() {
           ) : (
             <label className="w-32 h-32 flex flex-col items-center justify-center border-2 border-dashed border-gray-700 rounded-md cursor-pointer hover:border-primary-green hover:bg-gray-800/50 transition-colors">
               {isUploadingQR ? (
-                <Loader2 className="w-6 h-6 text-gray-400 animate-spin" />
+                <Loader2 className="w-6 h-6 text-gray-100 animate-spin" />
               ) : (
                 <>
-                  <UploadCloud className="w-6 h-6 text-gray-400 mb-2" />
-                  <span className="text-xs text-gray-500">点击上传</span>
+                  <UploadCloud className="w-6 h-6 text-gray-100 mb-2" />
+                  <span className="text-xs text-gray-100">点击上传</span>
                 </>
               )}
               <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} disabled={isUploadingQR} />
@@ -350,7 +350,7 @@ export default function SettingsPage() {
           )}
         </div>
         <div className="flex flex-col space-y-2">
-          <label className="text-sm text-gray-400">客服微信号 (WeChat ID)</label>
+          <label className="text-sm text-gray-100">客服微信号 (WeChat ID)</label>
           <input
             type="text"
             name="cs_wechat_id"
@@ -375,14 +375,14 @@ export default function SettingsPage() {
           <div key={index} className="bg-gray-800/50 p-4 rounded-lg border border-gray-700 space-y-4 relative">
             <button
               onClick={() => handleRemoveMembership(index)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-red-400 transition-colors"
+              className="absolute top-4 right-4 text-gray-100 hover:text-red-400 transition-colors"
               title="删除套餐"
             >
               <Trash2 className="w-5 h-5" />
             </button>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mr-8">
               <div className="flex flex-col space-y-1">
-                <label className="text-xs text-gray-400">套餐名称</label>
+                <label className="text-xs text-gray-100">套餐名称</label>
                 <input
                   type="text"
                   value={pkg.name || ''}
@@ -392,7 +392,7 @@ export default function SettingsPage() {
                 />
               </div>
               <div className="flex flex-col space-y-1">
-                <label className="text-xs text-gray-400">当前价格 (¥)</label>
+                <label className="text-xs text-gray-100">当前价格 (¥)</label>
                 <input
                   type="number"
                   value={pkg.current_price || ''}
@@ -401,7 +401,7 @@ export default function SettingsPage() {
                 />
               </div>
               <div className="flex flex-col space-y-1">
-                <label className="text-xs text-gray-400">原价 (¥)</label>
+                <label className="text-xs text-gray-100">原价 (¥)</label>
                 <input
                   type="number"
                   value={pkg.original_price || ''}
@@ -410,7 +410,7 @@ export default function SettingsPage() {
                 />
               </div>
               <div className="flex flex-col space-y-1">
-                <label className="text-xs text-gray-400">每月赠送积分</label>
+                <label className="text-xs text-gray-100">每月赠送积分</label>
                 <input
                   type="number"
                   value={pkg.points_per_month || ''}
@@ -429,12 +429,12 @@ export default function SettingsPage() {
                   onChange={(e) => handleMembershipChange(index, 'enable_countdown', e.target.checked)}
                   className="w-4 h-4 rounded bg-gray-900 border-gray-700 text-primary-green focus:ring-primary-green focus:ring-offset-gray-800"
                 />
-                <label htmlFor={`enable_countdown_${index}`} className="text-xs text-gray-400 cursor-pointer">开启限时抢购折扣标签</label>
+                <label htmlFor={`enable_countdown_${index}`} className="text-xs text-gray-100 cursor-pointer">开启限时抢购折扣标签</label>
               </div>
 
               {pkg.enable_countdown && (
                 <div className="flex flex-col space-y-1">
-                  <label className="text-xs text-gray-400">倒计时截止时间</label>
+                  <label className="text-xs text-gray-100">倒计时截止时间</label>
                   <input
                     type="datetime-local"
                     value={pkg.countdown_deadline || ''}
@@ -447,8 +447,8 @@ export default function SettingsPage() {
 
             <div className="space-y-2 mt-4 pt-4 border-t border-gray-700">
               <div className="flex justify-between items-center">
-                <label className="text-sm text-gray-300">特权列表 (Features)</label>
-                <Button onClick={() => handleAddFeature(index)} size="sm" variant="outline" className="border-gray-600 text-gray-300 hover:text-white hover:bg-gray-700 h-7 text-xs px-2">
+                <label className="text-sm text-gray-100">特权列表 (Features)</label>
+                <Button onClick={() => handleAddFeature(index)} size="sm" variant="outline" className="border-gray-600 text-gray-100 hover:text-white hover:bg-gray-700 h-7 text-xs px-2">
                   <Plus className="w-3 h-3 mr-1" />
                   添加特权
                 </Button>
@@ -461,19 +461,19 @@ export default function SettingsPage() {
                     onChange={(e) => handleFeatureChange(index, fIndex, e.target.value)}
                     className="flex-1 bg-gray-900 border border-gray-700 rounded p-1.5 text-sm text-white"
                   />
-                  <button onClick={() => handleRemoveFeature(index, fIndex)} className="text-gray-500 hover:text-red-400 p-1">
+                  <button onClick={() => handleRemoveFeature(index, fIndex)} className="text-gray-100 hover:text-red-400 p-1">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               ))}
               {(!pkg.features || pkg.features.length === 0) && (
-                <p className="text-xs text-gray-500 italic">暂无特权</p>
+                <p className="text-xs text-gray-100 italic">暂无特权</p>
               )}
             </div>
           </div>
         ))}
         {membershipPackages.length === 0 && (
-          <p className="text-sm text-gray-400 text-center py-4">暂无套餐，请点击右上角添加。</p>
+          <p className="text-sm text-gray-100 text-center py-4">暂无套餐，请点击右上角添加。</p>
         )}
       </div>
 
@@ -490,7 +490,7 @@ export default function SettingsPage() {
           {pointsTopupPackages.map((pkg, index) => (
             <div key={index} className="flex items-center space-x-4 bg-gray-800/50 p-3 rounded-lg border border-gray-700">
               <div className="flex-1 flex items-center space-x-2">
-                <label className="text-sm text-gray-400 w-16">积分数量</label>
+                <label className="text-sm text-gray-100 w-16">积分数量</label>
                 <input
                   type="number"
                   value={pkg.points || ''}
@@ -499,7 +499,7 @@ export default function SettingsPage() {
                 />
               </div>
               <div className="flex-1 flex items-center space-x-2">
-                <label className="text-sm text-gray-400 w-16">售价 (¥)</label>
+                <label className="text-sm text-gray-100 w-16">售价 (¥)</label>
                 <input
                   type="number"
                   value={pkg.price || ''}
@@ -507,13 +507,13 @@ export default function SettingsPage() {
                   className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm text-white"
                 />
               </div>
-              <button onClick={() => handleRemoveTopup(index)} className="text-gray-500 hover:text-red-400 p-2">
+              <button onClick={() => handleRemoveTopup(index)} className="text-gray-100 hover:text-red-400 p-2">
                 <X className="w-5 h-5" />
               </button>
             </div>
           ))}
           {pointsTopupPackages.length === 0 && (
-            <p className="text-sm text-gray-400 text-center py-4">暂无充值档位，请点击右上角添加。</p>
+            <p className="text-sm text-gray-100 text-center py-4">暂无充值档位，请点击右上角添加。</p>
           )}
         </div>
       </div>

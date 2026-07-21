@@ -7,13 +7,19 @@
    - Network:      http://192.168.0.2:3000
 
  ✓ Starting...
- ✓ Ready in 2s
- ○ Compiling /admin ...
- ✓ Compiled /admin in 13.6s (1994 modules)
- GET /admin 200 in 15155ms
+ ✓ Ready in 2.3s
  ○ Compiling / ...
- ✓ Compiled / in 1950ms (1409 modules)
- GET / 200 in 3144ms
+ ✓ Compiled / in 10.8s (897 modules)
+ GET / 200 in 12920ms
+ ○ Compiling /admin/settings ...
+ ✓ Compiled /admin/settings in 2s (926 modules)
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /admin/settings 200 in 3045ms
+ GET / 200 in 137ms
  ○ Compiling /admin ...
- ✓ Compiled /admin in 933ms (1141 modules)
- GET /admin 200 in 2472ms
+ ✓ Compiled /admin in 6.6s (2009 modules)
+ GET /admin 200 in 8062ms
+ ✓ Compiled in 1271ms (2023 modules)
+ ✓ Compiled in 645ms (2023 modules)
+ ✓ Compiled in 714ms (2023 modules)
+ ✓ Compiled in 655ms (2023 modules)

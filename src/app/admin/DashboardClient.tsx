@@ -87,42 +87,42 @@ export default function DashboardClient() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">今日新增用户</CardTitle>
-            <Users className="h-4 w-4 text-gray-400" />
+            <CardTitle className="text-sm font-medium text-gray-100">今日新增用户</CardTitle>
+            <Users className="h-4 w-4 text-gray-300" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">{data.newUsersCount}</div>
+            <div className="text-2xl font-bold text-white">{data.newUsersCount}</div>
             <p className="text-xs text-green-600 font-medium mt-1">+12% from yesterday</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">今日总营收 (元)</CardTitle>
-            <CreditCard className="h-4 w-4 text-gray-400" />
+            <CardTitle className="text-sm font-medium text-gray-100">今日总营收 (元)</CardTitle>
+            <CreditCard className="h-4 w-4 text-gray-300" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">¥{data.todayRevenue.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-white">¥{data.todayRevenue.toFixed(2)}</div>
             <p className="text-xs text-green-600 font-medium mt-1">+8% from yesterday</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">今日任务数</CardTitle>
-            <Activity className="h-4 w-4 text-gray-400" />
+            <CardTitle className="text-sm font-medium text-gray-100">今日任务数</CardTitle>
+            <Activity className="h-4 w-4 text-gray-300" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">{data.todayTasksCount}</div>
+            <div className="text-2xl font-bold text-white">{data.todayTasksCount}</div>
             <p className="text-xs text-green-600 font-medium mt-1">+23% from yesterday</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">总消耗积分</CardTitle>
-            <Zap className="h-4 w-4 text-gray-400" />
+            <CardTitle className="text-sm font-medium text-gray-100">总消耗积分</CardTitle>
+            <Zap className="h-4 w-4 text-gray-300" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">{data.totalPointsConsumed.toLocaleString()}</div>
-            <p className="text-xs text-gray-500 mt-1">Total points burned</p>
+            <div className="text-2xl font-bold text-white">{data.totalPointsConsumed.toLocaleString()}</div>
+            <p className="text-xs text-gray-100 mt-1">Total points burned</p>
           </CardContent>
         </Card>
       </div>
@@ -131,8 +131,8 @@ export default function DashboardClient() {
       <div className="grid gap-6 md:grid-cols-7">
         <Card className="col-span-5">
           <CardHeader>
-            <CardTitle className="text-gray-900">近7天算力消耗趋势</CardTitle>
-            <CardDescription>任务生成量 (蓝) 与积分消耗 (绿)</CardDescription>
+            <CardTitle className="text-white">近7天算力消耗趋势</CardTitle>
+            <CardDescription className="text-gray-300">任务生成量 (蓝) 与积分消耗 (绿)</CardDescription>
           </CardHeader>
           <CardContent className="pl-2">
             <div className="h-[300px] w-full">
@@ -148,9 +148,9 @@ export default function DashboardClient() {
                       <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <XAxis dataKey="date" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis yAxisId="left" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
-                  <YAxis yAxisId="right" orientation="right" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
+                  <XAxis dataKey="date" stroke="#f3f4f6" fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis yAxisId="left" stroke="#f3f4f6" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
+                  <YAxis yAxisId="right" orientation="right" stroke="#f3f4f6" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
                   <Tooltip
                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
@@ -165,8 +165,8 @@ export default function DashboardClient() {
 
         <Card className="col-span-2">
           <CardHeader>
-            <CardTitle className="text-gray-900">系统健康度</CardTitle>
-            <CardDescription>当前算力池与任务执行状态</CardDescription>
+            <CardTitle className="text-white">系统健康度</CardTitle>
+            <CardDescription className="text-gray-300">当前算力池与任务执行状态</CardDescription>
           </CardHeader>
           <CardContent className="space-y-8">
             <div className="flex items-center space-x-4">
@@ -174,8 +174,8 @@ export default function DashboardClient() {
                 <Server className="h-6 w-6" />
               </div>
               <div className="flex-1 space-y-1">
-                <p className="text-sm font-medium leading-none text-gray-900">执行中任务</p>
-                <p className="text-2xl font-bold text-gray-900">{data.runningTasksCount}</p>
+                <p className="text-sm font-medium leading-none text-white">执行中任务</p>
+                <p className="text-2xl font-bold text-white">{data.runningTasksCount}</p>
               </div>
             </div>
 
@@ -183,9 +183,9 @@ export default function DashboardClient() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <CheckCircle2 className="h-5 w-5 text-green-500" />
-                  <span className="text-sm font-medium text-gray-900">整体任务成功率</span>
+                  <span className="text-sm font-medium text-white">整体任务成功率</span>
                 </div>
-                <span className="text-sm font-bold text-gray-900">{data.taskSuccessRate}%</span>
+                <span className="text-sm font-bold text-white">{data.taskSuccessRate}%</span>
               </div>
               <Progress value={data.taskSuccessRate} className="h-2" />
             </div>
@@ -196,18 +196,18 @@ export default function DashboardClient() {
       {/* Bottom Section: Leaderboard */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-gray-900">热门工作流 Top 5</CardTitle>
-          <CardDescription>按全平台历史总调用次数排序</CardDescription>
+          <CardTitle className="text-white">热门工作流 Top 5</CardTitle>
+          <CardDescription className="text-gray-300">按全平台历史总调用次数排序</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[100px]">排名</TableHead>
-                <TableHead>工作流名称</TableHead>
-                <TableHead>分类</TableHead>
-                <TableHead>R端应用ID</TableHead>
-                <TableHead className="text-right">总调用次数</TableHead>
+                <TableHead className="w-[100px] text-gray-100">排名</TableHead>
+                <TableHead className="text-gray-100">工作流名称</TableHead>
+                <TableHead className="text-gray-100">分类</TableHead>
+                <TableHead className="text-gray-100">R端应用ID</TableHead>
+                <TableHead className="text-right text-gray-100">总调用次数</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -223,14 +223,14 @@ export default function DashboardClient() {
                       {index + 1}
                     </span>
                   </TableCell>
-                  <TableCell className="font-semibold text-gray-900">{workflow.title}</TableCell>
+                  <TableCell className="font-semibold text-white">{workflow.title}</TableCell>
                   <TableCell>
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                       {workflow.category}
                     </span>
                   </TableCell>
-                  <TableCell className="font-mono text-sm text-gray-500">{workflow.r_app_id}</TableCell>
-                  <TableCell className="text-right font-bold text-gray-900">
+                  <TableCell className="font-mono text-sm text-gray-100">{workflow.r_app_id}</TableCell>
+                  <TableCell className="text-right font-bold text-white">
                     {workflow.usage_count.toLocaleString()}
                   </TableCell>
                 </TableRow>
