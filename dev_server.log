@@ -7,8 +7,10 @@
    - Network:      http://192.168.0.2:3000
 
  ✓ Starting...
- ✓ Ready in 1959ms
+ ✓ Ready in 2.1s
  ○ Compiling / ...
- ✓ Compiled / in 7.6s (897 modules)
- HEAD / 200 in 9153ms
- GET / 200 in 138ms
+ ✓ Compiled / in 10.6s (897 modules)
+ GET / 200 in 12730ms
+ ✓ Compiled in 680ms (897 modules)
+ GET / 200 in 649ms
+ ✓ Compiled in 374ms (897 modules)
