@@ -94,23 +94,22 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
 
 
   useEffect(() => {
-    // 强制切除 406 污染源
-    // if (user?.id) {
-    //   const fetchPoints = async () => {
-    //     const { data } = await supabase
-    //       .from('profiles')
-    //       .select('points')
-    //       .eq('id', user.id)
-    //       .single();
-    //     if (data && data.points !== undefined) {
-    //       set积分余额(data.points);
-    //     }
-    //   };
-    //
-    //   fetchPoints();
-    //   const intervalId = setInterval(fetchPoints, 10000); // sync every 10s
-    //   return () => clearInterval(intervalId);
-    // }
+    if (user?.id) {
+      const fetchPoints = async () => {
+        const { data } = await supabase
+          .from('profiles')
+          .select('points')
+          .eq('id', user.id)
+          .single();
+        if (data && data.points !== undefined) {
+          set积分余额(data.points);
+        }
+      };
+
+      fetchPoints();
+      const intervalId = setInterval(fetchPoints, 10000); // sync every 10s
+      return () => clearInterval(intervalId);
+    }
   }, [user?.id, set积分余额]);
 
   useEffect(() => {
