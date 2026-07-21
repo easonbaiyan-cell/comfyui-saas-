@@ -9,8 +9,8 @@ export function PromoBanner({ text: propText, countdownUntil: propCountdown }: {
   const text = settings?.banner_text || propText;
   const countdownEndStr = settings?.banner_countdown_end;
   const countdownUntil = countdownEndStr ? new Date(countdownEndStr) : propCountdown;
-  const highlightTag = settings?.banner_highlight_tag || "首发特惠";
-  const discountText = settings?.banner_discount_text || "5 折";
+  const highlightTag = settings?.banner_highlight_tag;
+  const discountText = settings?.banner_discount_text;
   const enabled = settings ? settings.banner_enabled : true;
   const [timeLeft, setTimeLeft] = useState<string>("");
   const [isVisible, setIsVisible] = useState(true);
@@ -63,9 +63,18 @@ export function PromoBanner({ text: propText, countdownUntil: propCountdown }: {
   return (
     <div className="relative bg-fuchsia-600 text-white py-2 px-10 text-center text-sm font-medium flex items-center justify-center min-h-[40px]">
       <div className="flex-1 flex items-center justify-center flex-wrap gap-2">
+        {highlightTag && (
+          <span className="bg-white/20 text-white px-2 py-0.5 rounded-md text-xs font-bold mr-1">{highlightTag}</span>
+        )}
         <span>{highlightKeywords(text)}</span>
+        {discountText && (
+          <span>- {discountText}</span>
+        )}
         {countdownUntil && (
-          <span className="font-bold tabular-nums tracking-wider bg-black/20 px-2 py-0.5 rounded-md text-white">{timeLeft}</span>
+          <>
+            <span className="mx-2">|</span>
+            <span className="font-bold tabular-nums tracking-wider bg-black/20 px-2 py-0.5 rounded-md text-white">{timeLeft}</span>
+          </>
         )}
       </div>
       <button 
