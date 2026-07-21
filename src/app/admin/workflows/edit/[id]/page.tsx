@@ -380,22 +380,22 @@ export default function EditWorkflowPage({ params }: { params: Promise<{ id: str
         {/* Block B: Backend Compute Bridge */}
         <div className="bg-white shadow sm:rounded-lg overflow-hidden border border-gray-200">
           <div className="px-4 py-5 sm:px-6 bg-gray-50 border-b border-gray-200">
-            <h3 className="text-lg leading-6 font-medium text-gray-900">区块 B：底层算力桥接 (对接 RunningHub)</h3>
+            <h3 className="text-lg leading-6 font-medium text-gray-900">区块 B：底层算力桥接</h3>
           </div>
           <div className="px-4 py-5 sm:p-6 space-y-6">
             <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
               <div className="sm:col-span-6">
-                <label htmlFor="appId" className="block text-sm font-medium text-gray-700">RunningHub 工作流 ID (App ID)</label>
+                <label htmlFor="appId" className="block text-sm font-medium text-gray-700">底层应用 ID (App ID)</label>
                 <div className="mt-1">
                   <input type="text" name="appId" id="appId" className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border font-mono" placeholder="app-..." />
                 </div>
               </div>
               <div className="sm:col-span-6">
-                <label htmlFor="rh_payload_template" className="block text-sm font-medium text-gray-700">RunningHub 节点配置 (JSON Payload)</label>
+                <label htmlFor="rh_payload_template" className="block text-sm font-medium text-gray-700">算力节点配置 (JSON Payload)</label>
                 <div className="mt-1">
                   <textarea name="rh_payload_template" id="rh_payload_template" rows={10} className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border font-mono bg-gray-50" placeholder='[{"nodeId":"123","type":"image","value":""}]'></textarea>
                 </div>
-                <p className="mt-2 text-sm text-gray-500">直接粘贴 R 平台复制出的 nodeInfoList JSON 数组。</p>
+                <p className="mt-2 text-sm text-gray-500">直接粘贴底层算力平台复制出的 nodeInfoList JSON 数组。</p>
               </div>
             </div>
 
