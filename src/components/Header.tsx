@@ -30,7 +30,7 @@ const isImageUrl = (url: string) => {
 export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) {
   const { settings } = useSettingsStore();
   const points = useAuthStore(state => state.积分余额);
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const { isAuthOpen, setIsAuthOpen } = useAuthStore();
   // 新增：控制定价页面弹窗的开关
   const [isPricingOpen, setIsPricingOpen] = useState(false);
   const [isPointsOpen, setIsPointsOpen] = useState(false);

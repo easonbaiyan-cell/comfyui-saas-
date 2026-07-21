@@ -82,6 +82,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
   }, [toastMessage]);
 
   const user = useAuthStore((state) => state.user);
+  const setIsAuthOpen = useAuthStore((state) => state.setIsAuthOpen);
   const 积分余额 = useAuthStore((state) => state.积分余额);
   const set积分余额 = useAuthStore((state) => state.set积分余额);
 
@@ -134,6 +135,14 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
   }, [nodeInfoList]);
 
   const handleDynamicUpload = async (e: React.ChangeEvent<HTMLInputElement>, nodeId: string) => {
+    if (!user) {
+      // 1. 拦截上传动作 (Image Upload Guard)
+      setErrorMsg(null);
+      setIsAuthOpen(true);
+      setToastMessage({ type: 'error', text: '请先登录后再上传图片' });
+      return;
+    }
+
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -164,9 +173,13 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
 
       const objectUrl = URL.createObjectURL(file);
       setPreviewUrls(prev => ({ ...prev, [nodeId]: objectUrl }));
-    } catch (err: unknown) {
+    } catch (err: any) {
       console.error('上传出错:', err);
-      setErrorMsg("上传失败，请重试");
+      if (!user || (err.message && (err.message.includes('403') || err.message.includes('401') || err.message.includes('Row-level security') || err.message.includes('Failed to fetch')))) {
+        setErrorMsg(null);
+      } else {
+        setErrorMsg("上传失败，请重试");
+      }
     } finally {
       setActiveUploads(prev => ({ ...prev, [nodeId]: false }));
     }
@@ -191,6 +204,14 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
               type="file"
               className="hidden"
               accept={isImage ? "image/jpeg, image/png, image/webp" : "video/mp4, video/webm"}
+              onClick={(e) => {
+                if (!user) {
+                  e.preventDefault();
+                  setErrorMsg(null);
+                  setIsAuthOpen(true);
+                  setToastMessage({ type: 'error', text: '请先登录后再上传文件' });
+                }
+              }}
               onChange={(e) => handleDynamicUpload(e, node.nodeId)}
             />
             {!value ? (
@@ -297,6 +318,12 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
   }, [workflowId]); // 依赖数组必须包含 workflowId
 
   const handleGenerate = async () => {
+    // 2. 拦截生成动作 (Generate Button Guard)
+    if (!user) {
+      setIsAuthOpen(true);
+      return;
+    }
+
     // 请在 fetch 请求发生前，优先执行以下拦截
     if (!workflow || !workflow.rh_payload_template) {
       console.error("拦截提交: workflow 数据丢失或 rh_payload_template 为 null", workflow);
