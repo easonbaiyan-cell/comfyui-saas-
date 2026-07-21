@@ -1,0 +1,56 @@
+diff --git a/src/components/PromoBanner.tsx b/src/components/PromoBanner.tsx
+index 32d1a44..6421e05 100644
+--- a/src/components/PromoBanner.tsx
++++ b/src/components/PromoBanner.tsx
+@@ -2,16 +2,8 @@
+
+ import { useEffect, useState } from "react";
+ import { X } from "lucide-react";
+-import { useSettingsStore } from "@/store/settings";
+
+-export function PromoBanner({ text: propText, countdownUntil: propCountdown }: { text?: string, countdownUntil?: Date }) {
+-  const { settings } = useSettingsStore();
+-  const text = settings?.banner_text || propText;
+-  const countdownEndStr = settings?.banner_countdown_end;
+-  const countdownUntil = countdownEndStr ? new Date(countdownEndStr) : propCountdown;
+-  const highlightTag = settings?.banner_highlight_tag;
+-  const discountText = settings?.banner_discount_text;
+-  const enabled = settings ? settings.banner_enabled : true;
++export function PromoBanner({ text, countdownUntil }: { text?: string, countdownUntil?: Date }) {
+   const [timeLeft, setTimeLeft] = useState<string>("");
+   const [isVisible, setIsVisible] = useState(true);
+
+@@ -39,11 +31,11 @@ export function PromoBanner({ text: propText, countdownUntil: propCountdown }: {
+     return () => clearInterval(interval);
+   }, [countdownUntil]);
+
+-  if (!text || !isVisible || !enabled) return null;
++  if (!text || !isVisible) return null;
+
+   // Function to highlight promotional keywords
+   const highlightKeywords = (originalText: string) => {
+-    const keywords = ["限时 37 折", "0.37元/秒", "37 折", "首发特惠", "5 折", highlightTag, discountText].filter(Boolean);
++    const keywords = ["限时 37 折", "0.37元/秒", "37 折", "首发特惠", "5 折"];
+
+     let parts: (string | React.ReactNode)[] = [originalText];
+     keywords.forEach(kw => {
+@@ -63,18 +55,9 @@ export function PromoBanner({ text: propText, countdownUntil: propCountdown }: {
+   return (
+     <div className="relative bg-fuchsia-600 text-white py-2 px-10 text-center text-sm font-medium flex items-center justify-center min-h-[40px]">
+       <div className="flex-1 flex items-center justify-center flex-wrap gap-2">
+-        {highlightTag && (
+-          <span className="bg-white/20 text-white px-2 py-0.5 rounded-md text-xs font-bold mr-1">{highlightTag}</span>
+-        )}
+         <span>{highlightKeywords(text)}</span>
+-        {discountText && (
+-          <span>- {discountText}</span>
+-        )}
+         {countdownUntil && (
+-          <>
+-            <span className="mx-2">|</span>
+-            <span className="font-bold tabular-nums tracking-wider bg-black/20 px-2 py-0.5 rounded-md text-white">{timeLeft}</span>
+-          </>
++          <span className="font-bold tabular-nums tracking-wider bg-black/20 px-2 py-0.5 rounded-md text-white">{timeLeft}</span>
+         )}
+       </div>
+       <button

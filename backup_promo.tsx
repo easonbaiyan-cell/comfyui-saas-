@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -15,12 +14,10 @@ export function PromoBanner({ text: propText, countdownUntil: propCountdown }: {
   const enabled = settings ? settings.banner_enabled : true;
   const [timeLeft, setTimeLeft] = useState<string>("");
   const [isVisible, setIsVisible] = useState(true);
-  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    setIsClient(true);
     if (!countdownUntil) return;
-    
+
     const interval = setInterval(() => {
       const now = new Date().getTime();
       const distance = new Date(countdownUntil).getTime() - now;
@@ -46,8 +43,8 @@ export function PromoBanner({ text: propText, countdownUntil: propCountdown }: {
 
   // Function to highlight promotional keywords
   const highlightKeywords = (originalText: string) => {
-    const keywords = ["限时 37 折", "0.37元/秒", "37 折", "首发特惠", "5 折", highlightTag, discountText].filter(Boolean) as string[];
-    
+    const keywords = ["限时 37 折", "0.37元/秒", "37 折", "首发特惠", "5 折", highlightTag, discountText].filter(Boolean);
+
     let parts: (string | React.ReactNode)[] = [originalText];
     keywords.forEach(kw => {
       parts = parts.flatMap(part => {
@@ -59,7 +56,7 @@ export function PromoBanner({ text: propText, countdownUntil: propCountdown }: {
         }, []);
       });
     });
-    
+
     return parts;
   };
 
@@ -74,15 +71,13 @@ export function PromoBanner({ text: propText, countdownUntil: propCountdown }: {
           <span>- {discountText}</span>
         )}
         {countdownUntil && (
-          <div className="flex items-center gap-2">
+          <>
             <span className="mx-2">|</span>
-            <span className="font-bold tabular-nums tracking-wider bg-black/20 px-2 py-0.5 rounded-md text-white min-w-[120px] min-h-[24px] inline-flex items-center justify-center transition-opacity duration-300">
-              {isClient && timeLeft ? timeLeft : <span className="opacity-0">0天 0时 0分 0秒</span>}
-            </span>
-          </div>
+            <span className="font-bold tabular-nums tracking-wider bg-black/20 px-2 py-0.5 rounded-md text-white">{timeLeft}</span>
+          </>
         )}
       </div>
-      <button 
+      <button
         onClick={() => setIsVisible(false)}
         className="absolute right-4 p-1 hover:bg-black/20 rounded-full transition-colors flex-shrink-0 text-white"
         aria-label="Close banner"
