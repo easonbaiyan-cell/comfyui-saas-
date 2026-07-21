@@ -9,6 +9,7 @@ export function AdminSidebar() {
 
   const links = [
     { href: '/admin', label: '数据大盘 (Dashboard)' },
+    { href: '/admin/users', label: '用户管理 (Users)' },
     { href: '/admin/workflows', label: '商品与算力管理 (Workflows)' },
     { href: '/admin/finance', label: '财务与分销 (Finance)' },
     { href: '/admin/settings', label: '全局设置 (Settings)' },

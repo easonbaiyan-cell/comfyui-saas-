@@ -30,7 +30,7 @@ const isImageUrl = (url: string) => {
 export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) {
   const { settings } = useSettingsStore();
   const points = useAuthStore(state => state.积分余额);
-  const { isAuthOpen, setIsAuthOpen } = useAuthStore();
+  const { isAuthOpen, setIsAuthOpen, setIsDistributor } = useAuthStore();
   // 新增：控制定价页面弹窗的开关
   const [isPricingOpen, setIsPricingOpen] = useState(false);
   const [isPointsOpen, setIsPointsOpen] = useState(false);
@@ -114,9 +114,30 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
   }, [user?.id, set积分余额]);
 
   useEffect(() => {
+    const fetchDistributorStatus = async (userId: string) => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('is_distributor')
+          .eq('id', userId)
+          .maybeSingle();
+
+        if (!error && data) {
+          setIsDistributor(!!data.is_distributor);
+        } else {
+          setIsDistributor(false);
+        }
+      } catch (e) {
+        setIsDistributor(false);
+      }
+    };
+
     // Initial fetch
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user || null);
+      if (session?.user?.id) {
+        fetchDistributorStatus(session.user.id);
+      }
     });
 
     // Subscribe to auth changes
@@ -124,11 +145,14 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
       setUser(session?.user || null);
       if (session?.user) {
         setIsAuthOpen(false); // Close auth modal if user logs in
+        fetchDistributorStatus(session.user.id);
+      } else {
+        setIsDistributor(false);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [setUser]);
+  }, [setUser, setIsAuthOpen, setIsDistributor]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
