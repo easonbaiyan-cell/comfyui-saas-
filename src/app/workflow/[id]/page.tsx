@@ -118,6 +118,10 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
   const [activeUploads, setActiveUploads] = useState<Record<string, boolean>>({});
   const [previewUrls, setPreviewUrls] = useState<Record<string, string>>({});
 
+  // Price preview state
+  const [estimatedCost, setEstimatedCost] = useState<number | null>(null);
+  const [isEstimating, setIsEstimating] = useState(false);
+
   const nodeInfoList = workflow?.rh_payload_template?.nodeInfoList;
   useEffect(() => {
     if (nodeInfoList && Object.keys(dynamicFormValues).length === 0) {
@@ -133,6 +137,57 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nodeInfoList]);
+
+  useEffect(() => {
+    if (!workflow || !(workflow as any).r_app_id || Object.keys(dynamicFormValues).length === 0) return;
+
+    const timer = setTimeout(async () => {
+      setIsEstimating(true);
+      try {
+        const constructedNodeInfoList = workflow.rh_payload_template?.nodeInfoList?.map((node: DynamicNode) => {
+          let value = dynamicFormValues[node.nodeId];
+          if (value === undefined) {
+            value = node.fieldValue !== undefined ? node.fieldValue : "";
+          }
+          return {
+            nodeId: String(node.nodeId),
+            fieldName: String(node.fieldName || (node as any).type || "text"),
+            fieldValue: value
+          };
+        });
+
+        const payload = {
+          nodeInfoList: constructedNodeInfoList
+        };
+
+        const res = await fetch('/api/workflows/price-preview', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            payload,
+            modelRoute: (workflow as any).r_app_id
+          })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success && data.estimatedPrice !== undefined) {
+          const platformMultiplier = 1.5; // Platform profit multiplier
+          const finalCost = Math.ceil(Number(data.estimatedPrice) * platformMultiplier);
+          setEstimatedCost(finalCost);
+        } else {
+          console.error("Failed to estimate cost", data);
+          setEstimatedCost(null);
+        }
+      } catch (err) {
+        console.error("Error fetching price preview:", err);
+        setEstimatedCost(null);
+      } finally {
+        setIsEstimating(false);
+      }
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timer);
+  }, [dynamicFormValues, workflow]);
 
   const handleDynamicUpload = async (e: React.ChangeEvent<HTMLInputElement>, nodeId: string) => {
     if (!user) {
@@ -354,8 +409,12 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
       setErrorMsg("请先登录");
       return;
     }
-    if (积分余额 < cost) {
+
+    const finalCost = estimatedCost !== null ? estimatedCost : cost;
+
+    if (积分余额 < finalCost) {
       setErrorMsg("积分不足，请先充值");
+      setToastMessage({ text: '积分不足，请前往充值', type: 'error' });
       return;
     }
 
@@ -672,12 +731,16 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
                 <span className="text-sm text-gray-400">≈</span>
                 <div className="flex items-center gap-1 text-primary-green font-semibold bg-primary-green/10 px-3 py-1.5 rounded-full border border-primary-green/20">
                   <Zap className="h-4 w-4 fill-current" />
-                  <span>{cost} 积分</span>
+                  {isEstimating ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <span className="text-[#D4FF00]">预估消耗 ~ {estimatedCost !== null ? estimatedCost : cost} 积分</span>
+                  )}
                 </div>
                 <div className="relative group cursor-help ml-1">
                   <HelpCircle className="h-4 w-4 text-gray-500 hover:text-gray-300 transition-colors" />
                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-black border border-white/10 text-xs text-gray-300 rounded shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all pointer-events-none text-center">
-                    扣除规则：每次生成将根据该工作流设定的单次消耗积分进行扣除。
+                    扣除规则：每次生成将根据用户选择的参数动态计算所需积分。
                   </div>
                 </div>
               </div>
