@@ -165,17 +165,17 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             payload,
-            modelRoute: (workflow as any).r_app_id
+            modelRoute: (workflow as any).model_route
           })
         });
 
         const data = await res.json();
-        if (res.ok && data.success && data.estimatedPrice !== undefined) {
+        if (res.ok && data.success && data.estimatedPrice !== undefined && data.estimatedPrice > 0) {
           const platformMultiplier = 1.5; // Platform profit multiplier
           const finalCost = Math.ceil(Number(data.estimatedPrice) * platformMultiplier);
           setEstimatedCost(finalCost);
         } else {
-          console.error("Failed to estimate cost", data);
+          console.error("Failed to estimate cost, full response:", data);
           setEstimatedCost(null);
         }
       } catch (err) {
@@ -732,9 +732,11 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
                 <div className="flex items-center gap-1 text-primary-green font-semibold bg-primary-green/10 px-3 py-1.5 rounded-full border border-primary-green/20">
                   <Zap className="h-4 w-4 fill-current" />
                   {isEstimating ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span className="flex items-center gap-1"><Loader2 className="w-4 h-4 animate-spin" /> 预估中...</span>
                   ) : (
-                    <span className="text-[#D4FF00]">预估消耗 ~ {estimatedCost !== null ? estimatedCost : cost} 积分</span>
+                    <span className="text-[#D4FF00]">
+                      {estimatedCost !== null ? `预估消耗 ~ ${estimatedCost} 积分` : '预估失败，请检查参数'}
+                    </span>
                   )}
                 </div>
                 <div className="relative group cursor-help ml-1">
@@ -748,9 +750,9 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
               {/* Generate Button */}
               <button
                 onClick={handleGenerate}
-                disabled={isGenerating || Object.values(activeUploads).some(Boolean)}
+                disabled={isGenerating || Object.values(activeUploads).some(Boolean) || estimatedCost === null || estimatedCost === 0}
                 className={`w-full text-black font-bold text-lg h-14 px-12 rounded-xl transition-all flex items-center justify-center ${
-                  isGenerating
+                  isGenerating || estimatedCost === null || estimatedCost === 0
                     ? 'bg-primary-green/50 cursor-not-allowed'
                     : 'bg-primary-green hover:bg-primary-green shadow-[0_0_15px_var(--color-primary-green)] hover:shadow-[0_0_20px_var(--color-primary-green)] hover:scale-[1.02] active:scale-[0.98]'
                 }`}
