@@ -149,10 +149,10 @@ export default function CreateWorkflowPage() {
       category: formData.get('category'),
       cover_url: coverUrl,
       video_url: videoUrl,
-      cost_points: formData.get('points'),
       virtual_platform: formData.get('platform'),
       virtual_likes: formData.get('likes'),
       r_app_id: formData.get('appId'),
+      model_route: formData.get('modelRoute'),
       node_mapping: [],
       rh_payload_template: parsedPayloadTemplate,
     };
@@ -316,19 +316,13 @@ export default function CreateWorkflowPage() {
                 </div>
               </div>
 
-              <div className="sm:col-span-2">
+              <div className="sm:col-span-4">
                 <label htmlFor="likes" className="block text-sm font-medium text-gray-700">虚拟点赞数</label>
                 <div className="mt-1">
                   <input type="number" name="likes" id="likes" className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" placeholder="输入纯数字，如 150000" />
                 </div>
               </div>
 
-              <div className="sm:col-span-2">
-                <label htmlFor="points" className="block text-sm font-medium text-gray-700">单次生成消耗积分</label>
-                <div className="mt-1">
-                  <input type="number" name="points" id="points" className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" placeholder="10" />
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -344,6 +338,12 @@ export default function CreateWorkflowPage() {
                 <label htmlFor="appId" className="block text-sm font-medium text-gray-700">底层应用 ID (App ID)</label>
                 <div className="mt-1">
                   <input type="text" name="appId" id="appId" className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border font-mono" placeholder="app-..." />
+                </div>
+              </div>
+              <div className="sm:col-span-6">
+                <label htmlFor="modelRoute" className="block text-sm font-medium text-gray-700">模型路由 (Model Route)</label>
+                <div className="mt-1">
+                  <input type="text" name="modelRoute" id="modelRoute" required className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border font-mono" placeholder="例如：rhart-image-g/image-to-image" />
                 </div>
               </div>
               <div className="sm:col-span-6">
