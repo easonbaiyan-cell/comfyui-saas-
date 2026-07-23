@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
-import { Activity, Users, CreditCard, Zap, Server, CheckCircle2 } from 'lucide-react';
+import { Activity, Users, CreditCard, Zap, Server, CheckCircle2, DollarSign, LineChart, TrendingUp, Wallet, ShieldAlert } from 'lucide-react';
 import { getDashboardDataAction } from './actions';
 import { supabase } from '@/lib/supabase';
 import {
@@ -26,6 +26,15 @@ interface DashboardData {
   taskSuccessRate: number;
   trendData: { date: string; tasks: number; points: number }[];
   topWorkflows: { id: string; title: string; category: string; usage_count: number; r_app_id: string }[];
+  totalRechargePoints: number;
+  totalRhCost: number;
+  monthConsumedPoints: number;
+  monthRhCost: number;
+  margin: string;
+  totalOutstandingPoints: number;
+  peakConcurrency: number;
+  currentConcurrency: number;
+  todayNetProfit: number;
 }
 
 export default function DashboardClient() {
@@ -87,22 +96,22 @@ export default function DashboardClient() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-100">今日新增用户</CardTitle>
-            <Users className="h-4 w-4 text-gray-300" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-white">{data.newUsersCount}</div>
-            <p className="text-xs text-green-600 font-medium mt-1">+12% from yesterday</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-100">今日总营收 (元)</CardTitle>
             <CreditCard className="h-4 w-4 text-gray-300" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">¥{data.todayRevenue.toFixed(2)}</div>
             <p className="text-xs text-green-600 font-medium mt-1">+8% from yesterday</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-gray-100">今日新增用户</CardTitle>
+            <Users className="h-4 w-4 text-gray-300" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-white">{data.newUsersCount}</div>
+            <p className="text-xs text-green-600 font-medium mt-1">+12% from yesterday</p>
           </CardContent>
         </Card>
         <Card>
@@ -117,12 +126,65 @@ export default function DashboardClient() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-100">总消耗积分</CardTitle>
-            <Zap className="h-4 w-4 text-gray-300" />
+            <CardTitle className="text-sm font-medium text-gray-100">今日净利润预估</CardTitle>
+            <TrendingUp className="h-4 w-4 text-gray-300" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{data.totalPointsConsumed.toLocaleString()}</div>
-            <p className="text-xs text-gray-100 mt-1">Total points burned</p>
+            <div className="text-2xl font-bold text-white">¥{data.todayNetProfit.toFixed(2)}</div>
+            <p className="text-xs text-gray-100 mt-1">Estimated Net Profit</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Finance & Reconciliation Section */}
+      <div>
+        <h3 className="text-xl font-bold tracking-tight text-gray-100">财务与对账 (Finance & Reconciliation)</h3>
+      </div>
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-gray-100">累计账本</CardTitle>
+            <Wallet className="h-4 w-4 text-gray-300" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-300">累计充值积分:</span>
+                <span className="font-bold text-white">{data.totalRechargePoints.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-300">上游累计消耗成本:</span>
+                <span className="font-bold text-red-400">¥{data.totalRhCost.toFixed(2)}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-gray-100">本月账本</CardTitle>
+            <DollarSign className="h-4 w-4 text-gray-300" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-300">本月平台消耗积分:</span>
+                <span className="font-bold text-white">{data.monthConsumedPoints.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-300">本月上游消耗成本:</span>
+                <span className="font-bold text-red-400">¥{data.monthRhCost.toFixed(2)}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-gray-100">平均利润率 (Margin)</CardTitle>
+            <LineChart className="h-4 w-4 text-gray-300" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-400">{data.margin}x</div>
+            <p className="text-xs text-gray-300 mt-1">平台消耗积分 / 上游消耗成本</p>
           </CardContent>
         </Card>
       </div>
@@ -165,17 +227,33 @@ export default function DashboardClient() {
 
         <Card className="col-span-2">
           <CardHeader>
-            <CardTitle className="text-white">系统健康度</CardTitle>
+            <CardTitle className="text-white">风控与健康度 (Risk & Health)</CardTitle>
             <CardDescription className="text-gray-300">当前算力池与任务执行状态</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-8">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-blue-100 text-blue-600 rounded-full">
-                <Server className="h-6 w-6" />
+          <CardContent className="space-y-6">
+            <div className="space-y-2 border-b border-gray-700 pb-4">
+              <div className="flex items-center space-x-2">
+                <ShieldAlert className="h-5 w-5 text-yellow-500" />
+                <span className="text-sm font-medium text-white">平台算力负债</span>
               </div>
-              <div className="flex-1 space-y-1">
-                <p className="text-sm font-medium leading-none text-white">执行中任务</p>
-                <p className="text-2xl font-bold text-white">{data.runningTasksCount}</p>
+              <p className="text-2xl font-bold text-white">{data.totalOutstandingPoints.toLocaleString()}</p>
+              <p className="text-xs text-gray-400">全站用户当前可消耗积分，需确保上游余额充足</p>
+            </div>
+
+            <div className="space-y-2 border-b border-gray-700 pb-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-white">并发峰值监控</span>
+                <Activity className="h-4 w-4 text-blue-400" />
+              </div>
+              <div className="flex justify-between items-center mt-2">
+                <div>
+                  <p className="text-xs text-gray-400">当前实时并发</p>
+                  <p className="text-lg font-bold text-blue-400">{data.currentConcurrency}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-400">历史最高并发</p>
+                  <p className="text-lg font-bold text-white">{data.peakConcurrency}</p>
+                </div>
               </div>
             </div>
 

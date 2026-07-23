@@ -162,9 +162,49 @@ export async function getDashboardDataAction(token: string) {
       ];
     }
 
+
+    // --- New Finance & Reconciliation Metrics ---
+    // TODO: Connect with RH Webhook usage data
+    const totalRechargePoints = 1500000; // Mock data
+    const totalRhCost = 500.00; // Mock data
+    const monthConsumedPoints = 350000; // Mock data
+    const monthRhCost = 120.00; // Mock data
+
+    const margin = totalRhCost > 0 ? (totalPointsConsumed / totalRhCost).toFixed(2) : 'N/A';
+
+    // --- New Risk & Health Metrics ---
+    let totalOutstandingPoints = 0;
+    try {
+      // Sum points from profiles
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('points');
+      if (!error && data) {
+        totalOutstandingPoints = data.reduce((sum, profile) => sum + Number(profile.points || 0), 0);
+      }
+    } catch (e) {
+      console.error('Failed to get total outstanding points', e);
+    }
+
+    const peakConcurrency = 125; // Mock data
+    const currentConcurrency = runningTasksCount; // existing var
+
+    const todayRhCost = 15.00; // Mock data
+    const todayNetProfit = todayRevenue - todayRhCost;
+
     return {
       success: true,
       data: {
+        totalRechargePoints,
+        totalRhCost,
+        monthConsumedPoints,
+        monthRhCost,
+        margin,
+        totalOutstandingPoints,
+        peakConcurrency,
+        currentConcurrency,
+        todayNetProfit,
+
         newUsersCount,
         todayRevenue,
         todayTasksCount,
