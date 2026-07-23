@@ -693,7 +693,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
 
               {/* Extra note */}
               <p className="text-xs text-gray-500 mt-1">
-                *实际消耗将按照 RunningHub 真实运行时长（每秒）精准计费扣除
+                *实际消耗将按照云端算力真实运行时长（每秒）精准核算扣除
               </p>
             </div>
 
