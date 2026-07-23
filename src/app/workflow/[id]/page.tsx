@@ -651,28 +651,11 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
           <div className="p-6 flex-1 w-full max-w-sm mx-auto flex flex-col">
             <h1 className="text-lg font-semibold text-white mb-6 text-center">工作流详情与操作</h1>
 
-
-                        {errorMsg && (
-              <p className="text-danger-red text-sm mb-4 text-center">{errorMsg}</p>
-            )}
-
-            {workflow?.rh_payload_template?.nodeInfoList && workflow.rh_payload_template.nodeInfoList.length > 0 ? (
-              workflow.rh_payload_template?.nodeInfoList?.map(renderDynamicNode)
-            ) : (
-              <div className="text-gray-500 text-sm text-center py-10">该工作流暂无配置参数</div>
-            )}
-
-            {/* Some extra padding at the bottom so content isn't hidden by sticky bar */}
-            <div className="h-20"></div>
-          </div>
-
-          {/* Sticky Bottom Action Bar */}
-          <div className="sticky bottom-0 left-0 right-0 z-10 bg-[#0a0a0a]/90 backdrop-blur-md border-t border-white/10 p-4 px-6">
-            <div className="w-full mx-auto flex flex-col items-center justify-between gap-4">
-
+            {/* Top Action Bar */}
+            <div className="w-full mx-auto flex flex-col items-center justify-between gap-4 mb-8">
               {/* Cost Estimation */}
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-400">单次生成消耗</span>
+                <span className="text-sm text-gray-400">预估单次积分消耗</span>
                 <span className="text-sm text-gray-400">≈</span>
                 <div className="flex items-center gap-1 text-primary-green font-semibold bg-primary-green/10 px-3 py-1.5 rounded-full border border-primary-green/20">
                   <Zap className="h-4 w-4 fill-current" />
@@ -707,9 +690,23 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
                   "立即生成"
                 )}
               </button>
-            </div>
-          </div>
 
+              {/* Extra note */}
+              <p className="text-xs text-gray-500 mt-1">
+                *实际消耗将按照 RunningHub 真实运行时长（每秒）精准计费扣除
+              </p>
+            </div>
+
+            {errorMsg && (
+              <p className="text-danger-red text-sm mb-4 text-center">{errorMsg}</p>
+            )}
+
+            {workflow?.rh_payload_template?.nodeInfoList && workflow.rh_payload_template.nodeInfoList.length > 0 ? (
+              workflow.rh_payload_template?.nodeInfoList?.map(renderDynamicNode)
+            ) : (
+              <div className="text-gray-500 text-sm text-center py-10">该工作流暂无配置参数</div>
+            )}
+          </div>
         </div>
 
 
