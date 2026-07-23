@@ -666,7 +666,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
                 <div className="relative group cursor-help ml-1">
                   <HelpCircle className="h-4 w-4 text-gray-500 hover:text-gray-300 transition-colors" />
                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-black border border-white/10 text-xs text-gray-300 rounded shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all pointer-events-none text-center">
-                    扣除规则：每次生成将固定扣除显示的积分数。
+                    实际消耗将按照云端算力真实运行时长（每秒）精准核算扣除。
                   </div>
                 </div>
               </div>
@@ -691,10 +691,6 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
                 )}
               </button>
 
-              {/* Extra note */}
-              <p className="text-xs text-gray-500 mt-1">
-                *实际消耗将按照云端算力真实运行时长（每秒）精准核算扣除
-              </p>
             </div>
 
             {errorMsg && (
