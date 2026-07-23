@@ -152,7 +152,7 @@ export default function CreateWorkflowPage() {
       virtual_platform: formData.get('platform'),
       virtual_likes: formData.get('likes'),
       r_app_id: formData.get('appId'),
-      model_route: formData.get('modelRoute'),
+      cost_points: formData.get('costPoints'),
       node_mapping: [],
       rh_payload_template: parsedPayloadTemplate,
     };
@@ -341,9 +341,9 @@ export default function CreateWorkflowPage() {
                 </div>
               </div>
               <div className="sm:col-span-6">
-                <label htmlFor="modelRoute" className="block text-sm font-medium text-gray-700">模型路由 (Model Route)</label>
+                <label htmlFor="costPoints" className="block text-sm font-medium text-gray-700">单次生成消耗积分 (Cost Points)</label>
                 <div className="mt-1">
-                  <input type="text" name="modelRoute" id="modelRoute" required className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border font-mono" placeholder="例如：rhart-image-g/image-to-image" />
+                  <input type="number" name="costPoints" id="costPoints" required className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border font-mono" placeholder="例如：10" defaultValue={10} />
                 </div>
               </div>
               <div className="sm:col-span-6">
