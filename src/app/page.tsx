@@ -1,5 +1,6 @@
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { GenerateVideoEngine } from "@/components/GenerateVideoEngine";
+import { GenerateImageEngine } from "@/components/GenerateImageEngine";
 
 export const dynamic = 'force-dynamic';
 
@@ -20,12 +21,7 @@ export default async function Home() {
 
         {/* Row 3: 1图生主图 */}
         <section className="container mx-auto px-4 py-12">
-          <div className="border-2 border-dashed border-purple-500/30 bg-[#1C1C1E] rounded-3xl p-16 text-center flex flex-col items-center justify-center min-h-[300px] hover:border-purple-500/60 transition-colors group">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 group-hover:text-purple-400 transition-colors">
-              AI 智能白底图/场景图
-            </h2>
-            <p className="text-gray-400">正在建设中 / Placeholder Block</p>
-          </div>
+          <GenerateImageEngine />
         </section>
 
         {/* Row 4: 4图生详情页 */}
