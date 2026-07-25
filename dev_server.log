@@ -7,10 +7,7 @@
    - Network:      http://192.168.0.2:3000
 
  ✓ Starting...
- ✓ Ready in 2.1s
- ○ Compiling /workflow/[id] ...
- ✓ Compiled /workflow/[id] in 11.3s (910 modules)
- GET /workflow/test-id 200 in 15126ms
- ✓ Compiled in 924ms (910 modules)
- GET /workflow/test-id 200 in 677ms
- ✓ Compiled in 638ms (910 modules)
+ ✓ Ready in 2.3s
+ ○ Compiling / ...
+ ✓ Compiled / in 10.7s (899 modules)
+ GET / 200 in 12890ms
