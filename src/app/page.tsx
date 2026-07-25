@@ -1,4 +1,5 @@
 import { HeroCarousel } from "@/components/HeroCarousel";
+import { GenerateVideoEngine } from "@/components/GenerateVideoEngine";
 
 export const dynamic = 'force-dynamic';
 
@@ -14,12 +15,7 @@ export default async function Home() {
 
         {/* Row 2: 核心变现引擎 */}
         <section className="container mx-auto px-4 py-12">
-          <div className="border-2 border-dashed border-[#D0FF2A]/30 bg-[#1C1C1E] rounded-3xl p-16 text-center flex flex-col items-center justify-center min-h-[300px] hover:border-[#D0FF2A]/60 transition-colors group">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 group-hover:text-[#D0FF2A] transition-colors">
-              极简带货视频生成引擎
-            </h2>
-            <p className="text-gray-400">正在建设中 / Placeholder Block</p>
-          </div>
+          <GenerateVideoEngine />
         </section>
 
         {/* Row 3: 1图生主图 */}
