@@ -3,6 +3,7 @@ import { GenerateVideoEngine } from "@/components/GenerateVideoEngine";
 import { GenerateImageEngine } from "@/components/GenerateImageEngine";
 import { GenerateDetailsEngine } from "@/components/GenerateDetailsEngine";
 
+import { MasterclassSection } from "@/components/MasterclassSection";
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
@@ -32,12 +33,7 @@ export default async function Home() {
 
         {/* Row 5: 实操大师班 */}
         <section className="container mx-auto px-4 py-12 pb-24">
-          <div className="border-2 border-dashed border-gray-600 bg-[#1C1C1E] rounded-3xl p-16 text-center flex flex-col items-center justify-center min-h-[300px] hover:border-gray-400 transition-colors group">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 group-hover:text-white transition-colors">
-              30讲系统实操大师班
-            </h2>
-            <p className="text-gray-400">正在建设中 / Placeholder Block</p>
-          </div>
+          <MasterclassSection />
         </section>
       </main>
 
