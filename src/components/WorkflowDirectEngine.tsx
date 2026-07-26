@@ -29,6 +29,8 @@ interface WorkflowData {
   cover_image_url?: string;
   cover_url?: string;
   description?: string;
+  title?: string;
+  subtitle2?: string;
   virtual_platform?: string;
   virtual_likes?: number;
   rh_payload_template?: {
@@ -595,17 +597,43 @@ export function WorkflowDirectEngine({ workflowId }: { workflowId: string }) {
         </div>
       )}
       <div className="grid grid-cols-1 lg:grid-cols-3 h-full w-full">
-        {/* Left Column: Showcase Video */}
-        <div className="border-r border-white/5 p-6 flex flex-col items-center justify-start overflow-y-auto">
+        {/* Left Column: Title and Description */}
+        <div className="border-r border-white/5 p-6 flex flex-col justify-between overflow-y-auto h-full">
+          <div className="w-full max-w-sm flex flex-col pt-8">
+            {workflow?.subtitle2 && (
+              <h3 className="text-primary-green text-sm font-medium tracking-widest uppercase mb-2">
+                {workflow.subtitle2}
+              </h3>
+            )}
+            <h1 className="text-4xl font-bold text-white mb-4 leading-tight">
+              {workflow?.title || '工作流生成'}
+            </h1>
+            <p className="text-base text-gray-400 leading-relaxed">
+              {workflow?.description || '暂无描述'}
+            </p>
+          </div>
+
+          <div className="flex gap-4 mt-8">
+            <div className="w-24 h-24 bg-white/5 rounded-xl border border-white/10 flex items-center justify-center">
+              <span className="text-gray-600 text-xs">占位图1</span>
+            </div>
+            <div className="w-24 h-24 bg-white/5 rounded-xl border border-white/10 flex items-center justify-center">
+              <span className="text-gray-600 text-xs">占位图2</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Middle Column: Reference Video/Image */}
+        <div className="border-r border-white/5 p-6 flex flex-col items-center justify-start overflow-y-auto h-full">
           <div className="w-full max-w-sm flex flex-col">
-            <h1 className="text-lg font-semibold text-white mb-6 text-center">参考视频</h1>
+            <h1 className="text-lg font-semibold text-white mb-6 text-center">参考素材</h1>
 
             {/* Video Placeholder */}
-            <div className="bg-[#131622] rounded-2xl aspect-[9/16] w-full relative flex items-center justify-center shadow-xl overflow-hidden group bg-gray-800">
+            <div className="bg-[#131622] rounded-2xl aspect-[9/16] w-full relative flex items-center justify-center shadow-xl overflow-hidden group border border-white/5">
               {!(workflow?.reference_video_url || workflow?.video_url) && !(workflow?.cover_image_url || workflow?.cover_url) ? (
                 <div className="flex flex-col items-center text-gray-500">
                   <Video className="w-10 h-10 mb-2" />
-                  <span className="text-sm">暂无演示视频</span>
+                  <span className="text-sm">暂无演示素材</span>
                 </div>
               ) : !(workflow?.reference_video_url || workflow?.video_url) && (workflow?.cover_image_url || workflow?.cover_url) ? (
                 <img
@@ -626,31 +654,24 @@ export function WorkflowDirectEngine({ workflowId }: { workflowId: string }) {
                 />
               )}
             </div>
-
-            <div className="flex flex-row gap-2 items-center mb-2 mt-4">
-              {workflow?.virtual_platform && (
-                <span className="bg-danger-red text-white text-xs px-2 py-1 rounded-md font-medium">{workflow.virtual_platform}</span>
-              )}
-              <div className="flex items-center gap-1 text-gray-400 text-sm bg-black/60 px-3 py-1.5 rounded-full backdrop-blur-md">
-                <Heart className="h-3.5 w-3.5" />
-                <span>{formatLikes(workflow?.virtual_likes || 0)}</span>
-              </div>
-            </div>
-
-            {/* Traffic Analysis Text */}
-            <p className="text-xs text-gray-500 leading-relaxed">
-              {workflow?.description || '暂无描述'}
-            </p>
           </div>
         </div>
 
-        {/* Middle Column: Parameters and Actions */}
-        <div className="border-r border-white/5 overflow-y-auto h-full relative flex flex-col">
-          <div className="p-6 flex-1 w-full max-w-sm mx-auto flex flex-col">
-            <h1 className="text-lg font-semibold text-white mb-6 text-center">工作流详情与操作</h1>
+        {/* Right Column: Parameters, Button, and Result */}
+        <div className="p-6 flex flex-col items-center justify-start overflow-y-auto h-full relative">
+          <div className="w-full max-w-sm flex flex-col">
+            <h1 className="text-lg font-semibold text-white mb-6 text-center">生成与结果</h1>
+
+            <div className="mb-6 w-full">
+              {workflow?.rh_payload_template?.nodeInfoList && workflow.rh_payload_template.nodeInfoList.length > 0 ? (
+                workflow.rh_payload_template?.nodeInfoList?.map(renderDynamicNode)
+              ) : (
+                <div className="text-gray-500 text-sm text-center py-4">该工作流暂无配置参数</div>
+              )}
+            </div>
 
             {/* Top Action Bar */}
-            <div className="w-full mx-auto flex flex-col items-center justify-between gap-4 mb-8">
+            <div className="w-full mx-auto flex flex-col items-center justify-between gap-4 mb-6">
               {/* Cost Estimation */}
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-400">预估单次积分消耗</span>
@@ -688,30 +709,11 @@ export function WorkflowDirectEngine({ workflowId }: { workflowId: string }) {
                   "立即生成"
                 )}
               </button>
-
-              {/* Extra note */}
-              <p className="text-xs text-gray-500 mt-1">
-                *实际消耗将按照云端算力真实运行时长（每秒）精准核算扣除
-              </p>
             </div>
 
             {errorMsg && (
               <p className="text-danger-red text-sm mb-4 text-center">{errorMsg}</p>
             )}
-
-            {workflow?.rh_payload_template?.nodeInfoList && workflow.rh_payload_template.nodeInfoList.length > 0 ? (
-              workflow.rh_payload_template?.nodeInfoList?.map(renderDynamicNode)
-            ) : (
-              <div className="text-gray-500 text-sm text-center py-10">该工作流暂无配置参数</div>
-            )}
-          </div>
-        </div>
-
-
-        {/* Right Column: Generated Video and Actions */}
-        <div className="p-6 flex flex-col items-center justify-start overflow-y-auto h-full">
-          <div className="w-full max-w-sm flex flex-col">
-            <h1 className="text-lg font-semibold text-white mb-6 text-center">生成结果</h1>
 
             {/* Video Placeholder */}
             <div className="bg-[#131622] rounded-2xl aspect-[9/16] w-full relative flex flex-col items-center justify-center shadow-xl overflow-hidden border border-white/5">
