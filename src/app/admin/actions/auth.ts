@@ -12,7 +12,8 @@ export async function loginAdmin(prevState: any, formData: FormData) {
     password === process.env.ADMIN_PASSWORD
   ) {
     const secretToken = process.env.ADMIN_SECRET_TOKEN || '';
-    cookies().set('admin_session', secretToken, {
+    const cookieStore = await cookies();
+    cookieStore.set('admin_session', secretToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       maxAge: 60 * 60 * 24 * 7, // 7 days
@@ -26,6 +27,7 @@ export async function loginAdmin(prevState: any, formData: FormData) {
 }
 
 export async function logoutAdmin() {
-  cookies().delete('admin_session');
+  const cookieStore = await cookies();
+  cookieStore.delete('admin_session');
   redirect('/admin/login');
 }

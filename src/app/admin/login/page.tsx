@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { loginAdmin } from '../actions/auth';
 import { useFormStatus } from 'react-dom';
 
-const initialState = {
+const initialState: { error: string | null } = {
   error: null,
 };
 
