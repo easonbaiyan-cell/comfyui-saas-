@@ -2,27 +2,23 @@ import { HeroCarousel } from "@/components/HeroCarousel";
 import { WorkflowGenerateBlock } from "@/components/WorkflowGenerateBlock";
 
 import { MasterclassSection } from "@/components/MasterclassSection";
+import { supabase } from "@/lib/supabase";
 export const dynamic = 'force-dynamic';
 
 
-  const mockWorkflow = {
-    id: "37133a46-181b-4043-b678-9d11d65d7989",
-    title: "一键生成爆款视频",
-    description: "轻松圈起流量",
-    category: "video",
-    cost_points: 10,
-    rh_payload_template: {
-      nodeInfoList: [
-        {
-          nodeId: "node_1",
-          fieldName: "image",
-          description: "Upload Image"
-        }
-      ]
-    }
-  };
 
 export default async function Home() {
+  const { data: workflows, error } = await supabase
+    .from('workflows')
+    .select('*')
+    .eq('status', 'published');
+
+  if (error) {
+    console.error("Error fetching workflows:", error);
+  }
+
+  const workflowsList = workflows || [];
+
   return (
     <div className="flex min-h-screen flex-col bg-[#0a0a0a] text-white selection:bg-[#D0FF2A] selection:text-black">
 
@@ -34,7 +30,11 @@ export default async function Home() {
 
         {/* Row 2: 核心变现引擎 */}
         <section className="w-full max-w-7xl mx-auto px-6 lg:px-8 py-12">
-          <WorkflowGenerateBlock workflow={mockWorkflow} />
+          {workflowsList.map((workflow, index) => (
+            <div key={workflow.id} className={index !== workflowsList.length - 1 ? 'mb-24' : ''}>
+              <WorkflowGenerateBlock workflow={workflow} />
+            </div>
+          ))}
         </section>
 
         {/* Row 3: 1图生主图 (Placeholder or next workflow) */}
