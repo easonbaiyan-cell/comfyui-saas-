@@ -668,7 +668,9 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
                     "立即生成"
                   )}
                 </button>
-                <button className={`bg-red-600 text-white font-medium rounded-xl px-6 h-14 whitespace-nowrap ${!isGenerating ? "opacity-50 cursor-not-allowed" : "hover:bg-red-700"}`} onClick={handleCancel} disabled={!isGenerating}>取消生成</button>
+                {isGenerating && (
+                  <button className={`bg-red-600 text-white font-medium rounded-xl px-6 h-14 whitespace-nowrap flex-1 hover:bg-red-700`} onClick={handleCancel}>取消生成</button>
+                )}
               </div>
 
               {/* Extra note */}
@@ -684,7 +686,7 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
         <div className="p-6 flex flex-col items-center justify-start overflow-y-auto h-full lg:col-span-4">
           <div className="w-full max-w-sm flex flex-col">
             {/* Video Placeholder */}
-            <div className="bg-[#131622] rounded-2xl aspect-[9/16] w-full relative flex flex-col items-center justify-center shadow-xl overflow-hidden border border-white/5">
+            <div className="bg-[#111111] rounded-2xl aspect-[9/16] w-full relative flex flex-col items-center justify-center shadow-xl overflow-hidden border border-white/5">
               <div className="absolute top-4 left-4 z-10 border border-[#D4FF3F] text-[#D4FF3F] rounded-full px-4 py-1 text-sm inline-block">生成结果</div>
               {isGenerating ? (
                 <div className="flex flex-col items-center justify-center text-primary-green">
