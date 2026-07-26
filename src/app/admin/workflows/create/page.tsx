@@ -15,10 +15,6 @@ export default function CreateWorkflowPage() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [isDirty, setIsDirty] = useState(false);
 
-  const [coverUrl, setCoverUrl] = useState('');
-  const [videoUrl, setVideoUrl] = useState('');
-  const [isUploadingCover, setIsUploadingCover] = useState(false);
-  const [isUploadingVideo, setIsUploadingVideo] = useState(false);
   const [toastMessage, setToastMessage] = useState<{message: string, type: 'success'|'error'} | null>(null);
 
   const showToast = (message: string, type: 'success'|'error' = 'success') => {
@@ -86,42 +82,6 @@ export default function CreateWorkflowPage() {
   }, [isDirty]);
 
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'cover' | 'video') => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      if (type === 'cover') setIsUploadingCover(true);
-      if (type === 'video') setIsUploadingVideo(true);
-
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      const { data, error } = await supabase.storage
-        .from('site-assets')
-        .upload(filePath, file);
-
-      if (error) {
-        throw error;
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('site-assets')
-        .getPublicUrl(filePath);
-
-      if (type === 'cover') setCoverUrl(publicUrl);
-      if (type === 'video') setVideoUrl(publicUrl);
-      showToast('上传成功');
-    } catch (error: unknown) {
-      const errMsg = error instanceof Error ? error.message : String(error);
-      showToast(`上传失败，请稍后重试（系统提示：${errMsg}）`, 'error');
-    } finally {
-      if (type === 'cover') setIsUploadingCover(false);
-      if (type === 'video') setIsUploadingVideo(false);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsDirty(false); // Reset on submit
@@ -145,12 +105,9 @@ export default function CreateWorkflowPage() {
 
     const payload = {
       title: formData.get('title'),
+      subtitle2: formData.get('subtitle2'),
       description: formData.get('subtitle'),
       category: formData.get('category'),
-      cover_url: coverUrl,
-      video_url: videoUrl,
-      virtual_platform: formData.get('platform'),
-      virtual_likes: formData.get('likes'),
       r_app_id: formData.get('appId'),
       cost_points: formData.get('costPoints'),
       node_mapping: [],
@@ -212,6 +169,13 @@ export default function CreateWorkflowPage() {
           </div>
           <div className="px-4 py-5 sm:p-6 space-y-6">
             <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+              <div className="sm:col-span-6">
+                <label htmlFor="subtitle2" className="block text-sm font-medium text-gray-700">副标题2</label>
+                <div className="mt-1">
+                  <input type="text" name="subtitle2" id="subtitle2" className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" placeholder="输入副标题2..." />
+                </div>
+              </div>
+
               <div className="sm:col-span-3">
                 <label htmlFor="title" className="block text-sm font-medium text-gray-700">工作流名称</label>
                 <div className="mt-1">
@@ -240,89 +204,6 @@ export default function CreateWorkflowPage() {
                   <input type="text" name="subtitle" id="subtitle" className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" placeholder="简短描述该工作流的作用..." />
                 </div>
               </div>
-
-              <div className="sm:col-span-3">
-                <label className="block text-sm font-medium text-gray-700 mb-1">封面图上传 (Cover)</label>
-                <div className="relative aspect-[9/16] w-full max-w-[200px] border-2 border-gray-300 border-dashed rounded-md overflow-hidden bg-gray-50 flex flex-col items-center justify-center hover:bg-gray-100 transition-colors">
-                  {coverUrl ? (
-                    <img src={coverUrl} alt="Cover Preview" className="absolute inset-0 w-full h-full object-cover" />
-                  ) : (
-                    <div className="text-center p-4">
-                      {isUploadingCover ? (
-                        <div className="flex flex-col items-center justify-center">
-                          <svg className="animate-spin h-8 w-8 text-indigo-600 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          <p className="text-sm text-gray-500">上传中...</p>
-                        </div>
-                      ) : (
-                        <>
-                          <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                          <p className="mt-1 text-sm text-indigo-600 font-medium">点击上传图片</p>
-                        </>
-                      )}
-                    </div>
-                  )}
-                  <input type="file" accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={(e) => handleFileUpload(e, 'cover')} disabled={isUploadingCover} />
-                </div>
-                <input type="hidden" name="coverUrl" value={coverUrl} />
-              </div>
-
-              <div className="sm:col-span-3">
-                <label className="block text-sm font-medium text-gray-700 mb-1">演示视频上传 (Reference Video)</label>
-                <div className="relative aspect-[9/16] w-full max-w-[200px] border-2 border-gray-300 border-dashed rounded-md overflow-hidden bg-gray-50 flex flex-col items-center justify-center hover:bg-gray-100 transition-colors">
-                  {videoUrl ? (
-                    <video src={videoUrl} autoPlay loop muted playsInline controls onClick={(e) => e.stopPropagation()} className="absolute inset-0 w-full h-full object-cover" />
-                  ) : (
-                    <div className="text-center p-4">
-                      {isUploadingVideo ? (
-                        <div className="flex flex-col items-center justify-center">
-                          <svg className="animate-spin h-8 w-8 text-indigo-600 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          <p className="text-sm text-gray-500">上传中...</p>
-                        </div>
-                      ) : (
-                        <>
-                          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                          </svg>
-                          <p className="mt-1 text-sm text-indigo-600 font-medium">点击上传视频</p>
-                        </>
-                      )}
-                    </div>
-                  )}
-                  <input type="file" accept="video/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={(e) => handleFileUpload(e, 'video')} disabled={isUploadingVideo} />
-                </div>
-                <input type="hidden" name="videoUrl" value={videoUrl} />
-              </div>
-
-              <div className="sm:col-span-6">
-                <p className="text-sm text-gray-500 text-center">建议比例 9:16，支持 JPG/PNG/MP4，不超过 50MB</p>
-              </div>
-
-              <div className="sm:col-span-2">
-                <label htmlFor="platform" className="block text-sm font-medium text-gray-700">前台显示的虚拟平台标识</label>
-                <div className="mt-1">
-                  <select id="platform" name="platform" className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border bg-white">
-                    <option>无</option>
-                    <option>抖音</option>
-                    <option>小红书</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="sm:col-span-4">
-                <label htmlFor="likes" className="block text-sm font-medium text-gray-700">虚拟点赞数</label>
-                <div className="mt-1">
-                  <input type="number" name="likes" id="likes" className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" placeholder="输入纯数字，如 150000" />
-                </div>
-              </div>
-
             </div>
           </div>
         </div>

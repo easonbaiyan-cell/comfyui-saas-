@@ -31,13 +31,10 @@ export async function createWorkflowAction(formData: any, accessToken: string) {
     const { error } = await supabase.from('workflows').insert([
       {
         title: formData.title,
+        subtitle2: formData.subtitle2,
         description: formData.description,
         category: formData.category,
-        cover_url: formData.cover_url,
-        video_url: formData.video_url,
         cost_points: parseInt(formData.cost_points) || 0,
-        virtual_platform: formData.virtual_platform,
-        virtual_likes: parseInt(formData.virtual_likes) || 0,
         r_app_id: formData.r_app_id,
         node_mapping: formData.node_mapping || [],
         rh_payload_template: formData.rh_payload_template || [],
@@ -329,13 +326,10 @@ export async function updateWorkflowAction(workflowId: string, formData: any, ac
       .from('workflows')
       .update({
         title: formData.title,
+        subtitle2: formData.subtitle2,
         description: formData.description,
         category: formData.category,
-        cover_url: formData.cover_url,
-        video_url: formData.video_url,
         cost_points: parseInt(formData.cost_points) || 0,
-        virtual_platform: formData.virtual_platform,
-        virtual_likes: parseInt(formData.virtual_likes) || 0,
         r_app_id: formData.r_app_id,
         node_mapping: formData.node_mapping || [],
         rh_payload_template: formData.rh_payload_template || [],
