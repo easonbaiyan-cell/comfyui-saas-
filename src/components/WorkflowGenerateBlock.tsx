@@ -1,7 +1,7 @@
 'use client';
 
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Play, UploadCloud, HelpCircle, Minus, Plus, Zap, Heart, MessageCircle, Download, Trash2, Share2, X, Loader2, Video } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth';
@@ -58,6 +58,7 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [generatedMediaUrl, setGeneratedMediaUrl] = useState<string | null>(null);
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [taskId, setTaskId] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<any>(null);
 
@@ -412,6 +413,28 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
     }
   };
 
+
+  const handleCancel = () => {
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
+
+    setIsGenerating(false);
+    setTaskId(null);
+    setElapsedTime(0);
+    setPollStatus(null);
+
+    if (workflowId) {
+      localStorage.removeItem(`active_task_${workflowId}`);
+      localStorage.removeItem(`task_start_${workflowId}`);
+    }
+
+    setToastMessage({ text: '任务已取消', type: 'success' });
+
+    // TODO: 调用后端 API 通知 RunningHub 取消该 Task，后续我们将在这里接入真实的云端阻断逻辑。
+  };
+
   const handleDownload = async () => {
     if (!generatedMediaUrl) return;
     try {
@@ -450,6 +473,7 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
     if (!currentTaskId) return;
     let attempts = 0;
     const interval = setInterval(async () => {
+      pollIntervalRef.current = interval;
       attempts++;
       if (attempts >= 720) { // 60 minutes limit (720 * 5s = 3600s)
         clearInterval(interval);
@@ -643,7 +667,7 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
                     "立即生成"
                   )}
                 </button>
-                <button className="bg-red-600 text-white font-medium rounded-xl px-6 h-14 whitespace-nowrap">取消生成</button>
+                <button className={`bg-red-600 text-white font-medium rounded-xl px-6 h-14 whitespace-nowrap ${!isGenerating ? "opacity-50 cursor-not-allowed" : "hover:bg-red-700"}`} onClick={handleCancel} disabled={!isGenerating}>取消生成</button>
               </div>
 
               {/* Extra note */}
