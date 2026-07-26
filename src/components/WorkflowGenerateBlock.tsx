@@ -189,8 +189,6 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
       const isUploadingThis = activeUploads[node.nodeId];
       const isImage = node.fieldName === 'image';
 
-      const isModelUpload = isImage && (node.description?.includes('模特') || node.fieldName === 'image');
-
       return (
         <div key={node.nodeId} className="mb-6 w-full bg-[#111111] border border-white/10 rounded-2xl aspect-[3/4] flex flex-col overflow-hidden">
           <label className="block w-full h-full cursor-pointer flex-1">
@@ -206,11 +204,9 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
                   setToastMessage({ type: 'error', text: '请先登录后再上传文件' });
                   return;
                 }
-                if (isModelUpload) {
-                  e.preventDefault();
-                  setCurrentUploadNodeId(node.nodeId);
-                  setIsMaterialModalOpen(true);
-                }
+                e.preventDefault();
+                setCurrentUploadNodeId(node.nodeId);
+                setIsMaterialModalOpen(true);
               }}
               onChange={(e) => handleDynamicUpload(e, node.nodeId)}
             />
@@ -634,7 +630,13 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
           setIsMaterialModalOpen(false);
           setCurrentUploadNodeId(null);
         }}
-        title="选择模特"
+        title={
+          currentUploadNodeId
+            ? (workflow?.rh_payload_template?.nodeInfoList?.find((n: DynamicNode) => n.nodeId === currentUploadNodeId)?.fieldName === 'image'
+                ? "选择图片"
+                : "选择视频")
+            : "选择素材"
+        }
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 h-full w-full">
