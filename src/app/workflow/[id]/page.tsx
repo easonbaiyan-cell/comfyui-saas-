@@ -197,7 +197,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
       const isImage = node.fieldName === 'image';
 
       return (
-        <div key={node.nodeId} className="mb-6 w-full">
+        <div key={node.nodeId} className="w-full">
           <h2 className="text-sm font-medium text-gray-400 mb-3 uppercase tracking-wider">{node.description || (isImage ? '图片上传' : '视频上传')}</h2>
           <label className="block w-full cursor-pointer">
             <input
@@ -596,60 +596,32 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
           {toastMessage.text}
         </div>
       )}
-      <div className="grid grid-cols-1 lg:grid-cols-3 h-full w-full">
-        {/* Left Column: Showcase Video */}
-        <div className="border-r border-white/5 p-6 flex flex-col items-center justify-start overflow-y-auto">
-          <div className="w-full max-w-sm flex flex-col">
-            <h1 className="text-lg font-semibold text-white mb-6 text-center">参考视频</h1>
-
-            {/* Video Placeholder */}
-            <div className="bg-[#131622] rounded-2xl aspect-[9/16] w-full relative flex items-center justify-center shadow-xl overflow-hidden group bg-gray-800">
-              {!(workflow?.reference_video_url || workflow?.video_url) && !(workflow?.cover_image_url || workflow?.cover_url) ? (
-                <div className="flex flex-col items-center text-gray-500">
-                  <Video className="w-10 h-10 mb-2" />
-                  <span className="text-sm">暂无演示视频</span>
-                </div>
-              ) : !(workflow?.reference_video_url || workflow?.video_url) && (workflow?.cover_image_url || workflow?.cover_url) ? (
-                <img
-                  src={workflow?.cover_image_url || workflow?.cover_url || ""}
-                  className="absolute inset-0 w-full h-full object-cover"
-                  alt="Cover"
-                />
-              ) : (
-                <video
-                    src={workflow?.reference_video_url || workflow?.video_url || ""}
-                    className="absolute inset-0 w-full h-full object-cover"
-                    poster={workflow?.cover_image_url || workflow?.cover_url || undefined}
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    controls
-                />
-              )}
-            </div>
-
-            <div className="flex flex-row gap-2 items-center mb-2 mt-4">
-              {workflow?.virtual_platform && (
-                <span className="bg-danger-red text-white text-xs px-2 py-1 rounded-md font-medium">{workflow.virtual_platform}</span>
-              )}
-              <div className="flex items-center gap-1 text-gray-400 text-sm bg-black/60 px-3 py-1.5 rounded-full backdrop-blur-md">
-                <Heart className="h-3.5 w-3.5" />
-                <span>{formatLikes(workflow?.virtual_likes || 0)}</span>
-              </div>
-            </div>
-
-            {/* Traffic Analysis Text */}
-            <p className="text-xs text-gray-500 leading-relaxed">
-              {workflow?.description || '暂无描述'}
-            </p>
-          </div>
-        </div>
-
-        {/* Middle Column: Parameters and Actions */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 h-full w-full">
+        {/* Left Column: Parameters and Actions */}
         <div className="border-r border-white/5 overflow-y-auto h-full relative flex flex-col">
-          <div className="p-6 flex-1 w-full max-w-sm mx-auto flex flex-col">
-            <h1 className="text-lg font-semibold text-white mb-6 text-center">工作流详情与操作</h1>
+          <div className="p-6 flex-1 w-full flex flex-col">
+                        {/* Left Header */}
+            <div className="w-full flex flex-col items-center justify-center mb-6 text-center">
+              {workflow?.virtual_platform && (
+                <span className="bg-danger-red text-white text-xs px-2 py-1 rounded-md font-medium mb-2 inline-block">
+                  {workflow.virtual_platform}
+                </span>
+              )}
+              <h1 className="text-2xl font-bold text-white mb-2">{workflow?.id || '工作流名称'}</h1>
+              <p className="text-sm text-gray-400 max-w-lg mx-auto">
+                {workflow?.description || '暂无描述'}
+              </p>
+            </div>
+
+
+
+            {workflow?.rh_payload_template?.nodeInfoList && workflow.rh_payload_template.nodeInfoList.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
+                {workflow.rh_payload_template.nodeInfoList.map(renderDynamicNode)}
+              </div>
+            ) : (
+              <div className="text-gray-500 text-sm text-center py-10">该工作流暂无配置参数</div>
+            )}
 
             {/* Top Action Bar */}
             <div className="w-full mx-auto flex flex-col items-center justify-between gap-4 mb-8">
@@ -672,24 +644,27 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
               </div>
 
               {/* Generate Button */}
-              <button
-                onClick={handleGenerate}
-                disabled={isGenerating || Object.values(activeUploads).some(Boolean)}
-                className={`w-full text-black font-bold text-lg h-14 px-12 rounded-xl transition-all flex items-center justify-center ${
-                  isGenerating
-                    ? 'bg-primary-green/50 cursor-not-allowed'
-                    : 'bg-primary-green hover:bg-primary-green shadow-[0_0_15px_var(--color-primary-green)] hover:shadow-[0_0_20px_var(--color-primary-green)] hover:scale-[1.02] active:scale-[0.98]'
-                }`}
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    生成中...
-                  </>
-                ) : (
-                  "立即生成"
-                )}
-              </button>
+              <div className="flex gap-4 w-full">
+                <button
+                  onClick={handleGenerate}
+                  disabled={isGenerating || Object.values(activeUploads).some(Boolean)}
+                  className={`flex-1 text-black font-bold text-lg h-14 px-12 rounded-xl transition-all flex items-center justify-center ${
+                    isGenerating
+                      ? 'bg-primary-green/50 cursor-not-allowed'
+                      : 'bg-primary-green hover:bg-primary-green shadow-[0_0_15px_var(--color-primary-green)] hover:shadow-[0_0_20px_var(--color-primary-green)] hover:scale-[1.02] active:scale-[0.98]'
+                  }`}
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      生成中...
+                    </>
+                  ) : (
+                    "立即生成"
+                  )}
+                </button>
+                <button className="w-1/3 text-white bg-danger-red hover:bg-danger-red/80 font-bold text-lg h-14 rounded-xl transition-all flex items-center justify-center">取消生成</button>
+              </div>
 
               {/* Extra note */}
               <p className="text-xs text-gray-500 mt-1">
@@ -699,12 +674,6 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
 
             {errorMsg && (
               <p className="text-danger-red text-sm mb-4 text-center">{errorMsg}</p>
-            )}
-
-            {workflow?.rh_payload_template?.nodeInfoList && workflow.rh_payload_template.nodeInfoList.length > 0 ? (
-              workflow.rh_payload_template?.nodeInfoList?.map(renderDynamicNode)
-            ) : (
-              <div className="text-gray-500 text-sm text-center py-10">该工作流暂无配置参数</div>
             )}
           </div>
         </div>
