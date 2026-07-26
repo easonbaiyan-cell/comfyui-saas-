@@ -32,6 +32,7 @@ function formatLikes(likes: number | null): string {
 export interface WorkflowData {
   id: string;
   title?: string;
+  subtitle2?: string;
   description?: string;
   category?: string;
   cost_points?: number;
@@ -610,7 +611,7 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
         <div className="border-r border-white/5 overflow-y-auto h-full relative flex flex-col lg:col-span-8">
           <div className="p-6 flex-1 w-full flex flex-col">
             <div className="mb-6">
-              <p className="text-sm text-gray-400 mb-1">{workflow.category || '默认分类'}</p>
+              <p className="text-sm text-gray-400 mb-1">{workflow.subtitle2}</p>
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-1">{workflow.title}</h2>
               <p className="text-sm text-gray-400 mb-6">{workflow.description}</p>
             </div>

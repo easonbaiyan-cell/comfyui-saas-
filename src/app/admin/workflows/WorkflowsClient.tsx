@@ -4,16 +4,13 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { getWorkflowsAction, togglePinWorkflowAction, toggleStatusWorkflowAction, getCategoriesAction, deleteWorkflowAction, reorderWorkflowsAction } from './actions';
-import CategoryManagementModal from './CategoryManagementModal';
+import { getWorkflowsAction, togglePinWorkflowAction, toggleStatusWorkflowAction, deleteWorkflowAction, reorderWorkflowsAction } from './actions';
+
 export default function WorkflowsClient() {
   const [workflows, setWorkflows] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
-  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [nameSearch, setNameSearch] = useState('');
-  const [categorySearch, setCategorySearch] = useState('');
   const [toastMessage, setToastMessage] = useState<{message: string, type: 'success'|'error'} | null>(null);
   const showToast = (message: string, type: 'success'|'error' = 'success') => {
     setToastMessage({ message, type });
@@ -33,19 +30,12 @@ export default function WorkflowsClient() {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
           setSessionToken(session.access_token);
-          const [workflowsResult, categoriesResult] = await Promise.all([
-            getWorkflowsAction(session.access_token),
-            getCategoriesAction(session.access_token)
-          ]);
+          const workflowsResult = await getWorkflowsAction(session.access_token);
+
           if (workflowsResult.success && workflowsResult.workflows) {
             setWorkflows(workflowsResult.workflows);
           } else {
             console.error('Failed to load workflows:', workflowsResult.error);
-          }
-          if (categoriesResult.success && categoriesResult.categories) {
-            setCategories(categoriesResult.categories);
-          } else {
-            console.error('Failed to load categories:', categoriesResult.error);
           }
         }
       } catch (err) {
@@ -196,15 +186,6 @@ export default function WorkflowsClient() {
           <h2 className="text-2xl font-bold text-gray-900">商品与算力管理</h2>
           <p className="text-gray-500 mt-1">管理所有工作流商品、配置参数和算力映射。</p>
         </div>
-        <button
-          onClick={() => setIsCategoryModalOpen(true)}
-          className="inline-flex items-center px-4 py-2 mr-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-        >
-          <svg className="-ml-1 mr-2 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-            <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-          </svg>
-          管理/新增分类
-        </button>
         <Link
           href="/admin/workflows/create"
           className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
@@ -229,16 +210,6 @@ export default function WorkflowsClient() {
                   onChange={(e) => setNameSearch(e.target.value)}
                   className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
                 />
-                <select
-                  value={categorySearch}
-                  onChange={(e) => setCategorySearch(e.target.value)}
-                  className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border bg-white"
-                >
-                  <option value="">所有分类</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.name}>{c.name}</option>
-                  ))}
-                </select>
               </div>
             </div>
             <div className="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
@@ -247,9 +218,6 @@ export default function WorkflowsClient() {
                   <tr>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       工作流名称
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      所属分类
                     </th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       R 端工作流 ID
@@ -279,8 +247,7 @@ export default function WorkflowsClient() {
                     }
                     const filteredWorkflows = workflows.filter(wf => {
                       const matchName = !nameSearch || (wf.title && wf.title.toLowerCase().includes(nameSearch.toLowerCase()));
-                      const matchCategory = !categorySearch || wf.category === categorySearch;
-                      return matchName && matchCategory;
+                      return matchName;
                     });
                     if (filteredWorkflows.length === 0) {
                       return (
@@ -300,9 +267,6 @@ export default function WorkflowsClient() {
                               </span>
                             )}
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-500">{workflow.category}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-500 font-mono">{workflow.r_app_id || '-'}</div>
@@ -364,14 +328,6 @@ export default function WorkflowsClient() {
           </div>
         </div>
       </div>
-      {/* Category Modal */}
-      <CategoryManagementModal
-        isOpen={isCategoryModalOpen}
-        onClose={() => setIsCategoryModalOpen(false)}
-        onCategorySelected={(categoryName) => {
-          // Optionally handle selection, for now just close
-        }}
-      />
     </div>
   );
 }

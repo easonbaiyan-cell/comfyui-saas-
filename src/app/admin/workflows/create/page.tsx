@@ -3,16 +3,12 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { createWorkflowAction, getCategoriesAction, createCategoryAction } from '../actions';
+import { createWorkflowAction } from '../actions';
 import { supabase } from '@/lib/supabase';
-import CategoryManagementModal from '../CategoryManagementModal';
 
 export default function CreateWorkflowPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('');
   const [isDirty, setIsDirty] = useState(false);
 
   const [toastMessage, setToastMessage] = useState<{message: string, type: 'success'|'error'} | null>(null);
@@ -30,26 +26,6 @@ export default function CreateWorkflowPage() {
     }
     return () => clearTimeout(timeoutId);
   }, [toastMessage]);
-
-  const fetchCategories = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-      const res = await getCategoriesAction(session.access_token);
-      if (res.success && res.categories) {
-        setCategories(res.categories);
-        if (res.categories.length > 0) {
-          setSelectedCategory((prev) => prev || res.categories![0].name);
-        }
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  useEffect(() => {
-    fetchCategories();
-  }, []);
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -107,7 +83,6 @@ export default function CreateWorkflowPage() {
       title: formData.get('title'),
       subtitle2: formData.get('subtitle2'),
       description: formData.get('subtitle'),
-      category: formData.get('category'),
       r_app_id: formData.get('appId'),
       cost_points: formData.get('costPoints'),
       node_mapping: [],
@@ -183,21 +158,6 @@ export default function CreateWorkflowPage() {
                 </div>
               </div>
 
-              <div className="sm:col-span-3">
-                <div className="flex justify-between items-center">
-                  <label htmlFor="category" className="block text-sm font-medium text-gray-700">选择分类</label>
-                  <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsCategoryModalOpen(true); }} className="text-sm text-indigo-600 hover:text-indigo-500">管理/新增分类</button>
-                </div>
-                <div className="mt-1">
-                  <select id="category" name="category" value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border bg-white">
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.name}>{c.name}</option>
-                    ))}
-                    {categories.length === 0 && <option value="">暂无分类</option>}
-                  </select>
-                </div>
-              </div>
-
               <div className="sm:col-span-6">
                 <label htmlFor="subtitle" className="block text-sm font-medium text-gray-700">副标题描述 (Optional)</label>
                 <div className="mt-1">
@@ -240,16 +200,6 @@ export default function CreateWorkflowPage() {
         </div>
         </div>
       </form>
-
-      {/* Category Modal */}
-      <CategoryManagementModal
-        isOpen={isCategoryModalOpen}
-        onClose={() => setIsCategoryModalOpen(false)}
-        onCategorySelected={(categoryName) => {
-          setSelectedCategory(categoryName);
-          fetchCategories();
-        }}
-      />
     </div>
   );
 }
