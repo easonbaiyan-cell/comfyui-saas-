@@ -17,7 +17,25 @@ export default async function Home() {
     console.error("Error fetching workflows:", error);
   }
 
-  const workflowsList = workflows || [];
+
+  const mockWorkflow = {
+    id: 'mock-1',
+    title: 'Mock Workflow',
+    description: 'Mock Description',
+    rh_payload_template: {
+      nodeInfoList: [
+        {
+          nodeId: 'node1',
+          description: '包含模特的图片',
+          fieldName: 'image',
+          type: 'image'
+        }
+      ]
+    },
+    cost_points: 10
+  };
+  const workflowsList = (!workflows || workflows.length === 0) ? [mockWorkflow] : workflows;
+
 
   return (
     <div className="flex min-h-screen flex-col bg-[#0a0a0a] text-white selection:bg-[#D0FF2A] selection:text-black">

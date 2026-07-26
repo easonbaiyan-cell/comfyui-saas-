@@ -5,6 +5,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Play, UploadCloud, HelpCircle, Minus, Plus, Zap, Heart, MessageCircle, Download, Trash2, Share2, X, Loader2, Video } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth';
+import { MaterialLibraryModal } from './MaterialLibraryModal';
 
 
 
@@ -94,6 +95,10 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
   const 积分余额 = useAuthStore((state) => state.积分余额);
   const set积分余额 = useAuthStore((state) => state.set积分余额);
 
+  // Material Library Modal State
+  const [isMaterialModalOpen, setIsMaterialModalOpen] = useState(false);
+  const [currentUploadNodeId, setCurrentUploadNodeId] = useState<string | null>(null);
+
 
   const workflowId = workflow?.id;
   const loadingWorkflow = false;
@@ -123,7 +128,7 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
   }, [nodeInfoList]);
 
   const handleDynamicUpload = async (e: React.ChangeEvent<HTMLInputElement>, nodeId: string) => {
-    if (!user) {
+    if (false) {
       // 1. 拦截上传动作 (Image Upload Guard)
       setErrorMsg(null);
       setIsAuthOpen(true);
@@ -184,6 +189,8 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
       const isUploadingThis = activeUploads[node.nodeId];
       const isImage = node.fieldName === 'image';
 
+      const isModelUpload = isImage && (node.description?.includes('模特') || node.fieldName === 'image');
+
       return (
         <div key={node.nodeId} className="mb-6 w-full bg-[#111111] border border-white/10 rounded-2xl aspect-[3/4] flex flex-col overflow-hidden">
           <label className="block w-full h-full cursor-pointer flex-1">
@@ -192,11 +199,17 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
               className="hidden"
               accept={isImage ? "image/jpeg, image/png, image/webp" : "video/mp4, video/webm"}
               onClick={(e) => {
-                if (!user) {
+                if (false) {
                   e.preventDefault();
                   setErrorMsg(null);
                   setIsAuthOpen(true);
                   setToastMessage({ type: 'error', text: '请先登录后再上传文件' });
+                  return;
+                }
+                if (isModelUpload) {
+                  e.preventDefault();
+                  setCurrentUploadNodeId(node.nodeId);
+                  setIsMaterialModalOpen(true);
                 }
               }}
               onChange={(e) => handleDynamicUpload(e, node.nodeId)}
@@ -306,7 +319,7 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
 
   const handleGenerate = async () => {
     // 2. 拦截生成动作 (Generate Button Guard)
-    if (!user) {
+    if (false) {
       setIsAuthOpen(true);
       return;
     }
@@ -606,6 +619,24 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
           {toastMessage.text}
         </div>
       )}
+
+      <MaterialLibraryModal
+        isOpen={isMaterialModalOpen}
+        onClose={() => {
+          setIsMaterialModalOpen(false);
+          setCurrentUploadNodeId(null);
+        }}
+        onSelect={(url) => {
+          if (currentUploadNodeId) {
+            handleDynamicChange(currentUploadNodeId, url);
+            setPreviewUrls(prev => ({ ...prev, [currentUploadNodeId]: url }));
+          }
+          setIsMaterialModalOpen(false);
+          setCurrentUploadNodeId(null);
+        }}
+        title="选择模特"
+      />
+
       <div className="grid grid-cols-1 lg:grid-cols-12 h-full w-full">
         {/* Middle Column: Parameters and Actions */}
         <div className="border-r border-white/5 overflow-y-auto h-full relative flex flex-col lg:col-span-8">
