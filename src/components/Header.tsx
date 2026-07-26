@@ -160,7 +160,7 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
   return (
     <>
       <header className="relative z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
+        <div className="w-full max-w-7xl mx-auto flex h-16 items-center justify-between px-6 lg:px-8">
           {/* Left: Logo Only */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center">

@@ -28,7 +28,7 @@ export function HeroCarousel() {
   };
 
   return (
-    <div className="relative w-full h-[70vh] min-h-[600px] overflow-hidden bg-black group">
+    <div className="relative w-full min-h-[80vh] overflow-hidden bg-black group">
       {/* Background Slider */}
       <div className="absolute inset-0 z-0">
         {backgroundImages.map((img, idx) => (
@@ -39,7 +39,7 @@ export function HeroCarousel() {
             }`}
           >
             <div
-              className="absolute inset-0 bg-cover bg-center"
+              className="absolute inset-0 bg-cover bg-[position:right_center]"
               style={{ backgroundImage: `url('${img}')` }}
             />
           </div>
@@ -47,15 +47,15 @@ export function HeroCarousel() {
       </div>
 
       {/* Gradient Mask */}
-      <div className="absolute inset-0 z-10 bg-gradient-to-r from-black/90 via-black/70 to-transparent pointer-events-none" />
+      <div className="absolute inset-y-0 left-0 z-10 w-full md:w-[55%] bg-gradient-to-r from-[#0a0a0a] via-[#0a0a0a]/80 to-transparent pointer-events-none" />
 
       {/* Content Container */}
-      <div className="relative z-20 h-full container mx-auto px-4 flex items-center">
+      <div className="relative z-20 h-full w-full max-w-7xl mx-auto px-6 lg:px-8 flex items-center">
         <div className="w-full md:w-[55%] flex flex-col justify-center h-full pt-10">
 
           {/* Top Label */}
           <div className="mb-6">
-            <span className="text-xs font-bold tracking-widest text-purple-400/80 uppercase">
+            <span className="text-[10px] font-black tracking-[0.2em] text-[#D0FF2A] uppercase">
               PAPAGAGA 商业级应用
             </span>
           </div>
@@ -66,28 +66,28 @@ export function HeroCarousel() {
           </h1>
 
           {/* Sub Title */}
-          <h2 className="text-3xl md:text-4xl text-white font-bold mb-6">
+          <h2 className="text-4xl md:text-6xl text-[#D0FF2A] font-black mb-6">
             小白轻松掌控带货全闭环
           </h2>
 
           {/* Description */}
-          <p className="text-lg md:text-xl text-gray-300 leading-relaxed mb-12 max-w-xl">
+          <p className="text-base md:text-lg text-gray-400 leading-relaxed mb-12 max-w-xl">
             颠覆传统电商模式，以极低门槛重塑内容生产力。从零基础到爆款视频，用 AI 构建属于超级个体的自动化印钞机。
           </p>
 
           {/* Data Stats Cards */}
           <div className="flex flex-wrap gap-6">
             <div className="flex flex-col border border-white/5 bg-transparent p-4 rounded-xl min-w-[120px]">
-              <span className="text-4xl font-bold text-[#D0FF2A] mb-2">30</span>
-              <span className="text-sm text-gray-400">节实战课程</span>
+              <span className="text-4xl font-bold text-white mb-2">30</span>
+              <span className="text-[10px] text-gray-500 tracking-widest">节实战课程</span>
             </div>
             <div className="flex flex-col border border-white/5 bg-transparent p-4 rounded-xl min-w-[120px]">
-              <span className="text-4xl font-bold text-[#D0FF2A] mb-2">4步</span>
-              <span className="text-sm text-gray-400">极简工作流</span>
+              <span className="text-4xl font-bold text-white mb-2">4步</span>
+              <span className="text-[10px] text-gray-500 tracking-widest">极简工作流</span>
             </div>
             <div className="flex flex-col border border-white/5 bg-transparent p-4 rounded-xl min-w-[120px]">
-              <span className="text-4xl font-bold text-[#D0FF2A] mb-2">25%</span>
-              <span className="text-sm text-gray-400">最高分销佣金</span>
+              <span className="text-4xl font-bold text-white mb-2">25%</span>
+              <span className="text-[10px] text-gray-500 tracking-widest">最高分销佣金</span>
             </div>
           </div>
 
@@ -117,8 +117,8 @@ export function HeroCarousel() {
             onClick={() => setCurrentIndex(idx)}
             className={`transition-all duration-300 rounded-full h-2 ${
               idx === currentIndex
-                ? "w-8 bg-[#D0FF2A]"
-                : "w-2 bg-gray-600 hover:bg-gray-400"
+                ? "w-4 h-1.5 bg-[#D0FF2A]"
+                : "w-1.5 h-1.5 bg-white/30"
             }`}
           />
         ))}
