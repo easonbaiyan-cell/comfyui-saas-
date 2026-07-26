@@ -6,6 +6,7 @@ interface MaterialLibraryModalProps {
   onClose: () => void;
   onSelect: (imageUrl: string) => void;
   title?: string;
+  type?: 'image' | 'video';
 }
 
 const mockImages = [
@@ -22,23 +23,28 @@ export function MaterialLibraryModal({
   onClose,
   onSelect,
   title = "选择模特",
+  type = 'image',
 }: MaterialLibraryModalProps) {
   const [activeTab, setActiveTab] = useState<'official' | 'uploads'>('official');
   const [uploadHistory, setUploadHistory] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const storageKey = type === 'video' ? 'user_uploaded_history_video' : 'user_uploaded_history_image';
+
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('user_uploaded_materials');
+    if (typeof window !== 'undefined' && isOpen) {
+      const stored = localStorage.getItem(storageKey);
       if (stored) {
         try {
           setUploadHistory(JSON.parse(stored));
         } catch (e) {
           console.error('Failed to parse uploaded materials history', e);
         }
+      } else {
+        setUploadHistory([]);
       }
     }
-  }, []);
+  }, [isOpen, type, storageKey]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -47,7 +53,7 @@ export function MaterialLibraryModal({
       const newHistory = [blobUrl, ...uploadHistory];
       setUploadHistory(newHistory);
       if (typeof window !== 'undefined') {
-        localStorage.setItem('user_uploaded_materials', JSON.stringify(newHistory));
+        localStorage.setItem(storageKey, JSON.stringify(newHistory));
       }
       onSelect(blobUrl);
     }
@@ -61,7 +67,7 @@ export function MaterialLibraryModal({
     const newHistory = uploadHistory.filter((url) => url !== urlToDelete);
     setUploadHistory(newHistory);
     if (typeof window !== 'undefined') {
-      localStorage.setItem('user_uploaded_materials', JSON.stringify(newHistory));
+      localStorage.setItem(storageKey, JSON.stringify(newHistory));
     }
     // Optionally revoke the blob url to free up memory
     if (urlToDelete.startsWith('blob:')) {
@@ -121,28 +127,30 @@ export function MaterialLibraryModal({
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
 
             {/* Local Upload Button (Always First) */}
-            <div
-              className="aspect-[3/4] border-2 border-dashed border-white/10 bg-white/5 hover:bg-white/10 rounded-xl cursor-pointer flex flex-col items-center justify-center transition-colors group relative"
-              onClick={() => {
-                if (fileInputRef.current) {
-                  fileInputRef.current.click();
-                }
-              }}
-            >
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                accept="image/*,video/*"
-                onChange={handleFileUpload}
-              />
-              <div className="w-12 h-12 rounded-full bg-black/40 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                <Plus className="w-6 h-6 text-gray-400 group-hover:text-white" />
+            {activeTab !== 'uploads' && (
+              <div
+                className="aspect-[3/4] border-2 border-dashed border-white/10 bg-white/5 hover:bg-white/10 rounded-xl cursor-pointer flex flex-col items-center justify-center transition-colors group relative"
+                onClick={() => {
+                  if (fileInputRef.current) {
+                    fileInputRef.current.click();
+                  }
+                }}
+              >
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept={type === 'video' ? 'video/*' : 'image/*'}
+                  onChange={handleFileUpload}
+                />
+                <div className="w-12 h-12 rounded-full bg-black/40 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                  <Plus className="w-6 h-6 text-gray-400 group-hover:text-white" />
+                </div>
+                <span className="text-sm font-medium text-gray-400 group-hover:text-white">
+                  点击上传
+                </span>
               </div>
-              <span className="text-sm font-medium text-gray-400 group-hover:text-white">
-                点击上传
-              </span>
-            </div>
+            )}
 
             {/* Mock Image Cards */}
             {activeTab === 'official' && mockImages.map((url, index) => (
@@ -167,21 +175,28 @@ export function MaterialLibraryModal({
             )}
 
             {activeTab === 'uploads' && uploadHistory.map((url, index) => {
-              const isVideo = url.endsWith('.mp4') || url.endsWith('.webm') || (!url.startsWith('blob:') && url.match(/\.(mp4|webm)$/i));
-              // Since blob urls don't have extensions, we'll assume image for now or we could store type in history if needed,
-              // but standard <img> tags handle blob images well. Video would need <video>.
-              // We'll just render img/video depending on a basic check, or default to img.
               return (
                 <div
                   key={index}
                   className="aspect-[3/4] rounded-xl overflow-hidden cursor-pointer border border-white/5 hover:border-[#D0FF2A]/50 transition-all group relative bg-black/40"
                   onClick={() => onSelect(url)}
                 >
-                  <img
-                    src={url}
-                    alt={`Upload ${index}`}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
+                  {type === 'video' ? (
+                    <video
+                      src={url}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                    />
+                  ) : (
+                    <img
+                      src={url}
+                      alt={`Upload ${index}`}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  )}
                   <div className="absolute inset-0 bg-black/0 pointer-events-none group-hover:bg-black/10 transition-colors" />
 
                   {/* Delete Button (visible on hover) */}

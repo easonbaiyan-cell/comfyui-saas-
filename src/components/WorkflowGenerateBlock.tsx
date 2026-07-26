@@ -637,6 +637,11 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
                 : "选择视频")
             : "选择素材"
         }
+        type={
+          currentUploadNodeId && workflow?.rh_payload_template?.nodeInfoList?.find((n: DynamicNode) => n.nodeId === currentUploadNodeId)?.fieldName === 'image'
+            ? 'image'
+            : 'video'
+        }
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 h-full w-full">
