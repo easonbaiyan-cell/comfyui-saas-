@@ -23,10 +23,33 @@ export function GenerateVideoEngine() {
   const [generatedMediaUrl, setGeneratedMediaUrl] = useState<string | null>(null);
   const pollIntervalRef = React.useRef<NodeJS.Timeout | null>(null);
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [errorMsg, setErrorMsg] = useState<any>(null);
+  const [toastMessage, setToastMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
+
 
   const user = useAuthStore((state) => state.user);
   const setIsAuthOpen = useAuthStore((state) => state.setIsAuthOpen);
   const 积分余额 = useAuthStore((state) => state.积分余额);
+
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
+
+  const extractErrorMessage = (err: any): string => {
+    if (!err) return '未知错误';
+    if (typeof err === 'string') return err;
+    if (err instanceof Error) return err.message;
+    try {
+      return JSON.stringify(err);
+    } catch (e) {
+      return String(err);
+    }
+  };
+
 
   useEffect(() => {
     async function fetchWorkflow() {
@@ -105,11 +128,10 @@ export function GenerateVideoEngine() {
 
     pollIntervalRef.current = setInterval(async () => {
       attempts++;
-      if (attempts >= 720) { // 60 minutes
+      if (attempts >= 720) { // 60 minutes limit (720 * 5s = 3600s)
         if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
-        setPollStatus('生成超时，请稍后重试');
+        setErrorMsg('生成超时，请稍后重试');
         setIsGenerating(false);
-        setCurrentTaskId(null);
         return;
       }
 
@@ -121,57 +143,120 @@ export function GenerateVideoEngine() {
         });
         if (!res.ok) {
             console.warn('网络波动，跳过本次解析');
-            return;
+            return; // 遇到 500 直接 return，等待下次轮询，绝不准崩！
         }
         const data = await res.json();
 
         if (data && data.code === 0) {
            if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+           localStorage.removeItem(`active_task_${workflowId}`);
+           localStorage.removeItem(`task_start_${workflowId}`);
            if (data.data && data.data.length > 0 && data.data[0].fileUrl) {
               const fileUrl = data.data[0].fileUrl;
               setGeneratedMediaUrl(fileUrl);
               setIsGenerating(false);
-              setCurrentTaskId(null);
 
-              let finalUserId = user?.id;
+              // ==== 核心入库逻辑开始 ====
+              console.log("⏳ 准备将资产写入 video_tasks 表...");
+
+              // 1. 防弹级实时获取当前用户 (绕过 React 闭包陷阱)
+              let finalUserId = user?.id; // 先尝试拿 state 里的
               if (!finalUserId) {
-                  const { data: { session } } = await supabase.auth.getSession();
+                  // 如果 state 里没有，强行向 Supabase 要最新状态
+                  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
                   finalUserId = session?.user?.id;
+                  if (sessionError) console.error("获取 Session 异常:", sessionError);
               }
 
-              if (finalUserId) {
-                  await supabase
-                      .from('video_tasks')
-                      .insert({
-                          user_id: finalUserId,
-                          workflow_id: workflowId,
-                          result_video_url: fileUrl,
-                          cost_points: 0
-                      });
+              // 2. 最终校验
+              if (!finalUserId) {
+                  console.error("❌ 严重错误: 实时从 Supabase 获取用户依然失败，无法入库");
+                  setToastMessage({ text: "云端保存失败：登录状态异常，请刷新重试", type: "error" });
+                  return; // 终止执行
               }
+
+              // 3. 执行入库
+              const { error: insertError } = await supabase
+                  .from('video_tasks')
+                  .insert({
+                      user_id: finalUserId,   // 使用实时获取到的真实 ID
+                      workflow_id: workflowId,
+                      result_video_url: fileUrl,
+                      cost_points: 0
+                  });
+
+              if (insertError) {
+                  console.error("❌ 数据库写入彻底失败:", insertError);
+                  setToastMessage({ text: `云端保存失败: ${insertError.message}`, type: "error" });
+              } else {
+                  console.log("✅ 资产已成功写入 video_tasks 表！");
+                  setToastMessage({ text: "生成成功！已保存至我的创作", type: "success" });
+              }
+              // ==== 核心入库逻辑结束 ====
+
            } else {
-              setPollStatus('生成成功但未找到视频URL');
+              setErrorMsg('生成成功但未找到视频URL');
               setIsGenerating(false);
-              setCurrentTaskId(null);
            }
-        } else if (data && data.code === -1) {
+        } else if (data && (data.code === 804 || data.code === 813)) {
+           // RUNNING or QUEUED, just wait for the next tick
+           setPollStatus(data.code === 804 ? '正在拼命生成中...' : '排队中...');
+        } else if (data && data.code === 805) {
            if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
-           setPollStatus('生成失败');
+           localStorage.removeItem(`active_task_${workflowId}`);
+           localStorage.removeItem(`task_start_${workflowId}`);
+           const errorData = data.data?.failedReason || '生成失败';
+           setErrorMsg(extractErrorMessage(errorData));
            setIsGenerating(false);
-           setCurrentTaskId(null);
-        } else if (data && data.code === 1) {
-           // Queueing or running
-           let progressMsg = `生成中 (耗时 ${(attempts * 5)}s)...`;
-           if (data.data && data.data.length > 0 && data.data[0].progress) {
-             progressMsg = `生成中 - 进度 ${data.data[0].progress}%`;
-           }
-           setPollStatus(progressMsg);
+        } else if (data && data.code !== undefined) {
+           if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+           localStorage.removeItem(`active_task_${workflowId}`);
+           localStorage.removeItem(`task_start_${workflowId}`);
+           const errorData = data.msg || data.message || '未知状态异常';
+           setErrorMsg(extractErrorMessage(errorData));
+           setIsGenerating(false);
         }
-      } catch (err) {
-        console.error("轮询异常:", err);
+      } catch (error) {
+        console.warn('请求阻断，跳过本次', error);
       }
-    }, 5000);
+    }, 5000); // Poll every 5 seconds
   };
+
+
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isGenerating) {
+      interval = setInterval(() => {
+        setElapsedTime(prev => prev + 1);
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isGenerating]);
+
+  // Recover task polling from local storage
+  useEffect(() => {
+    if (typeof window === 'undefined' || !workflow?.id) return;
+
+    const storageKey = `active_task_${workflow.id}`;
+    const cachedTaskId = localStorage.getItem(storageKey);
+    const startKey = `task_start_${workflow.id}`;
+    const startTime = localStorage.getItem(startKey);
+
+    if (cachedTaskId) {
+        console.log("恢复执行任务:", cachedTaskId);
+        if (startTime) {
+          const passedSeconds = Math.floor((Date.now() - parseInt(startTime, 10)) / 1000);
+          setElapsedTime(passedSeconds > 0 ? passedSeconds : 0);
+        }
+        setCurrentTaskId(cachedTaskId);
+        setIsGenerating(true);
+        setPollStatus("正在恢复任务状态...");
+        pollForResult(cachedTaskId, workflow.id);
+    }
+  }, [workflow?.id]);
 
 
   const handleStop = async () => {
@@ -180,6 +265,10 @@ export function GenerateVideoEngine() {
     }
     setIsGenerating(false);
     setPollStatus(null);
+    if (workflow?.id) {
+       localStorage.removeItem(`active_task_${workflow.id}`);
+       localStorage.removeItem(`task_start_${workflow.id}`);
+    }
     if (currentTaskId) {
       try {
         await fetch('/api/stop', {
@@ -229,6 +318,10 @@ export function GenerateVideoEngine() {
     setPollStatus("任务提交中...");
     setGeneratedMediaUrl(null);
 
+    setElapsedTime(0);
+    setErrorMsg(null);
+
+
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData?.session?.access_token;
@@ -266,18 +359,31 @@ export function GenerateVideoEngine() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || data.error || '生成失败');
 
+
       setCurrentTaskId(data.taskId);
+
+      // Store in local storage to prevent loss on refresh
+      localStorage.setItem(`active_task_${workflow.id}`, data.taskId);
+      localStorage.setItem(`task_start_${workflow.id}`, Date.now().toString());
+
       pollForResult(data.taskId, workflow.id);
+
     } catch (err: any) {
       console.error(err);
-      alert(err.message || String(err));
+      setErrorMsg(extractErrorMessage(err));
       setIsGenerating(false);
       setPollStatus(null);
     }
   };
 
+
   return (
-    <div className="w-full">
+    <div className="w-full relative">
+      {toastMessage && (
+        <div className={`fixed top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg text-sm font-medium z-[100] transition-all shadow-lg ${toastMessage.type === 'error' ? 'bg-danger-red text-white' : 'bg-primary-green text-black'}`}>
+          {toastMessage.text}
+        </div>
+      )}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
         {/* Left Column: Input & Action Area */}
@@ -291,13 +397,13 @@ export function GenerateVideoEngine() {
           </div>
 
           {/* Parameters Configuration Area */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
              {loading ? (
-                 <div className="col-span-1 md:col-span-3 flex items-center justify-center h-48">
+                 <div className="col-span-1 md:col-span-2 flex items-center justify-center h-48">
                     <Loader2 className="w-8 h-8 text-gray-500 animate-spin" />
                  </div>
              ) : workflow?.rh_payload_template?.nodeInfoList ? (
-                 workflow.rh_payload_template.nodeInfoList.map((node: DynamicNode) => {
+                 workflow.rh_payload_template.nodeInfoList.slice(0, 2).map((node: DynamicNode) => {
                     const isFile = node.fieldName === 'image' || node.fieldName === 'video';
                     const isImage = node.fieldName === 'image';
                     const value = dynamicFormValues[node.nodeId];
@@ -360,9 +466,6 @@ export function GenerateVideoEngine() {
                     <div className="text-gray-500 flex items-center justify-center bg-[#111] rounded-2xl h-48 border border-white/5 hover:border-[#D0FF2A] hover:shadow-[0_0_15px_rgba(208,255,42,0.2)] transition-all cursor-pointer">
                     <span className="font-medium">+ 选择模特</span>
                     </div>
-                    <div className="text-gray-500 flex items-center justify-center bg-[#111] rounded-2xl h-48 border border-white/5 hover:border-[#D0FF2A] hover:shadow-[0_0_15px_rgba(208,255,42,0.2)] transition-all cursor-pointer">
-                    <span className="font-medium">+ 选择热门视频</span>
-                    </div>
                 </>
              )}
           </div>
@@ -388,7 +491,7 @@ export function GenerateVideoEngine() {
                 {isGenerating ? (
                     <div className="flex items-center gap-2">
                         <Loader2 className="w-5 h-5 animate-spin" />
-                        <span>{pollStatus || '生成中...'}</span>
+                        <span>{pollStatus || `生成中 (${elapsedTime}s)`}</span>
                     </div>
                 ) : '立即生成'}
               </button>
@@ -453,7 +556,16 @@ export function GenerateVideoEngine() {
               ) : isGenerating ? (
                   <div className="flex flex-col items-center justify-center gap-4 text-gray-500">
                       <Loader2 className="w-8 h-8 animate-spin text-[#D0FF2A]" />
-                      <span className="text-xs text-center px-2">{pollStatus || '正在生成...'}</span>
+                      <div className="flex flex-col items-center gap-2">
+                        <span className="text-sm font-medium text-center px-2 text-[#D0FF2A] animate-pulse">{pollStatus || '正在生成，请耐心等待...'}</span>
+                        <div className="bg-[#D0FF2A]/10 text-[#D0FF2A] text-xs font-mono px-3 py-1 rounded-full border border-[#D0FF2A]/20">
+                          已用时间: {elapsedTime} 秒
+                        </div>
+                      </div>
+                  </div>
+              ) : errorMsg ? (
+                  <div className="flex flex-col items-center justify-center gap-4 text-red-500 p-4">
+                      <span className="text-xs text-center">{errorMsg}</span>
                   </div>
               ) : (
                   <span className="text-gray-500 text-sm">暂无生成结果</span>
