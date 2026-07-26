@@ -195,9 +195,8 @@ export function WorkflowDirectEngine({ workflowId }: { workflowId: string }) {
       const isImage = node.fieldName === 'image';
 
       return (
-        <div key={node.nodeId} className="mb-6 w-full">
-          <h2 className="text-sm font-medium text-gray-400 mb-3 uppercase tracking-wider">{node.description || (isImage ? '图片上传' : '视频上传')}</h2>
-          <label className="block w-full cursor-pointer">
+        <div key={node.nodeId} className="mb-6 w-full bg-[#111111] border border-white/10 rounded-2xl aspect-[3/4] flex flex-col overflow-hidden">
+          <label className="block w-full h-full cursor-pointer flex-1">
             <input
               type="file"
               className="hidden"
@@ -213,7 +212,7 @@ export function WorkflowDirectEngine({ workflowId }: { workflowId: string }) {
               onChange={(e) => handleDynamicUpload(e, node.nodeId)}
             />
             {!value ? (
-              <div className="border-2 border-dashed border-white/10 bg-white/5 hover:bg-white/10 rounded-xl p-8 text-center transition-colors flex flex-col items-center justify-center gap-4">
+              <div className="border-2 border-dashed border-white/10 bg-white/5 hover:bg-white/10 rounded-xl p-8 text-center transition-colors flex flex-col items-center justify-center gap-4 h-full">
                 <div className="h-16 w-16 bg-black/40 rounded-full flex items-center justify-center border border-white/5">
                   {isUploadingThis ? <Loader2 className="h-8 w-8 text-gray-400 animate-spin" /> : <UploadCloud className="h-8 w-8 text-gray-400" />}
                 </div>
@@ -222,11 +221,11 @@ export function WorkflowDirectEngine({ workflowId }: { workflowId: string }) {
                 </div>
               </div>
             ) : (
-              <div className="relative border border-dashed border-white/20 rounded-xl overflow-hidden bg-black/40 flex justify-center items-center p-2 group">
+              <div className="relative border border-dashed border-white/20 rounded-xl overflow-hidden bg-black/40 flex justify-center items-center p-2 group h-full">
                 {isImage ? (
-                  <img src={previewUrls[node.nodeId] || (value as string)} alt="Uploaded" className="max-h-64 object-contain rounded-lg" />
+                  <img src={previewUrls[node.nodeId] || (value as string)} alt="Uploaded" className="h-full w-full object-contain rounded-lg" />
                 ) : (
-                  <video src={previewUrls[node.nodeId] || (value as string)} className="max-h-64 object-contain rounded-lg" controls />
+                  <video src={previewUrls[node.nodeId] || (value as string)} className="h-full w-full object-contain rounded-lg" controls />
                 )}
                 <button
                   type="button"
@@ -598,7 +597,11 @@ export function WorkflowDirectEngine({ workflowId }: { workflowId: string }) {
         {/* Middle Column: Parameters and Actions */}
         <div className="border-r border-white/5 overflow-y-auto h-full relative flex flex-col lg:col-span-8">
           <div className="p-6 flex-1 w-full flex flex-col">
-            <h1 className="text-lg font-semibold text-white mb-6 text-center">工作流详情与操作</h1>
+            <div className="mb-6">
+              <p className="text-sm text-gray-400 mb-1">轻松圈起流量</p>
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-1">一键生成爆款视频</h2>
+              <p className="text-sm text-gray-400 mb-6">轻松圈起流量</p>
+            </div>
 
             {errorMsg && (
               <p className="text-danger-red text-sm mb-4 text-center">{errorMsg}</p>
@@ -633,24 +636,27 @@ export function WorkflowDirectEngine({ workflowId }: { workflowId: string }) {
               </div>
 
               {/* Generate Button */}
-              <button
-                onClick={handleGenerate}
-                disabled={isGenerating || Object.values(activeUploads).some(Boolean)}
-                className={`w-full text-black font-bold text-lg h-14 px-12 rounded-xl transition-all flex items-center justify-center ${
-                  isGenerating
-                    ? 'bg-primary-green/50 cursor-not-allowed'
-                    : 'bg-primary-green hover:bg-primary-green shadow-[0_0_15px_var(--color-primary-green)] hover:shadow-[0_0_20px_var(--color-primary-green)] hover:scale-[1.02] active:scale-[0.98]'
-                }`}
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    生成中...
-                  </>
-                ) : (
-                  "立即生成"
-                )}
-              </button>
+              <div className="flex items-center gap-4 w-full mt-4">
+                <button
+                  onClick={handleGenerate}
+                  disabled={isGenerating || Object.values(activeUploads).some(Boolean)}
+                  className={`flex-1 w-full text-black font-bold text-lg h-14 px-12 rounded-xl transition-all flex items-center justify-center ${
+                    isGenerating
+                      ? 'bg-primary-green/50 cursor-not-allowed'
+                      : 'bg-primary-green hover:bg-primary-green shadow-[0_0_15px_var(--color-primary-green)] hover:shadow-[0_0_20px_var(--color-primary-green)] hover:scale-[1.02] active:scale-[0.98]'
+                  }`}
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      生成中...
+                    </>
+                  ) : (
+                    "立即生成"
+                  )}
+                </button>
+                <button className="bg-red-600 text-white font-medium rounded-xl px-6 h-14 whitespace-nowrap">取消生成</button>
+              </div>
 
               {/* Extra note */}
               <p className="text-xs text-gray-500 mt-1">
@@ -664,10 +670,9 @@ export function WorkflowDirectEngine({ workflowId }: { workflowId: string }) {
         {/* Right Column: Generated Video and Actions */}
         <div className="p-6 flex flex-col items-center justify-start overflow-y-auto h-full lg:col-span-4">
           <div className="w-full max-w-sm flex flex-col">
-            <h1 className="text-lg font-semibold text-white mb-6 text-center">生成结果</h1>
-
             {/* Video Placeholder */}
             <div className="bg-[#131622] rounded-2xl aspect-[9/16] w-full relative flex flex-col items-center justify-center shadow-xl overflow-hidden border border-white/5">
+              <div className="absolute top-4 left-4 z-10 border border-[#D4FF3F] text-[#D4FF3F] rounded-full px-4 py-1 text-sm inline-block">生成结果</div>
               {isGenerating ? (
                 <div className="flex flex-col items-center justify-center text-primary-green">
                   <Loader2 className="h-10 w-10 animate-spin mb-4" />
