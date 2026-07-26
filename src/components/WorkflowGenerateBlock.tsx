@@ -99,6 +99,12 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
   const [isMaterialModalOpen, setIsMaterialModalOpen] = useState(false);
   const [currentUploadNodeId, setCurrentUploadNodeId] = useState<string | null>(null);
 
+  const getUploadNodeCategory = () => {
+    if (!currentUploadNodeId || !workflow?.rh_payload_template?.nodeInfoList) return undefined;
+    const fileNodes = workflow.rh_payload_template.nodeInfoList.filter((n: DynamicNode) => n.fieldName === 'image' || n.fieldName === 'video');
+    const index = fileNodes.findIndex((n: DynamicNode) => n.nodeId === currentUploadNodeId);
+    return index !== -1 ? `node_${index}` : undefined;
+  };
 
   const workflowId = workflow?.id;
   const loadingWorkflow = false;
@@ -642,6 +648,7 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
             ? 'image'
             : 'video'
         }
+        nodeCategory={getUploadNodeCategory()}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 h-full w-full">
