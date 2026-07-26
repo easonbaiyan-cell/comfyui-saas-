@@ -1,7 +1,5 @@
 import { HeroCarousel } from "@/components/HeroCarousel";
-import { GenerateVideoEngine } from "@/components/GenerateVideoEngine";
-import { GenerateImageEngine } from "@/components/GenerateImageEngine";
-import { GenerateDetailsEngine } from "@/components/GenerateDetailsEngine";
+import { WorkflowDirectEngine } from "@/components/WorkflowDirectEngine";
 
 import { MasterclassSection } from "@/components/MasterclassSection";
 export const dynamic = 'force-dynamic';
@@ -18,18 +16,12 @@ export default async function Home() {
 
         {/* Row 2: 核心变现引擎 */}
         <section className="w-full max-w-7xl mx-auto px-6 lg:px-8 py-12">
-          <GenerateVideoEngine />
+          <WorkflowDirectEngine workflowId="37133a46-181b-4043-b678-9d11d65d7989" />
         </section>
 
-        {/* Row 3: 1图生主图 */}
-        <section className="w-full max-w-7xl mx-auto px-6 lg:px-8 py-12">
-          <GenerateImageEngine />
-        </section>
+        {/* Row 3: 1图生主图 (Placeholder or next workflow) */}
 
-        {/* Row 4: 4图生详情页 */}
-        <section className="w-full max-w-7xl mx-auto px-6 lg:px-8 py-12">
-          <GenerateDetailsEngine />
-        </section>
+        {/* Row 4: 4图生详情页 (Placeholder or next workflow) */}
 
         {/* Row 5: 实操大师班 */}
         <section className="w-full max-w-7xl mx-auto px-6 lg:px-8 py-12 pb-24">
