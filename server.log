@@ -12,3 +12,10 @@
  ○ Compiling /workflow/[id] ...
  ✓ Compiled /workflow/[id] in 4.4s (908 modules)
  GET /workflow/dummy-id 200 in 7553ms
+ ✓ Compiled in 3s (359 modules)
+ ✓ Compiled in 317ms (359 modules)
+ ✓ Compiled in 263ms (359 modules)
+ ✓ Compiled in 346ms (359 modules)
+ ○ Compiling / ...
+ ✓ Compiled / in 2.7s (918 modules)
+ GET / 200 in 3881ms
