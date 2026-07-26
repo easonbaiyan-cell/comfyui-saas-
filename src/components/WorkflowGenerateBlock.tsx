@@ -586,9 +586,9 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
         <div className="border-r border-white/5 overflow-y-auto h-full relative flex flex-col lg:col-span-8">
           <div className="p-6 flex-1 w-full flex flex-col">
             <div className="mb-6">
-              <p className="text-sm text-gray-400 mb-1">轻松圈起流量</p>
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-1">一键生成爆款视频</h2>
-              <p className="text-sm text-gray-400 mb-6">轻松圈起流量</p>
+              <p className="text-sm text-gray-400 mb-1">{workflow.category || '默认分类'}</p>
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-1">{workflow.title}</h2>
+              <p className="text-sm text-gray-400 mb-6">{workflow.description}</p>
             </div>
 
             {errorMsg && (
@@ -612,7 +612,7 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
                 <div className="flex items-center gap-1 text-primary-green font-semibold bg-primary-green/10 px-3 py-1.5 rounded-full border border-primary-green/20">
                   <Zap className="h-4 w-4 fill-current" />
                   <span className="text-[#D4FF00]">
-                    {cost} 积分
+                    {workflow.cost_points} 积分
                   </span>
                 </div>
                 <div className="relative group cursor-help ml-1">
