@@ -1,13 +1,18 @@
-1. **Update Header.tsx:**
-   - Import `isDistributor` from `useAuthStore` in `src/components/Header.tsx`.
-   - In the "常规功能导航菜单" (General Function Navigation Menu) section of the profile dropdown, conditionally render a link to `/affiliate` titled "分销中心" (Distributor Center) if `isDistributor` is true.
+1. **Define Database & Server Actions:**
+   - Create a migration script `00000000000010_create_official_materials.sql` to define the `official_materials` table with `id`, `category`, `type`, `url`, and `created_at` (Done).
+   - The migration also creates the `official_materials` storage bucket and policies (Done).
+   - Create `src/actions/officialMaterials.ts` to export Server Actions: `getOfficialMaterials`, `getAllOfficialMaterials`, `uploadOfficialMaterial`, and `deleteOfficialMaterial` using `@supabase/supabase-js` with service role key (Done).
 
-2. **Create Affiliate Page (`/affiliate`):**
-   - Create `src/app/affiliate/page.tsx`.
-   - Implement route protection: if there is no user or `isDistributor` is false, redirect to `/`. I will use a client-side redirect using `useRouter` from `next/navigation` combined with a `useEffect` and `useAuthStore`.
-   - Mock data for "累计预估收益（￥）", "可结算余额（￥）", and "我邀请的用户数".
-   - Create a UI with "暗黑科技风" (dark tech style).
-   - Add a notice "本页面仅作收益记账，实际结算请联系专属商务进行线下打款" clearly on the page.
-   - Add Tabs to switch between "我的邀请记录" (My Invite Records) and "分佣账单" (Commission Bills). The tabs will just show empty/mock content for now.
+2. **Admin Materials Management UI:**
+   - Create `src/app/admin/materials/page.tsx` for managing official materials (Done).
+   - It will include an upload form for uploading to Supabase Storage and saving the URL using Server Actions.
+   - It will include a grid to display uploaded materials and delete them.
+   - Update `src/app/admin/AdminSidebar.tsx` to include the "Materials" link (Done).
 
-3. **Pre-commit checks**
+3. **Frontend Dynamic Fetch (C-End):**
+   - Update `src/components/MaterialLibraryModal.tsx` to use `useEffect` and `getOfficialMaterials` action to fetch real materials based on `nodeCategory`.
+   - Remove the `getMockMaterials` function and render the real URLs in the "official" tab.
+
+4. **Pre-commit and Submit:**
+   - Run `pre_commit_instructions` and follow its checks.
+   - Submit the PR.
