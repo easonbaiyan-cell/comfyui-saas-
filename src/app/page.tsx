@@ -17,22 +17,22 @@ export default async function Home() {
         </section>
 
         {/* Row 2: 核心变现引擎 */}
-        <section className="container mx-auto px-4 py-12">
+        <section className="w-full max-w-7xl mx-auto px-6 lg:px-8 py-12">
           <GenerateVideoEngine />
         </section>
 
         {/* Row 3: 1图生主图 */}
-        <section className="container mx-auto px-4 py-12">
+        <section className="w-full max-w-7xl mx-auto px-6 lg:px-8 py-12">
           <GenerateImageEngine />
         </section>
 
         {/* Row 4: 4图生详情页 */}
-        <section className="container mx-auto px-4 py-12">
+        <section className="w-full max-w-7xl mx-auto px-6 lg:px-8 py-12">
           <GenerateDetailsEngine />
         </section>
 
         {/* Row 5: 实操大师班 */}
-        <section className="container mx-auto px-4 py-12 pb-24">
+        <section className="w-full max-w-7xl mx-auto px-6 lg:px-8 py-12 pb-24">
           <MasterclassSection />
         </section>
       </main>

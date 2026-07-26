@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { HelpCircle, UploadCloud, Loader2, Trash2 } from 'lucide-react';
+import { HelpCircle, UploadCloud, Loader2, Trash2, Download } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth';
 
@@ -21,6 +21,8 @@ export function GenerateVideoEngine() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [pollStatus, setPollStatus] = useState<string | null>(null);
   const [generatedMediaUrl, setGeneratedMediaUrl] = useState<string | null>(null);
+  const pollIntervalRef = React.useRef<NodeJS.Timeout | null>(null);
+  const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
 
   const user = useAuthStore((state) => state.user);
   const setIsAuthOpen = useAuthStore((state) => state.setIsAuthOpen);
@@ -95,15 +97,19 @@ export function GenerateVideoEngine() {
     setDynamicFormValues(prev => ({ ...prev, [nodeId]: value }));
   };
 
-  const pollForResult = async (currentTaskId: string, workflowId: string) => {
-    if (!currentTaskId) return;
+  // eslint-disable-next-line
+  const pollForResult = async (taskId: string, workflowId: string) => {
+    if (!taskId) return;
     let attempts = 0;
-    const interval = setInterval(async () => {
+    if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+
+    pollIntervalRef.current = setInterval(async () => {
       attempts++;
       if (attempts >= 720) { // 60 minutes
-        clearInterval(interval);
+        if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
         setPollStatus('生成超时，请稍后重试');
         setIsGenerating(false);
+        setCurrentTaskId(null);
         return;
       }
 
@@ -111,7 +117,7 @@ export function GenerateVideoEngine() {
         const res = await fetch('/api/status', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ taskId: currentTaskId })
+          body: JSON.stringify({ taskId: taskId })
         });
         if (!res.ok) {
             console.warn('网络波动，跳过本次解析');
@@ -120,11 +126,12 @@ export function GenerateVideoEngine() {
         const data = await res.json();
 
         if (data && data.code === 0) {
-           clearInterval(interval);
+           if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
            if (data.data && data.data.length > 0 && data.data[0].fileUrl) {
               const fileUrl = data.data[0].fileUrl;
               setGeneratedMediaUrl(fileUrl);
               setIsGenerating(false);
+              setCurrentTaskId(null);
 
               let finalUserId = user?.id;
               if (!finalUserId) {
@@ -145,19 +152,46 @@ export function GenerateVideoEngine() {
            } else {
               setPollStatus('生成成功但未找到视频URL');
               setIsGenerating(false);
+              setCurrentTaskId(null);
            }
         } else if (data && data.code === -1) {
-           clearInterval(interval);
+           if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
            setPollStatus('生成失败');
            setIsGenerating(false);
+           setCurrentTaskId(null);
         } else if (data && data.code === 1) {
            // Queueing or running
-           setPollStatus(`生成中 (耗时 ${(attempts * 5)}s)...`);
+           let progressMsg = `生成中 (耗时 ${(attempts * 5)}s)...`;
+           if (data.data && data.data.length > 0 && data.data[0].progress) {
+             progressMsg = `生成中 - 进度 ${data.data[0].progress}%`;
+           }
+           setPollStatus(progressMsg);
         }
       } catch (err) {
         console.error("轮询异常:", err);
       }
     }, 5000);
+  };
+
+
+  const handleStop = async () => {
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+    }
+    setIsGenerating(false);
+    setPollStatus(null);
+    if (currentTaskId) {
+      try {
+        await fetch('/api/stop', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ taskId: currentTaskId })
+        });
+      } catch (err) {
+        console.error("Failed to cancel task", err);
+      }
+      setCurrentTaskId(null);
+    }
   };
 
   const handleGenerate = async () => {
@@ -171,7 +205,7 @@ export function GenerateVideoEngine() {
       return;
     }
 
-    const cost = workflow.cost_points !== undefined ? Number(workflow.cost_points) : 10;
+    const cost = workflow.cost_points !== undefined && workflow.cost_points !== null ? Number(workflow.cost_points) : 10;
     if (积分余额 < cost) {
       alert("积分不足，请先充值");
       return;
@@ -232,6 +266,7 @@ export function GenerateVideoEngine() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || data.error || '生成失败');
 
+      setCurrentTaskId(data.taskId);
       pollForResult(data.taskId, workflow.id);
     } catch (err: any) {
       console.error(err);
@@ -335,7 +370,7 @@ export function GenerateVideoEngine() {
           {/* Generate Action Area */}
           <div className="flex flex-col items-center justify-center gap-4 mt-auto pt-4">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-400">预估单次积分消耗 ≈ {workflow?.cost_points || 10} 积分</span>
+              <span className="text-sm text-gray-400">预估单次积分消耗 ≈ {workflow?.cost_points !== undefined && workflow?.cost_points !== null ? workflow.cost_points : 10} 积分</span>
               <div className="relative group cursor-help ml-1">
                 <HelpCircle className="h-4 w-4 text-gray-500 hover:text-gray-300 transition-colors" />
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-black border border-white/10 text-xs text-gray-300 rounded shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all pointer-events-none text-center">
@@ -344,40 +379,86 @@ export function GenerateVideoEngine() {
               </div>
             </div>
 
-            <button
-              onClick={handleGenerate}
-              disabled={isGenerating}
-              className="w-full text-black font-bold text-lg h-14 px-12 rounded-xl transition-all flex items-center justify-center bg-[#D0FF2A] hover:bg-[#bceb24] shadow-[0_0_15px_#D0FF2A] hover:shadow-[0_0_20px_#D0FF2A] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
-            >
-              {isGenerating ? (
-                  <div className="flex items-center gap-2">
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      <span>{pollStatus || '生成中...'}</span>
-                  </div>
-              ) : '立即生成'}
-            </button>
+            <div className="flex gap-4 w-full">
+              <button
+                onClick={handleGenerate}
+                disabled={isGenerating}
+                className="flex-1 text-black font-bold text-lg h-14 px-12 rounded-xl transition-all flex items-center justify-center bg-[#D0FF2A] hover:bg-[#bceb24] shadow-[0_0_15px_#D0FF2A] hover:shadow-[0_0_20px_#D0FF2A] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
+              >
+                {isGenerating ? (
+                    <div className="flex items-center gap-2">
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <span>{pollStatus || '生成中...'}</span>
+                    </div>
+                ) : '立即生成'}
+              </button>
+
+              {isGenerating && (
+                <button
+                  onClick={handleStop}
+                  className="px-8 text-white font-bold text-lg h-14 rounded-xl transition-all flex items-center justify-center bg-red-600 hover:bg-red-500 shadow-[0_0_15px_rgba(220,38,38,0.5)] hover:shadow-[0_0_20px_rgba(220,38,38,0.8)] hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  取消生成
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Right Column: Result Area */}
         <div className="lg:col-span-1 flex flex-col">
-          <div className="bg-[#111] rounded-3xl border border-white/5 aspect-[9/16] w-full relative flex items-center justify-center overflow-hidden group">
-            {generatedMediaUrl ? (
-                <video
-                    src={generatedMediaUrl}
-                    className="absolute inset-0 w-full h-full object-contain bg-black"
-                    controls
-                    autoPlay
-                    loop
-                />
-            ) : isGenerating ? (
-                <div className="flex flex-col items-center justify-center gap-4 text-gray-500">
-                    <Loader2 className="w-10 h-10 animate-spin text-[#D0FF2A]" />
-                    <span className="text-sm">{pollStatus || '正在生成...'}</span>
-                </div>
-            ) : (
-                <span className="text-gray-500 text-sm">暂无生成结果</span>
-            )}
+          <div className="grid grid-cols-2 gap-4 w-full">
+            {/* Reference Video Window */}
+            <div className="bg-[#111] rounded-2xl border border-white/5 aspect-[9/16] w-full relative flex flex-col items-center justify-center overflow-hidden">
+               <div className="absolute top-4 left-4 bg-black/50 px-3 py-1 rounded-full text-xs text-gray-400 backdrop-blur-md z-10 border border-white/10">
+                 加载参考视频
+               </div>
+               <div className="flex flex-col items-center justify-center gap-2 pointer-events-none opacity-50">
+                  <UploadCloud className="w-8 h-8 text-gray-400" />
+                  <span className="font-medium text-sm text-gray-500">暂无参考</span>
+               </div>
+            </div>
+
+            {/* Generated Result Window */}
+            <div className="bg-[#111] rounded-2xl border border-white/5 aspect-[9/16] w-full relative flex items-center justify-center overflow-hidden group">
+              <div className="absolute top-4 left-4 bg-black/50 px-3 py-1 rounded-full text-xs text-[#D0FF2A] backdrop-blur-md z-10 border border-[#D0FF2A]/20">
+                 生成结果
+              </div>
+
+              {generatedMediaUrl ? (
+                  <>
+                    <video
+                        src={generatedMediaUrl}
+                        className="absolute inset-0 w-full h-full object-contain bg-black"
+                        controls
+                        autoPlay
+                        loop
+                    />
+                    <div className="absolute top-4 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                      <button
+                        title="下载"
+                        className="p-2 bg-black/60 hover:bg-[#D0FF2A] hover:text-black rounded-full text-white transition-colors backdrop-blur-md border border-white/10 hover:border-transparent"
+                      >
+                        <Download className="w-4 h-4" />
+                      </button>
+                      <button
+                        title="删除/清空"
+                        onClick={() => setGeneratedMediaUrl(null)}
+                        className="p-2 bg-black/60 hover:bg-red-500 rounded-full text-white transition-colors backdrop-blur-md border border-white/10 hover:border-transparent"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </>
+              ) : isGenerating ? (
+                  <div className="flex flex-col items-center justify-center gap-4 text-gray-500">
+                      <Loader2 className="w-8 h-8 animate-spin text-[#D0FF2A]" />
+                      <span className="text-xs text-center px-2">{pollStatus || '正在生成...'}</span>
+                  </div>
+              ) : (
+                  <span className="text-gray-500 text-sm">暂无生成结果</span>
+              )}
+            </div>
           </div>
         </div>
 
