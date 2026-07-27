@@ -100,9 +100,11 @@ export async function POST(req: Request) {
       nodeInfoList = body.rh_payload_template.nodeInfoList;
     }
 
+    const apiKey = process.env.RUNNINGHUB_API_KEY || 'aa0c44bf36314b1ebdc7937ddede6fae';
+
     const payload: any = {
       webappId: workflow.r_app_id,
-      apiKey: 'aa0c44bf36314b1ebdc7937ddede6fae',
+      apiKey: apiKey,
       nodeInfoList: nodeInfoList
     };
 

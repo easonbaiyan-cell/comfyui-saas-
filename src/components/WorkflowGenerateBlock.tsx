@@ -6,6 +6,7 @@ import { Play, UploadCloud, HelpCircle, Minus, Plus, Zap, Heart, MessageCircle, 
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth';
 import { MaterialLibraryModal } from './MaterialLibraryModal';
+import { uploadToRunningHub } from '@/services/runningHubUpload';
 
 
 
@@ -377,9 +378,44 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
         throw new Error("未获取到认证信息");
       }
 
+      // 3. 拦截、转换与上传前置动作
+      setPollStatus("正在上传媒体资源...");
+      const finalFormValues = { ...dynamicFormValues };
+
+      if (workflow.rh_payload_template?.nodeInfoList) {
+        for (const node of workflow.rh_payload_template.nodeInfoList) {
+          const isMedia = node.fieldName === 'image' || node.fieldName === 'video';
+          let value = dynamicFormValues[node.nodeId];
+
+          if (value === undefined) {
+            value = node.fieldValue !== undefined ? node.fieldValue : "";
+          }
+
+          if (isMedia && typeof value === 'string' && value.trim() !== '') {
+            try {
+              // Convert the URL (blob or https) to a Blob object
+              const res = await fetch(value);
+              const blob = await res.blob();
+
+              const isImage = node.fieldName === 'image';
+              const ext = isImage ? 'png' : 'mp4';
+              const filename = `upload_${Date.now()}.${ext}`;
+
+              // Upload to RunningHub
+              const rhFileName = await uploadToRunningHub(blob, filename);
+              finalFormValues[node.nodeId] = rhFileName;
+            } catch (uploadErr: any) {
+              console.error("媒体资源上传失败:", uploadErr);
+              throw new Error(`资源上传失败: ${uploadErr.message}`);
+            }
+          }
+        }
+      }
+      setPollStatus(null);
+
       // Construct nodeInfoList keeping strict types (do not convert to string)
       const constructedNodeInfoList = workflow.rh_payload_template?.nodeInfoList?.map((node: DynamicNode) => {
-        let value = dynamicFormValues[node.nodeId];
+        let value = finalFormValues[node.nodeId];
         if (value === undefined) {
           value = node.fieldValue !== undefined ? node.fieldValue : "";
         }
