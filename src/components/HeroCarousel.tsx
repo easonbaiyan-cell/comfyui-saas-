@@ -9,29 +9,34 @@ const backgroundImages = [
   "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=3000&auto=format&fit=crop",
 ];
 
-export function HeroCarousel() {
+export function HeroCarousel({ bannerSettings }: { bannerSettings?: any }) {
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  const images = bannerSettings?.main_banner_bg_image
+    ? [bannerSettings.main_banner_bg_image]
+    : backgroundImages;
+
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % backgroundImages.length);
+      setCurrentIndex((prev) => (prev + 1) % images.length);
     }, 6000);
     return () => clearInterval(timer);
   }, []);
 
   const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % backgroundImages.length);
+    setCurrentIndex((prev) => (prev + 1) % images.length);
   };
 
   const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + backgroundImages.length) % backgroundImages.length);
+    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
   };
 
   return (
     <div className="relative w-full min-h-[80vh] overflow-hidden bg-black group">
       {/* Background Slider */}
       <div className="absolute inset-0 z-0">
-        {backgroundImages.map((img, idx) => (
+        {images.map((img, idx) => (
           <div
             key={idx}
             className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
@@ -56,38 +61,38 @@ export function HeroCarousel() {
           {/* Top Label */}
           <div className="mb-6">
             <span className="text-[10px] font-black tracking-[0.2em] text-[#D0FF2A] uppercase">
-              PAPAGAGA 商业级应用
+              {bannerSettings?.main_banner_top_tag || 'PAPAGAGA 商业级应用'}
             </span>
           </div>
 
           {/* Main Title */}
           <h1 className="text-6xl md:text-7xl font-black text-white mb-6 tracking-tight leading-tight">
-            1人超级AI公司
+            {bannerSettings?.main_banner_title_1 || '1人超级AI公司'}
           </h1>
 
           {/* Sub Title */}
           <h2 className="text-4xl md:text-6xl text-[#D0FF2A] font-black mb-6">
-            小白轻松掌控带货全闭环
+            {bannerSettings?.main_banner_title_2 || '小白轻松掌控带货全闭环'}
           </h2>
 
           {/* Description */}
           <p className="text-base md:text-lg text-gray-400 leading-relaxed mb-12 max-w-xl">
-            颠覆传统电商模式，以极低门槛重塑内容生产力。从零基础到爆款视频，用 AI 构建属于超级个体的自动化印钞机。
+            {bannerSettings?.main_banner_description || '颠覆传统电商模式，以极低门槛重塑内容生产力。从零基础到爆款视频，用 AI 构建属于超级个体的自动化印钞机。'}
           </p>
 
           {/* Data Stats Cards */}
           <div className="flex flex-wrap gap-6">
             <div className="flex flex-col border border-white/5 bg-transparent p-4 rounded-xl min-w-[120px]">
-              <span className="text-4xl font-bold text-white mb-2">30</span>
-              <span className="text-[10px] text-gray-500 tracking-widest">节实战课程</span>
+              <span className="text-4xl font-bold text-white mb-2">{bannerSettings?.main_banner_metric_1_value || "30"}</span>
+              <span className="text-[10px] text-gray-500 tracking-widest">{bannerSettings?.main_banner_metric_1_label || "节实战课程"}</span>
             </div>
             <div className="flex flex-col border border-white/5 bg-transparent p-4 rounded-xl min-w-[120px]">
-              <span className="text-4xl font-bold text-white mb-2">4步</span>
-              <span className="text-[10px] text-gray-500 tracking-widest">极简工作流</span>
+              <span className="text-4xl font-bold text-white mb-2">{bannerSettings?.main_banner_metric_2_value || "4步"}</span>
+              <span className="text-[10px] text-gray-500 tracking-widest">{bannerSettings?.main_banner_metric_2_label || "极简工作流"}</span>
             </div>
             <div className="flex flex-col border border-white/5 bg-transparent p-4 rounded-xl min-w-[120px]">
-              <span className="text-4xl font-bold text-white mb-2">25%</span>
-              <span className="text-[10px] text-gray-500 tracking-widest">最高分销佣金</span>
+              <span className="text-4xl font-bold text-white mb-2">{bannerSettings?.main_banner_metric_3_value || "25%"}</span>
+              <span className="text-[10px] text-gray-500 tracking-widest">{bannerSettings?.main_banner_metric_3_label || "最高分销佣金"}</span>
             </div>
           </div>
 
@@ -111,7 +116,7 @@ export function HeroCarousel() {
 
       {/* Indicators */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex space-x-3">
-        {backgroundImages.map((_, idx) => (
+        {images.map((_, idx) => (
           <button
             key={idx}
             onClick={() => setCurrentIndex(idx)}

@@ -7,8 +7,8 @@ import { getAllOfficialMaterials, uploadOfficialMaterial, deleteOfficialMaterial
 
 // Use anon key for storage uploads directly from client
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://dummy.supabase.co',
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'dummy_key'
 );
 
 export default function MaterialsManagementPage() {

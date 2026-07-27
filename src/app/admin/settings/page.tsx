@@ -30,6 +30,7 @@ export default function SettingsPage() {
   const [membershipPackages, setMembershipPackages] = useState<MembershipPackage[]>([]);
   const [pointsTopupPackages, setPointsTopupPackages] = useState<PointsTopupPackage[]>([]);
   const [isUploadingQR, setIsUploadingQR] = useState(false);
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
 
 
   const [formData, setFormData] = useState({
@@ -38,6 +39,17 @@ export default function SettingsPage() {
     banner_highlight_tag: '',
     banner_discount_text: '',
     banner_countdown_end: '',
+    main_banner_bg_image: '',
+    main_banner_top_tag: '',
+    main_banner_title_1: '',
+    main_banner_title_2: '',
+    main_banner_description: '',
+    main_banner_metric_1_value: '',
+    main_banner_metric_1_label: '',
+    main_banner_metric_2_value: '',
+    main_banner_metric_2_label: '',
+    main_banner_metric_3_value: '',
+    main_banner_metric_3_label: '',
     cs_qrcode_url: '',
     cs_wechat_id: '',
     membership_packages: '',
@@ -66,6 +78,17 @@ export default function SettingsPage() {
           banner_highlight_tag: data.banner_highlight_tag || '',
           banner_discount_text: data.banner_discount_text || '',
           banner_countdown_end: data.banner_countdown_end ? new Date(data.banner_countdown_end).toISOString().slice(0, 16) : '',
+          main_banner_bg_image: data.main_banner_bg_image || '',
+          main_banner_top_tag: data.main_banner_top_tag || '',
+          main_banner_title_1: data.main_banner_title_1 || '',
+          main_banner_title_2: data.main_banner_title_2 || '',
+          main_banner_description: data.main_banner_description || '',
+          main_banner_metric_1_value: data.main_banner_metric_1_value || '',
+          main_banner_metric_1_label: data.main_banner_metric_1_label || '',
+          main_banner_metric_2_value: data.main_banner_metric_2_value || '',
+          main_banner_metric_2_label: data.main_banner_metric_2_label || '',
+          main_banner_metric_3_value: data.main_banner_metric_3_value || '',
+          main_banner_metric_3_label: data.main_banner_metric_3_label || '',
           cs_qrcode_url: data.cs_qrcode_url || '',
           cs_wechat_id: data.cs_wechat_id || '',
           membership_packages: data.membership_packages ? JSON.stringify(data.membership_packages, null, 2) : '',
@@ -137,6 +160,17 @@ export default function SettingsPage() {
           banner_highlight_tag: formData.banner_highlight_tag,
           banner_discount_text: formData.banner_discount_text,
           banner_countdown_end: formData.banner_countdown_end ? new Date(formData.banner_countdown_end).toISOString() : null,
+          main_banner_bg_image: formData.main_banner_bg_image,
+          main_banner_top_tag: formData.main_banner_top_tag,
+          main_banner_title_1: formData.main_banner_title_1,
+          main_banner_title_2: formData.main_banner_title_2,
+          main_banner_description: formData.main_banner_description,
+          main_banner_metric_1_value: formData.main_banner_metric_1_value,
+          main_banner_metric_1_label: formData.main_banner_metric_1_label,
+          main_banner_metric_2_value: formData.main_banner_metric_2_value,
+          main_banner_metric_2_label: formData.main_banner_metric_2_label,
+          main_banner_metric_3_value: formData.main_banner_metric_3_value,
+          main_banner_metric_3_label: formData.main_banner_metric_3_label,
           cs_qrcode_url: formData.cs_qrcode_url,
           cs_wechat_id: formData.cs_wechat_id,
           membership_packages: membership_packages,
@@ -215,6 +249,27 @@ export default function SettingsPage() {
     const newPkgs = [...pointsTopupPackages];
     newPkgs[index] = { ...newPkgs[index], [field]: value };
     setPointsTopupPackages(newPkgs);
+  };
+
+
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setIsUploadingBanner(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `banner-${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+      const { data, error } = await supabase.storage.from('site-assets').upload(filePath, file);
+      if (error) throw error;
+      const { data: { publicUrl } } = supabase.storage.from('site-assets').getPublicUrl(filePath);
+      setFormData(prev => ({ ...prev, main_banner_bg_image: publicUrl }));
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      alert('上传失败: ' + error.message);
+    } finally {
+      setIsUploadingBanner(false);
+    }
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
