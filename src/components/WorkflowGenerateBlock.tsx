@@ -6,7 +6,6 @@ import { Play, UploadCloud, HelpCircle, Minus, Plus, Zap, Heart, MessageCircle, 
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth';
 import { MaterialLibraryModal } from './MaterialLibraryModal';
-import { uploadToRunningHub } from '@/services/runningHubUpload';
 
 
 
@@ -154,7 +153,7 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
 
       const { data, error } = await supabase.storage
-        .from('site-assets')
+        .from('网站资产')
         .upload(fileName, file);
 
       if (error) {
@@ -162,7 +161,7 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
       }
 
       const { data: { publicUrl } } = supabase.storage
-        .from('site-assets')
+        .from('网站资产')
         .getPublicUrl(fileName);
 
       if (!publicUrl) {
@@ -393,13 +392,29 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
 
           if (isMedia && typeof value === 'string' && value.trim() !== '') {
             try {
-              // Convert the URL (blob or https) to a Blob object
-              const res = await fetch(value);
-              const blob = await res.blob();
+              // 获取文件名
+              const urlParts = value.split('/');
+              let fileName = urlParts[urlParts.length - 1].split('?')[0];
+              if (value.startsWith('blob:')) {
+                  const ext = node.fieldName === 'image' ? 'jpg' : 'mp4';
+                  fileName = `upload_${Date.now()}.${ext}`;
 
-              // Upload to RunningHub
-              const rhFileName = await uploadToRunningHub(blob);
-              finalFormValues[node.nodeId] = rhFileName;
+                  const res = await fetch(value);
+                  const blob = await res.blob();
+
+                  const { data, error } = await supabase.storage
+                    .from('网站资产')
+                    .upload(fileName, blob);
+
+                  if (error) throw error;
+              }
+
+              // 获取Public URL 替代原来直传 RunningHub 的逻辑
+              const { data: { publicUrl } } = supabase.storage
+                .from('网站资产')
+                .getPublicUrl(fileName);
+
+              finalFormValues[node.nodeId] = publicUrl;
             } catch (uploadErr: any) {
               console.error("媒体资源上传失败:", uploadErr);
               throw new Error(`资源上传失败: ${uploadErr.message}`);

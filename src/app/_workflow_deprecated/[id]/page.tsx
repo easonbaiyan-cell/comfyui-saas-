@@ -154,7 +154,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
 
       const { data, error } = await supabase.storage
-        .from('site-assets')
+        .from('网站资产')
         .upload(fileName, file);
 
       if (error) {
@@ -162,7 +162,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
       }
 
       const { data: { publicUrl } } = supabase.storage
-        .from('site-assets')
+        .from('网站资产')
         .getPublicUrl(fileName);
 
       if (!publicUrl) {
