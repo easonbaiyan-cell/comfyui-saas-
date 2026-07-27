@@ -662,7 +662,7 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
   }
 
   return (
-    <div className="h-[calc(100vh-64px)] bg-[#0a0a0a] text-white overflow-hidden">
+    <div className="bg-[#0a0a0a] text-white rounded-2xl border border-white/5 overflow-hidden">
       {toastMessage && (
         <div className={`fixed top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg text-sm font-medium z-[100] transition-all shadow-lg ${toastMessage.type === 'error' ? 'bg-danger-red text-white' : 'bg-primary-green text-black'}`}>
           {toastMessage.text}
