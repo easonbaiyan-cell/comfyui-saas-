@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Plus, Trash2 } from 'lucide-react';
+import { X, Plus, Trash2, Loader2 } from 'lucide-react';
+import { getOfficialMaterials } from '@/actions/officialMaterials';
 
 interface MaterialLibraryModalProps {
   isOpen: boolean;
@@ -9,38 +10,6 @@ interface MaterialLibraryModalProps {
   type?: 'image' | 'video';
   nodeCategory?: string;
 }
-
-const getMockMaterials = (nodeCategory: string | undefined, type: string) => {
-  if (type === 'video' || nodeCategory === 'node_2') {
-    return [
-      'https://vjs.zencdn.net/v/oceans.mp4',
-      'https://vjs.zencdn.net/v/oceans.mp4',
-      'https://vjs.zencdn.net/v/oceans.mp4',
-    ];
-  }
-
-  if (nodeCategory === 'node_0') {
-    return [
-      'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=500&h=750&fit=crop',
-      'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&h=750&fit=crop',
-      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&h=750&fit=crop',
-    ];
-  }
-
-  if (nodeCategory === 'node_1') {
-    return [
-      'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=500&h=750&fit=crop',
-      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=500&h=750&fit=crop',
-      'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=500&h=750&fit=crop',
-    ];
-  }
-
-  // fallback
-  return [
-    'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=500&h=750&fit=crop',
-    'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=500&h=750&fit=crop',
-  ];
-};
 
 export function MaterialLibraryModal({
   isOpen,
@@ -52,9 +21,27 @@ export function MaterialLibraryModal({
 }: MaterialLibraryModalProps) {
   const [activeTab, setActiveTab] = useState<'official' | 'uploads'>('official');
   const [uploadHistory, setUploadHistory] = useState<string[]>([]);
+  const [officialMaterials, setOfficialMaterials] = useState<any[]>([]);
+  const [loadingOfficial, setLoadingOfficial] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const storageKey = `user_uploaded_history_${nodeCategory || type}`;
+
+  useEffect(() => {
+    if (isOpen && nodeCategory) {
+      const fetchOfficial = async () => {
+        setLoadingOfficial(true);
+        try {
+          const data = await getOfficialMaterials(nodeCategory);
+          setOfficialMaterials(data || []);
+        } catch (e) {
+          console.error(e);
+        }
+        setLoadingOfficial(false);
+      };
+      fetchOfficial();
+    }
+  }, [isOpen, nodeCategory]);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && isOpen) {
@@ -178,7 +165,18 @@ export function MaterialLibraryModal({
             )}
 
             {/* Mock Image Cards */}
-            {activeTab === 'official' && getMockMaterials(nodeCategory, type).map((url, index) => (
+            {activeTab === 'official' && loadingOfficial && (
+              <div className="col-span-2 md:col-span-4 flex items-center justify-center text-gray-500 py-12">
+                <Loader2 className="w-6 h-6 animate-spin mr-2" />
+                加载官方素材中...
+              </div>
+            )}
+            {activeTab === 'official' && !loadingOfficial && officialMaterials.filter(m => m.type === type).length === 0 && (
+              <div className="col-span-2 md:col-span-4 flex items-center justify-center text-gray-500 py-12">
+                暂无此节点的官方素材
+              </div>
+            )}
+            {activeTab === 'official' && !loadingOfficial && officialMaterials.filter(m => m.type === type).map((m, index) => { const url = m.url; return (
               <div
                 key={index}
                 className="aspect-[3/4] rounded-xl overflow-hidden cursor-pointer border border-white/5 hover:border-[#D0FF2A]/50 transition-all group relative bg-black/40"
@@ -202,7 +200,7 @@ export function MaterialLibraryModal({
                 )}
                 <div className="absolute inset-0 bg-black/0 pointer-events-none group-hover:bg-black/10 transition-colors" />
               </div>
-            ))}
+            )})}
 
             {activeTab === 'uploads' && uploadHistory.length === 0 && (
                <div className="col-span-1 md:col-span-3 flex items-center justify-center text-gray-500 text-sm">
