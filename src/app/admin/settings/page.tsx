@@ -376,6 +376,145 @@ export default function SettingsPage() {
       </div>
 
       <div className="space-y-4 border border-gray-700 p-6 rounded-xl bg-gray-900/50">
+        <h2 className="text-xl font-semibold border-b border-gray-700 pb-2">首页主 Banner 设置 (Main Banner Settings)</h2>
+        <div className="flex flex-col space-y-2">
+          <label className="text-sm text-gray-100">背景图 (Background Image URL)</label>
+          {formData.main_banner_bg_image ? (
+            <div className="relative w-64 h-32 group">
+              <img src={formData.main_banner_bg_image} alt="Main Banner Background" className="w-full h-full object-cover rounded-md border border-gray-700" />
+              <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-md">
+                <label className="cursor-pointer flex flex-col items-center text-xs text-white">
+                  <UploadCloud className="w-5 h-5 mb-1" />
+                  重新上传
+                  <input type="file" accept="image/*" className="hidden" onChange={handleBannerUpload} />
+                </label>
+              </div>
+            </div>
+          ) : (
+            <label className="w-64 h-32 flex flex-col items-center justify-center border-2 border-dashed border-gray-700 rounded-md cursor-pointer hover:border-primary-green hover:bg-gray-800/50 transition-colors">
+              {isUploadingBanner ? (
+                <Loader2 className="w-6 h-6 text-gray-100 animate-spin" />
+              ) : (
+                <>
+                  <UploadCloud className="w-6 h-6 text-gray-100 mb-2" />
+                  <span className="text-xs text-gray-100">点击上传</span>
+                </>
+              )}
+              <input type="file" accept="image/*" className="hidden" onChange={handleBannerUpload} disabled={isUploadingBanner} />
+            </label>
+          )}
+          <input
+            type="text"
+            name="main_banner_bg_image"
+            value={formData.main_banner_bg_image}
+            onChange={handleChange}
+            className="bg-gray-800 border border-gray-700 rounded-md p-2 text-white mt-2"
+            placeholder="或者直接填入图片 URL"
+          />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex flex-col space-y-2">
+            <label className="text-sm text-gray-100">顶部小标题 (Top Tag)</label>
+            <input
+              type="text"
+              name="main_banner_top_tag"
+              value={formData.main_banner_top_tag}
+              onChange={handleChange}
+              className="bg-gray-800 border border-gray-700 rounded-md p-2 text-white"
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex flex-col space-y-2">
+            <label className="text-sm text-gray-100">主标题第一行 (Title 1)</label>
+            <input
+              type="text"
+              name="main_banner_title_1"
+              value={formData.main_banner_title_1}
+              onChange={handleChange}
+              className="bg-gray-800 border border-gray-700 rounded-md p-2 text-white"
+            />
+          </div>
+          <div className="flex flex-col space-y-2">
+            <label className="text-sm text-gray-100">主标题第二行 (Title 2)</label>
+            <input
+              type="text"
+              name="main_banner_title_2"
+              value={formData.main_banner_title_2}
+              onChange={handleChange}
+              className="bg-gray-800 border border-gray-700 rounded-md p-2 text-white"
+            />
+          </div>
+        </div>
+        <div className="flex flex-col space-y-2">
+          <label className="text-sm text-gray-100">描述文本 (Description)</label>
+          <textarea
+            name="main_banner_description"
+            value={formData.main_banner_description}
+            onChange={handleChange}
+            rows={3}
+            className="bg-gray-800 border border-gray-700 rounded-md p-2 text-white"
+          />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="flex flex-col space-y-2">
+            <label className="text-sm text-gray-100">指标1 数据 (Metric 1 Value)</label>
+            <input
+              type="text"
+              name="main_banner_metric_1_value"
+              value={formData.main_banner_metric_1_value}
+              onChange={handleChange}
+              className="bg-gray-800 border border-gray-700 rounded-md p-2 text-white"
+            />
+            <label className="text-sm text-gray-100">指标1 标签 (Metric 1 Label)</label>
+            <input
+              type="text"
+              name="main_banner_metric_1_label"
+              value={formData.main_banner_metric_1_label}
+              onChange={handleChange}
+              className="bg-gray-800 border border-gray-700 rounded-md p-2 text-white"
+            />
+          </div>
+          <div className="flex flex-col space-y-2">
+            <label className="text-sm text-gray-100">指标2 数据 (Metric 2 Value)</label>
+            <input
+              type="text"
+              name="main_banner_metric_2_value"
+              value={formData.main_banner_metric_2_value}
+              onChange={handleChange}
+              className="bg-gray-800 border border-gray-700 rounded-md p-2 text-white"
+            />
+            <label className="text-sm text-gray-100">指标2 标签 (Metric 2 Label)</label>
+            <input
+              type="text"
+              name="main_banner_metric_2_label"
+              value={formData.main_banner_metric_2_label}
+              onChange={handleChange}
+              className="bg-gray-800 border border-gray-700 rounded-md p-2 text-white"
+            />
+          </div>
+          <div className="flex flex-col space-y-2">
+            <label className="text-sm text-gray-100">指标3 数据 (Metric 3 Value)</label>
+            <input
+              type="text"
+              name="main_banner_metric_3_value"
+              value={formData.main_banner_metric_3_value}
+              onChange={handleChange}
+              className="bg-gray-800 border border-gray-700 rounded-md p-2 text-white"
+            />
+            <label className="text-sm text-gray-100">指标3 标签 (Metric 3 Label)</label>
+            <input
+              type="text"
+              name="main_banner_metric_3_label"
+              value={formData.main_banner_metric_3_label}
+              onChange={handleChange}
+              className="bg-gray-800 border border-gray-700 rounded-md p-2 text-white"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-4 border border-gray-700 p-6 rounded-xl bg-gray-900/50">
         <h2 className="text-xl font-semibold border-b border-gray-700 pb-2">专属客服设置 (Customer Service Settings)</h2>
         <div className="flex flex-col space-y-2">
           <label className="text-sm text-gray-100">客服二维码 (QR Code Image)</label>
