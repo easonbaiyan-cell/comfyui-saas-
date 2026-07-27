@@ -2,24 +2,20 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
   try {
-    const formData = await req.formData();
-    const file = formData.get('file');
-
-    if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 });
-    }
-
-    const rhFormData = new FormData();
-    rhFormData.append('file', file);
+    // Use arrayBuffer to bypass Next.js formData parser limit (413 Payload Too Large)
+    const arrayBuffer = await req.arrayBuffer();
+    const contentType = req.headers.get('content-type') || 'multipart/form-data';
 
     const apiKey = process.env.RUNNINGHUB_API_KEY || 'aa0c44bf36314b1ebdc7937ddede6fae';
 
     const rhResponse = await fetch('https://www.runninghub.cn/openapi/v2/media/upload/binary', {
       method: 'POST',
+
+      body: arrayBuffer,
       headers: {
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: rhFormData
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': contentType
+      }
     });
 
     const rhText = await rhResponse.text();
