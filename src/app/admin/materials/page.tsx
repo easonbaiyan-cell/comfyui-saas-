@@ -51,7 +51,7 @@ export default function MaterialsManagementPage() {
       const filePath = `${category}/${fileName}`;
 
       const { data, error } = await supabase.storage
-        .from('official_materials')
+        .from('site-assets')
         .upload(filePath, file);
 
       if (error) {
@@ -62,7 +62,7 @@ export default function MaterialsManagementPage() {
       }
 
       const { data: publicUrlData } = supabase.storage
-        .from('official_materials')
+        .from('site-assets')
         .getPublicUrl(filePath);
 
       const res = await uploadOfficialMaterial({
@@ -92,10 +92,10 @@ export default function MaterialsManagementPage() {
     if (!confirm('确定要删除这个素材吗？')) return;
 
     // extract file path from url if possible
-    const pathMatch = url.match(/\/official_materials\/(.*)$/);
+    const pathMatch = url.match(/\/site-assets\/(.*)$/);
     if (pathMatch && pathMatch[1]) {
         const filePath = pathMatch[1];
-        await supabase.storage.from('official_materials').remove([filePath]);
+        await supabase.storage.from('site-assets').remove([filePath]);
     }
 
     const res = await deleteOfficialMaterial(id);
