@@ -397,12 +397,8 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
               const res = await fetch(value);
               const blob = await res.blob();
 
-              const isImage = node.fieldName === 'image';
-              const ext = isImage ? 'png' : 'mp4';
-              const filename = `upload_${Date.now()}.${ext}`;
-
               // Upload to RunningHub
-              const rhFileName = await uploadToRunningHub(blob, filename);
+              const rhFileName = await uploadToRunningHub(blob);
               finalFormValues[node.nodeId] = rhFileName;
             } catch (uploadErr: any) {
               console.error("媒体资源上传失败:", uploadErr);

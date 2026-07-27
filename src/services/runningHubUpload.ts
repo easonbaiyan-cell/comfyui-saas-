@@ -1,14 +1,37 @@
-export async function uploadToRunningHub(fileBlob: Blob, filename: string): Promise<string> {
+export async function uploadToRunningHub(fileBlob: Blob, filename?: string): Promise<string> {
+  let finalFileName = filename;
+  if (!finalFileName) {
+    const mimeType = fileBlob.type || 'image/jpeg';
+    // Fallback if mimeType doesn't contain a slash
+    const ext = mimeType.includes('/') ? mimeType.split('/')[1] : 'jpg';
+    finalFileName = `upload_${Date.now()}.${ext}`;
+  }
+
   const formData = new FormData();
-  formData.append('file', fileBlob, filename);
+  formData.append('file', fileBlob, finalFileName);
 
   // 核心修复：绝对禁止手动指定 Content-Type: multipart/form-data
   // 必须让浏览器自动生成带 boundary 的 Content-Type
-  const response = await fetch('/api/upload-rh', {
-    method: 'POST',
-    // 不要写 headers: { 'Content-Type': 'multipart/form-data' }
-    body: formData,
-  });
+
+  const apiKey = process.env.NEXT_PUBLIC_RUNNINGHUB_API_KEY;
+  let response;
+
+  if (apiKey) {
+    // 突破上传限制：如果存在客户端可访问的 API Key，直接向 RunningHub 发送二进制上传请求
+    response = await fetch('https://www.runninghub.cn/openapi/v2/media/upload/binary', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: formData,
+    });
+  } else {
+    response = await fetch('/api/upload-rh', {
+      method: 'POST',
+      // 不要写 headers: { 'Content-Type': 'multipart/form-data' }
+      body: formData,
+    });
+  }
 
   if (!response.ok) {
     const text = await response.text();
