@@ -13,9 +13,9 @@ interface MaterialLibraryModalProps {
 const getMockMaterials = (nodeCategory: string | undefined, type: string) => {
   if (type === 'video' || nodeCategory === 'node_2') {
     return [
-      'https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4',
-      'https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_2mb.mp4',
-      'https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_5mb.mp4',
+      'https://vjs.zencdn.net/v/oceans.mp4',
+      'https://vjs.zencdn.net/v/oceans.mp4',
+      'https://vjs.zencdn.net/v/oceans.mp4',
     ];
   }
 
