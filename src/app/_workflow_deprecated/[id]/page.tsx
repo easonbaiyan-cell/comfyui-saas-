@@ -53,7 +53,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
   const [elapsedTime, setElapsedTime] = useState(0);
   const [generatedMediaUrl, setGeneratedMediaUrl] = useState<string | null>(null);
   const [taskId, setTaskId] = useState<string | null>(null);
-  const [errorMsg, setErrorMsg] = useState<any>(null);
+
 
   const isImageUrl = (url: string) => {
     if (!url) return false;
@@ -228,7 +228,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
                   <img src={previewUrls[node.nodeId] || (value as string)} alt="Uploaded" className="h-full w-full object-contain rounded-lg" />
                 ) : (
                   <video src={previewUrls[node.nodeId] || (value as string)} className="h-full w-full object-contain rounded-lg" controls />
-                )}
+
                 <button
                   type="button"
                   onClick={(e) => {
@@ -246,7 +246,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
-            )}
+
           </label>
         </div>
       );
@@ -421,7 +421,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
       pollForResult(data.taskId);
 
     } catch (err: unknown) {
-      setErrorMsg((err instanceof Error ? err.message : String(err)));
+      setToastMessage({ type: "error", text: (err instanceof Error ? err.message : String(err)) });
       setIsGenerating(false);
     }
   };
@@ -605,9 +605,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
               <p className="text-sm text-gray-400 mb-6">轻松圈起流量</p>
             </div>
 
-            {errorMsg && (
-              <p className="text-danger-red text-sm mb-4 text-center">{errorMsg}</p>
-            )}
+
 
             {workflow?.rh_payload_template?.nodeInfoList && workflow.rh_payload_template.nodeInfoList.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -615,7 +613,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
               </div>
             ) : (
               <div className="text-gray-500 text-sm text-center py-10">该工作流暂无配置参数</div>
-            )}
+
 
             {/* Top Action Bar */}
             <div className="w-full max-w-md mx-auto flex flex-col items-center justify-between gap-4 mt-8">
@@ -655,7 +653,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
                     </>
                   ) : (
                     "立即生成"
-                  )}
+
                 </button>
                 <button className="bg-red-600 text-white font-medium rounded-xl px-6 h-14 whitespace-nowrap">取消生成</button>
               </div>
@@ -706,7 +704,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
                 )
               ) : (
                 <span className="text-gray-600 text-sm">暂无生成结果</span>
-              )}
+
             </div>
 
             {/* Action Buttons */}
@@ -740,7 +738,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
                 <span>生成时间：{new Date().toLocaleString()}</span>
                 <span>有效期：<span className="text-primary-green/80">9</span>天后过期</span>
               </div>
-            )}
+
           </div>
         </div>
 
