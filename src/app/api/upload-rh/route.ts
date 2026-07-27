@@ -22,7 +22,25 @@ export async function POST(req: Request) {
       body: rhFormData
     });
 
-    const rhData = await rhResponse.json();
+    const rhText = await rhResponse.text();
+    let rhData;
+    try {
+      rhData = JSON.parse(rhText);
+    } catch (e) {
+      if (!rhResponse.ok) {
+        console.error('RunningHub Upload API Non-JSON Error Response:', rhText);
+        return NextResponse.json(
+          { error: 'RunningHub 服务器拒绝了该文件，可能是文件过大或格式错误' },
+          { status: rhResponse.status }
+        );
+      } else {
+        console.error('RunningHub Upload API returned invalid JSON:', rhText);
+        return NextResponse.json(
+          { error: 'RunningHub 服务器响应格式错误' },
+          { status: 500 }
+        );
+      }
+    }
 
     if (!rhResponse.ok || rhData.code !== 0) {
       console.error('RunningHub Upload API Error:', rhData);
