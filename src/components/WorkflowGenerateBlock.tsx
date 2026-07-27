@@ -62,7 +62,7 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
   const [generatedMediaUrl, setGeneratedMediaUrl] = useState<string | null>(null);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [taskId, setTaskId] = useState<string | null>(null);
-  const [errorMsg, setErrorMsg] = useState<any>(null);
+
 
   const isImageUrl = (url: string) => {
     if (!url) return false;
@@ -136,7 +136,7 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
   const handleDynamicUpload = async (e: React.ChangeEvent<HTMLInputElement>, nodeId: string) => {
     if (false) {
       // 1. 拦截上传动作 (Image Upload Guard)
-      setErrorMsg(null);
+
       setIsAuthOpen(true);
       setToastMessage({ type: 'error', text: '请先登录后再上传图片' });
       return;
@@ -146,7 +146,7 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
     if (!file) return;
 
     setActiveUploads(prev => ({ ...prev, [nodeId]: true }));
-    setErrorMsg(null);
+
 
     try {
       const fileExt = file.name.split('.').pop();
@@ -157,7 +157,7 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
         .upload(fileName, file);
 
       if (error) {
-        throw error;
+        throw new Error('Supabase 上传失败: ' + error.message);
       }
 
       const { data: { publicUrl } } = supabase.storage
@@ -175,9 +175,9 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
     } catch (err: any) {
       console.error('上传出错:', err);
       if (!user || (err.message && (err.message.includes('403') || err.message.includes('401') || err.message.includes('Row-level security') || err.message.includes('Failed to fetch')))) {
-        setErrorMsg(null);
+
       } else {
-        setToastMessage({ type: "error", text: "上传失败，请重试" }); setErrorMsg(null);
+        setToastMessage({ type: "error", text: "上传失败，请重试" });
       }
     } finally {
       setActiveUploads(prev => ({ ...prev, [nodeId]: false }));
@@ -205,7 +205,7 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
               onClick={(e) => {
                 if (false) {
                   e.preventDefault();
-                  setErrorMsg(null);
+
                   setIsAuthOpen(true);
                   setToastMessage({ type: 'error', text: '请先登录后再上传文件' });
                   return;
@@ -330,7 +330,7 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
     if (!workflow || !workflow.rh_payload_template) {
       console.error("拦截提交: workflow 数据丢失或 rh_payload_template 为 null", workflow);
       // 触发 UI 提示（请根据项目中实际使用的提示库如 react-hot-toast 或 sonner 进行适配）
-      setToastMessage({ type: "error", text: "工作流配置尚未加载完毕或数据缺失，请刷新重试。" }); setErrorMsg(null);
+      setToastMessage({ type: "error", text: "工作流配置尚未加载完毕或数据缺失，请刷新重试。" });
       return; // 强制阻断，绝对禁止向下执行 fetch
     }
 
@@ -348,25 +348,25 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
       });
 
       if (isMissingParams) {
-        setToastMessage({ type: "error", text: "请上传所有必需的图片/参数" }); setErrorMsg(null);
+        setToastMessage({ type: "error", text: "请上传所有必需的图片/参数" });
         return;
       }
     }
     if (!currentUser) {
-      setToastMessage({ type: "error", text: "请先登录" }); setErrorMsg(null);
+      setToastMessage({ type: "error", text: "请先登录" });
       return;
     }
 
     const finalCost = cost;
 
     if (积分余额 < finalCost) {
-      setToastMessage({ type: "error", text: "积分不足，请先充值" }); setErrorMsg(null);
+      setToastMessage({ type: "error", text: "积分不足，请先充值" });
       setToastMessage({ text: '积分不足，请前往充值', type: 'error' });
       return;
     }
 
     setIsGenerating(true);
-    setErrorMsg(null);
+
     setGeneratedMediaUrl(null);
     setPollStatus(null);
 
@@ -406,7 +406,7 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
                     .from('site-assets')
                     .upload(fileName, blob);
 
-                  if (error) throw error;
+                  if (error) throw new Error('Supabase 上传失败: ' + error.message);
               }
 
               // 获取Public URL 替代原来直传 RunningHub 的逻辑
@@ -471,7 +471,7 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
       pollForResult(data.taskId);
 
     } catch (err: unknown) {
-      setToastMessage({ type: "error", text: (err instanceof Error ? err.message : String(err)) }); setErrorMsg(null);
+      setToastMessage({ type: "error", text: (err instanceof Error ? err.message : String(err)) });
       setIsGenerating(false);
     }
   };
@@ -540,7 +540,7 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
       attempts++;
       if (attempts >= 720) { // 60 minutes limit (720 * 5s = 3600s)
         clearInterval(interval);
-        setToastMessage({ type: "error", text: '生成超时，请稍后重试' }); setErrorMsg(null);
+        setToastMessage({ type: "error", text: '生成超时，请稍后重试' });
         setIsGenerating(false);
         return;
       }
@@ -605,7 +605,7 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
               // ==== 核心入库逻辑结束 ====
 
            } else {
-              setToastMessage({ type: "error", text: '生成成功但未找到视频/图片URL' }); setErrorMsg(null);
+              setToastMessage({ type: "error", text: '生成成功但未找到视频/图片URL' });
               setIsGenerating(false);
            }
         } else if (data && (data.code === 804 || data.code === 813)) {
@@ -616,14 +616,14 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
            localStorage.removeItem(`active_task_${workflowId}`);
            localStorage.removeItem(`task_start_${workflowId}`);
            const errorData = data.data?.failedReason || '生成失败';
-           setToastMessage({ type: "error", text: extractErrorMessage(errorData) }); setErrorMsg(null);
+           setToastMessage({ type: "error", text: extractErrorMessage(errorData) });
            setIsGenerating(false);
         } else if (data && data.code !== undefined) {
            clearInterval(interval);
            localStorage.removeItem(`active_task_${workflowId}`);
            localStorage.removeItem(`task_start_${workflowId}`);
            const errorData = data.msg || data.message || '未知状态异常';
-           setToastMessage({ type: "error", text: extractErrorMessage(errorData) }); setErrorMsg(null);
+           setToastMessage({ type: "error", text: extractErrorMessage(errorData) });
            setIsGenerating(false);
         }
       } catch (error) {

@@ -24,7 +24,7 @@ export function GenerateVideoEngine() {
   const pollIntervalRef = React.useRef<NodeJS.Timeout | null>(null);
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [errorMsg, setErrorMsg] = useState<any>(null);
+
   const [toastMessage, setToastMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
 
 
@@ -96,7 +96,7 @@ export function GenerateVideoEngine() {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
       const { data, error } = await supabase.storage.from('site-assets').upload(fileName, file);
-      if (error) throw error;
+      if (error) throw new Error('Supabase 上传失败: ' + error.message);
 
       const { data: { publicUrl } } = supabase.storage.from('site-assets').getPublicUrl(fileName);
       if (!publicUrl) throw new Error('获取文件链接失败');
@@ -109,7 +109,7 @@ export function GenerateVideoEngine() {
       if (!user || (err.message && (err.message.includes('403') || err.message.includes('401')))) {
          // handle error silently or with global toast if available
       } else {
-         alert("上传失败，请重试");
+         setToastMessage({ type: "error", text: "上传失败，请重试" });
       }
     } finally {
       setActiveUploads(prev => ({ ...prev, [nodeId]: false }));
@@ -130,7 +130,7 @@ export function GenerateVideoEngine() {
       attempts++;
       if (attempts >= 720) { // 60 minutes limit (720 * 5s = 3600s)
         if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
-        setToastMessage({ type: "error", text: '生成超时，请稍后重试' }); setErrorMsg(null);
+        setToastMessage({ type: "error", text: '生成超时，请稍后重试' });
         setIsGenerating(false);
         return;
       }
@@ -195,7 +195,7 @@ export function GenerateVideoEngine() {
               // ==== 核心入库逻辑结束 ====
 
            } else {
-              setToastMessage({ type: "error", text: '生成成功但未找到视频URL' }); setErrorMsg(null);
+              setToastMessage({ type: "error", text: '生成成功但未找到视频URL' });
               setIsGenerating(false);
            }
         } else if (data && (data.code === 804 || data.code === 813)) {
@@ -206,14 +206,14 @@ export function GenerateVideoEngine() {
            localStorage.removeItem(`active_task_${workflowId}`);
            localStorage.removeItem(`task_start_${workflowId}`);
            const errorData = data.data?.failedReason || '生成失败';
-           setToastMessage({ type: "error", text: extractErrorMessage(errorData) }); setErrorMsg(null);
+           setToastMessage({ type: "error", text: extractErrorMessage(errorData) });
            setIsGenerating(false);
         } else if (data && data.code !== undefined) {
            if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
            localStorage.removeItem(`active_task_${workflowId}`);
            localStorage.removeItem(`task_start_${workflowId}`);
            const errorData = data.msg || data.message || '未知状态异常';
-           setToastMessage({ type: "error", text: extractErrorMessage(errorData) }); setErrorMsg(null);
+           setToastMessage({ type: "error", text: extractErrorMessage(errorData) });
            setIsGenerating(false);
         }
       } catch (error) {
@@ -290,13 +290,13 @@ export function GenerateVideoEngine() {
     }
 
     if (!workflow || !workflow.rh_payload_template) {
-      alert("工作流配置未加载完毕");
+      setToastMessage({ type: "error", text: "工作流配置未加载完毕" });
       return;
     }
 
     const cost = workflow.cost_points !== undefined && workflow.cost_points !== null ? Number(workflow.cost_points) : 10;
     if (积分余额 < cost) {
-      alert("积分不足，请先充值");
+      setToastMessage({ type: "error", text: "积分不足，请先充值" });
       return;
     }
 
@@ -309,7 +309,7 @@ export function GenerateVideoEngine() {
       });
 
       if (isMissingParams) {
-        alert("请上传所有必需的图片/参数");
+        setToastMessage({ type: "error", text: "请上传所有必需的图片/参数" });
         return;
       }
     }
@@ -319,7 +319,7 @@ export function GenerateVideoEngine() {
     setGeneratedMediaUrl(null);
 
     setElapsedTime(0);
-    setErrorMsg(null);
+
 
 
     try {
@@ -370,7 +370,7 @@ export function GenerateVideoEngine() {
 
     } catch (err: any) {
       console.error(err);
-      setToastMessage({ type: "error", text: extractErrorMessage(err) }); setErrorMsg(null);
+      setToastMessage({ type: "error", text: extractErrorMessage(err) });
       setIsGenerating(false);
       setPollStatus(null);
     }
