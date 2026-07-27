@@ -108,13 +108,13 @@ export default function SettingsPage() {
       const fileName = `avatar-${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('site-assets')
+        .from('网站资产')
         .upload(fileName, selectedFile);
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from('site-assets')
+        .from('网站资产')
         .getPublicUrl(fileName);
 
       if (!publicUrl) throw new Error('Failed to get public URL');

@@ -95,10 +95,10 @@ export function GenerateVideoEngine() {
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-      const { data, error } = await supabase.storage.from('site-assets').upload(fileName, file);
+      const { data, error } = await supabase.storage.from('网站资产').upload(fileName, file);
       if (error) throw error;
 
-      const { data: { publicUrl } } = supabase.storage.from('site-assets').getPublicUrl(fileName);
+      const { data: { publicUrl } } = supabase.storage.from('网站资产').getPublicUrl(fileName);
       if (!publicUrl) throw new Error('获取文件链接失败');
 
       setDynamicFormValues(prev => ({ ...prev, [nodeId]: publicUrl }));
