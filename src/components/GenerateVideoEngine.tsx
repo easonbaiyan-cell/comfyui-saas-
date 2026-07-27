@@ -95,10 +95,10 @@ export function GenerateVideoEngine() {
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-      const { data, error } = await supabase.storage.from('网站资产').upload(fileName, file);
+      const { data, error } = await supabase.storage.from('site-assets').upload(fileName, file);
       if (error) throw error;
 
-      const { data: { publicUrl } } = supabase.storage.from('网站资产').getPublicUrl(fileName);
+      const { data: { publicUrl } } = supabase.storage.from('site-assets').getPublicUrl(fileName);
       if (!publicUrl) throw new Error('获取文件链接失败');
 
       setDynamicFormValues(prev => ({ ...prev, [nodeId]: publicUrl }));
@@ -130,7 +130,7 @@ export function GenerateVideoEngine() {
       attempts++;
       if (attempts >= 720) { // 60 minutes limit (720 * 5s = 3600s)
         if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
-        setErrorMsg('生成超时，请稍后重试');
+        setToastMessage({ type: "error", text: '生成超时，请稍后重试' }); setErrorMsg(null);
         setIsGenerating(false);
         return;
       }
@@ -195,7 +195,7 @@ export function GenerateVideoEngine() {
               // ==== 核心入库逻辑结束 ====
 
            } else {
-              setErrorMsg('生成成功但未找到视频URL');
+              setToastMessage({ type: "error", text: '生成成功但未找到视频URL' }); setErrorMsg(null);
               setIsGenerating(false);
            }
         } else if (data && (data.code === 804 || data.code === 813)) {
@@ -206,14 +206,14 @@ export function GenerateVideoEngine() {
            localStorage.removeItem(`active_task_${workflowId}`);
            localStorage.removeItem(`task_start_${workflowId}`);
            const errorData = data.data?.failedReason || '生成失败';
-           setErrorMsg(extractErrorMessage(errorData));
+           setToastMessage({ type: "error", text: extractErrorMessage(errorData) }); setErrorMsg(null);
            setIsGenerating(false);
         } else if (data && data.code !== undefined) {
            if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
            localStorage.removeItem(`active_task_${workflowId}`);
            localStorage.removeItem(`task_start_${workflowId}`);
            const errorData = data.msg || data.message || '未知状态异常';
-           setErrorMsg(extractErrorMessage(errorData));
+           setToastMessage({ type: "error", text: extractErrorMessage(errorData) }); setErrorMsg(null);
            setIsGenerating(false);
         }
       } catch (error) {
@@ -370,7 +370,7 @@ export function GenerateVideoEngine() {
 
     } catch (err: any) {
       console.error(err);
-      setErrorMsg(extractErrorMessage(err));
+      setToastMessage({ type: "error", text: extractErrorMessage(err) }); setErrorMsg(null);
       setIsGenerating(false);
       setPollStatus(null);
     }
@@ -562,10 +562,6 @@ export function GenerateVideoEngine() {
                           已用时间: {elapsedTime} 秒
                         </div>
                       </div>
-                  </div>
-              ) : errorMsg ? (
-                  <div className="flex flex-col items-center justify-center gap-4 text-red-500 p-4">
-                      <span className="text-xs text-center">{errorMsg}</span>
                   </div>
               ) : (
                   <span className="text-gray-500 text-sm">暂无生成结果</span>

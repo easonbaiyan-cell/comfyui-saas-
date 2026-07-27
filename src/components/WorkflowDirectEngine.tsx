@@ -152,7 +152,7 @@ export function WorkflowDirectEngine({ workflowId }: { workflowId: string }) {
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
 
       const { data, error } = await supabase.storage
-        .from('网站资产')
+        .from('site-assets')
         .upload(fileName, file);
 
       if (error) {
@@ -160,7 +160,7 @@ export function WorkflowDirectEngine({ workflowId }: { workflowId: string }) {
       }
 
       const { data: { publicUrl } } = supabase.storage
-        .from('网站资产')
+        .from('site-assets')
         .getPublicUrl(fileName);
 
       if (!publicUrl) {
@@ -176,7 +176,7 @@ export function WorkflowDirectEngine({ workflowId }: { workflowId: string }) {
       if (!user || (err.message && (err.message.includes('403') || err.message.includes('401') || err.message.includes('Row-level security') || err.message.includes('Failed to fetch')))) {
         setErrorMsg(null);
       } else {
-        setErrorMsg("上传失败，请重试");
+        setToastMessage({ type: "error", text: "上传失败，请重试" }); setErrorMsg(null);
       }
     } finally {
       setActiveUploads(prev => ({ ...prev, [nodeId]: false }));
@@ -325,7 +325,7 @@ export function WorkflowDirectEngine({ workflowId }: { workflowId: string }) {
     if (!workflow || !workflow.rh_payload_template) {
       console.error("拦截提交: workflow 数据丢失或 rh_payload_template 为 null", workflow);
       // 触发 UI 提示（请根据项目中实际使用的提示库如 react-hot-toast 或 sonner 进行适配）
-      setErrorMsg("工作流配置尚未加载完毕或数据缺失，请刷新重试。");
+      setToastMessage({ type: "error", text: "工作流配置尚未加载完毕或数据缺失，请刷新重试。" }); setErrorMsg(null);
       return; // 强制阻断，绝对禁止向下执行 fetch
     }
 
@@ -343,19 +343,19 @@ export function WorkflowDirectEngine({ workflowId }: { workflowId: string }) {
       });
 
       if (isMissingParams) {
-        setErrorMsg("请上传所有必需的图片/参数");
+        setToastMessage({ type: "error", text: "请上传所有必需的图片/参数" }); setErrorMsg(null);
         return;
       }
     }
     if (!currentUser) {
-      setErrorMsg("请先登录");
+      setToastMessage({ type: "error", text: "请先登录" }); setErrorMsg(null);
       return;
     }
 
     const finalCost = cost;
 
     if (积分余额 < finalCost) {
-      setErrorMsg("积分不足，请先充值");
+      setToastMessage({ type: "error", text: "积分不足，请先充值" }); setErrorMsg(null);
       setToastMessage({ text: '积分不足，请前往充值', type: 'error' });
       return;
     }
@@ -419,7 +419,7 @@ export function WorkflowDirectEngine({ workflowId }: { workflowId: string }) {
       pollForResult(data.taskId);
 
     } catch (err: unknown) {
-      setErrorMsg((err instanceof Error ? err.message : String(err)));
+      setToastMessage({ type: "error", text: (err instanceof Error ? err.message : String(err)) }); setErrorMsg(null);
       setIsGenerating(false);
     }
   };
@@ -465,7 +465,7 @@ export function WorkflowDirectEngine({ workflowId }: { workflowId: string }) {
       attempts++;
       if (attempts >= 720) { // 60 minutes limit (720 * 5s = 3600s)
         clearInterval(interval);
-        setErrorMsg('生成超时，请稍后重试');
+        setToastMessage({ type: "error", text: '生成超时，请稍后重试' }); setErrorMsg(null);
         setIsGenerating(false);
         return;
       }
@@ -530,7 +530,7 @@ export function WorkflowDirectEngine({ workflowId }: { workflowId: string }) {
               // ==== 核心入库逻辑结束 ====
 
            } else {
-              setErrorMsg('生成成功但未找到视频/图片URL');
+              setToastMessage({ type: "error", text: '生成成功但未找到视频/图片URL' }); setErrorMsg(null);
               setIsGenerating(false);
            }
         } else if (data && (data.code === 804 || data.code === 813)) {
@@ -541,14 +541,14 @@ export function WorkflowDirectEngine({ workflowId }: { workflowId: string }) {
            localStorage.removeItem(`active_task_${workflowId}`);
            localStorage.removeItem(`task_start_${workflowId}`);
            const errorData = data.data?.failedReason || '生成失败';
-           setErrorMsg(extractErrorMessage(errorData));
+           setToastMessage({ type: "error", text: extractErrorMessage(errorData) }); setErrorMsg(null);
            setIsGenerating(false);
         } else if (data && data.code !== undefined) {
            clearInterval(interval);
            localStorage.removeItem(`active_task_${workflowId}`);
            localStorage.removeItem(`task_start_${workflowId}`);
            const errorData = data.msg || data.message || '未知状态异常';
-           setErrorMsg(extractErrorMessage(errorData));
+           setToastMessage({ type: "error", text: extractErrorMessage(errorData) }); setErrorMsg(null);
            setIsGenerating(false);
         }
       } catch (error) {
@@ -603,9 +603,7 @@ export function WorkflowDirectEngine({ workflowId }: { workflowId: string }) {
               <p className="text-sm text-gray-400 mb-6">轻松圈起流量</p>
             </div>
 
-            {errorMsg && (
-              <p className="text-danger-red text-sm mb-4 text-center">{errorMsg}</p>
-            )}
+
 
             {workflow?.rh_payload_template?.nodeInfoList && workflow.rh_payload_template.nodeInfoList.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

@@ -228,13 +228,13 @@ export default function SettingsPage() {
       const filePath = `${fileName}`;
 
       const { data, error } = await supabase.storage
-        .from('网站资产')
+        .from('site-assets')
         .upload(filePath, file);
 
       if (error) throw error;
 
       const { data: { publicUrl } } = supabase.storage
-        .from('网站资产')
+        .from('site-assets')
         .getPublicUrl(filePath);
 
       setFormData(prev => ({ ...prev, cs_qrcode_url: publicUrl }));
