@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 
 
 export default async function Home() {
+
   const { data: workflows, error } = await supabase
     .from('workflows')
     .select('*')
@@ -16,6 +17,17 @@ export default async function Home() {
   if (error) {
     console.error("Error fetching workflows:", error);
   }
+
+  const { data: settingsData, error: settingsError } = await supabase
+    .from('global_settings')
+    .select('*')
+    .eq('id', 1)
+    .maybeSingle();
+
+  if (settingsError) {
+    console.error("Error fetching global settings:", settingsError);
+  }
+
 
 
   const mockWorkflow = {
@@ -43,7 +55,7 @@ export default async function Home() {
       <main className="flex-1">
         {/* Row 1: 首屏滚动区 */}
         <section className="w-full">
-          <HeroCarousel />
+          <HeroCarousel bannerSettings={settingsData} />
         </section>
 
         {/* Row 2: 核心变现引擎 */}
