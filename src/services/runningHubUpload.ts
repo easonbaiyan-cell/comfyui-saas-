@@ -14,24 +14,15 @@ export async function uploadToRunningHub(fileBlob: Blob, filename?: string): Pro
   // 必须让浏览器自动生成带 boundary 的 Content-Type
 
   const apiKey = process.env.NEXT_PUBLIC_RUNNINGHUB_API_KEY;
-  let response;
 
-  if (apiKey) {
-    // 突破上传限制：如果存在客户端可访问的 API Key，直接向 RunningHub 发送二进制上传请求
-    response = await fetch('https://www.runninghub.cn/openapi/v2/media/upload/binary', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: formData,
-    });
-  } else {
-    response = await fetch('/api/upload-rh', {
-      method: 'POST',
-      // 不要写 headers: { 'Content-Type': 'multipart/form-data' }
-      body: formData,
-    });
-  }
+  // 核心修复：客户端直接 POST 请求 RunningHub，解决 413 限制
+  const response = await fetch('https://www.runninghub.cn/openapi/v2/media/upload/binary', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: formData,
+  });
 
   if (!response.ok) {
     const text = await response.text();
