@@ -106,6 +106,20 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
     return index !== -1 ? `node_${index}` : undefined;
   };
 
+
+  const renderTitle = (title?: string) => {
+    if (!title) return null;
+    const parts = title.split(/([a-zA-Z0-9]+(?:[\s-][a-zA-Z0-9]+)*)/);
+    return parts.map((part, index) => {
+      if (/[a-zA-Z0-9]/.test(part)) {
+        return <span key={index} className="text-[#D0FF2A]">{part}</span>;
+      }
+      return <span key={index}>{part}</span>;
+    });
+  };
+
+  const englishSubtitle = workflow.title?.match(/[a-zA-Z]+/g)?.join(' ') || 'AI WORKFLOW ENGINE';
+
   const workflowId = workflow?.id;
   const loadingWorkflow = false;
 
@@ -196,7 +210,7 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
       const isImage = node.fieldName === 'image';
 
       return (
-        <div key={node.nodeId} className="mb-6 w-full bg-[#111111] border border-white/10 rounded-2xl aspect-[3/4] flex flex-col overflow-hidden">
+        <div key={node.nodeId} className="mb-6 w-full bg-[#111111] border border-white/10 rounded-2xl aspect-[9/16] flex flex-col overflow-hidden">
           <label className="block w-full h-full cursor-pointer flex-1">
             <input
               type="file"
@@ -217,12 +231,13 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
               onChange={(e) => handleDynamicUpload(e, node.nodeId)}
             />
             {!value ? (
-              <div className="border-2 border-dashed border-white/10 bg-white/5 hover:bg-white/10 rounded-xl p-8 text-center transition-colors flex flex-col items-center justify-center gap-4 h-full">
-                <div className="h-16 w-16 bg-black/40 rounded-full flex items-center justify-center border border-white/5">
-                  {isUploadingThis ? <Loader2 className="h-8 w-8 text-gray-400 animate-spin" /> : <UploadCloud className="h-8 w-8 text-gray-400" />}
+              <div className="border border-white/10 bg-[#1A1A1A] hover:bg-[#222] rounded-xl p-6 text-center transition-colors flex flex-col items-center justify-center gap-3 h-full">
+                <div className="flex items-center justify-center mb-2">
+                  {isUploadingThis ? <Loader2 className="h-6 w-6 text-gray-400 animate-spin" /> : <Plus strokeWidth={1} className="h-8 w-8 text-white/80" />}
                 </div>
                 <div>
-                  <p className="text-base font-medium text-white mb-1">{isUploadingThis ? "正在上传..." : "点击加载上传"}</p>
+                  <p className="text-sm font-medium text-white mb-1">[ {node.description || node.fieldName} ]</p>
+                  <p className="text-[10px] text-gray-500">{isUploadingThis ? "正在上传..." : (isImage ? "建议尺寸=1024x1024px" : "支持 mp4/webm 格式")}</p>
                 </div>
               </div>
             ) : (
@@ -634,7 +649,7 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
 
   if (loadingWorkflow) {
     return (
-      <div className="h-[calc(100vh-64px)] bg-[#0a0a0a] text-white flex items-center justify-center flex-col">
+      <div className="bg-[#0a0a0a] text-white flex items-center justify-center flex-col py-12">
         <Loader2 className="w-10 h-10 animate-spin text-primary-green mb-4" />
         <p className="text-gray-400">加载中...</p>
       </div>
@@ -643,7 +658,7 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
 
   if (!workflow || !workflow.rh_payload_template) {
     return (
-      <div className="h-[calc(100vh-64px)] bg-[#0a0a0a] text-white flex items-center justify-center flex-col">
+      <div className="bg-[#0a0a0a] text-white flex items-center justify-center flex-col py-12">
         <div className="bg-[#131622] p-8 rounded-2xl border border-white/10 shadow-xl max-w-md w-full text-center">
           <HelpCircle className="w-16 h-16 text-danger-red mx-auto mb-4" />
           <h2 className="text-xl font-bold text-white mb-2">数据加载异常</h2>
@@ -662,7 +677,7 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
   }
 
   return (
-    <div className="h-[calc(100vh-64px)] bg-[#0a0a0a] text-white overflow-hidden">
+    <div className="bg-[#0a0a0a] text-white rounded-2xl border border-white/5 overflow-hidden shadow-2xl">
       {toastMessage && (
         <div className={`fixed top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg text-sm font-medium z-[100] transition-all shadow-lg ${toastMessage.type === 'error' ? 'bg-danger-red text-white' : 'bg-primary-green text-black'}`}>
           {toastMessage.text}
@@ -700,12 +715,25 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 h-full w-full">
         {/* Middle Column: Parameters and Actions */}
-        <div className="border-r border-white/5 overflow-y-auto h-full relative flex flex-col lg:col-span-8">
+        <div className="border-r border-white/5 relative flex flex-col lg:col-span-8">
           <div className="p-6 flex-1 w-full flex flex-col">
-            <div className="mb-6">
-              <p className="text-sm text-gray-400 mb-1">{workflow.subtitle2}</p>
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-1">{workflow.title}</h2>
-              <p className="text-sm text-gray-400 mb-6">{workflow.description}</p>
+            <div className="mb-8">
+              {workflow.subtitle2 && (
+                <p className="text-xs text-[#D0FF2A] uppercase mb-2 font-medium tracking-wider flex items-center gap-2">
+                  <span className="w-4 h-[1px] bg-[#D0FF2A]"></span>
+                  {workflow.subtitle2}
+                  <span className="w-4 h-[1px] bg-[#D0FF2A]"></span>
+                </p>
+              )}
+              <h1 className="text-4xl md:text-5xl font-black text-white mb-2 tracking-tight">
+                {renderTitle(workflow.title)}
+              </h1>
+              <p className="text-gray-500 uppercase tracking-widest text-xs mb-4">
+                {englishSubtitle}
+              </p>
+              <p className="text-sm text-gray-400 max-w-3xl leading-relaxed mb-6">
+                {workflow.description}
+              </p>
             </div>
 
 
@@ -740,31 +768,35 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
 
               {/* Generate Button */}
               <div className="flex items-center gap-4 w-full mt-4">
-                <button
-                  onClick={handleGenerate}
-                  disabled={isGenerating || Object.values(activeUploads).some(Boolean)}
-                  className={`flex-1 w-full text-black font-bold text-lg h-14 px-12 rounded-xl transition-all flex items-center justify-center ${
-                    isGenerating
-                      ? 'bg-primary-green/50 cursor-not-allowed'
-                      : 'bg-primary-green hover:bg-primary-green shadow-[0_0_15px_var(--color-primary-green)] hover:shadow-[0_0_20px_var(--color-primary-green)] hover:scale-[1.02] active:scale-[0.98]'
-                  }`}
-                >
-                  {isGenerating ? (
-                    <>
+                {isGenerating ? (
+                  <div className="flex w-full gap-3">
+                    <button
+                      disabled
+                      className="flex-[2] bg-[#2A2E24] text-[#D0FF2A] font-bold text-lg h-14 rounded-xl flex items-center justify-center cursor-not-allowed"
+                    >
                       <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                       生成中...
-                    </>
-                  ) : (
-                    "立即生成"
-                  )}
-                </button>
-                {isGenerating && (
-                  <button className={`bg-red-600 text-white font-medium rounded-xl px-6 h-14 whitespace-nowrap flex-1 hover:bg-red-700`} onClick={handleCancel}>取消生成</button>
+                    </button>
+                    <button
+                      onClick={handleCancel}
+                      className="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl h-14 transition-colors whitespace-nowrap"
+                    >
+                      取消生成
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleGenerate}
+                    disabled={Object.values(activeUploads).some(Boolean)}
+                    className="flex-1 w-full text-black font-bold text-lg h-14 px-12 rounded-xl transition-all flex items-center justify-center bg-primary-green hover:bg-primary-green shadow-[0_0_15px_var(--color-primary-green)] hover:shadow-[0_0_20px_var(--color-primary-green)] hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    立即生成
+                  </button>
                 )}
               </div>
 
               {/* Extra note */}
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 mt-2 text-center w-full">
                 *实际消耗将按照云端算力真实运行时长（每秒）精准核算扣除
               </p>
             </div>
@@ -773,21 +805,21 @@ export function WorkflowGenerateBlock({ workflow }: WorkflowBlockProps) {
 
 
         {/* Right Column: Generated Video and Actions */}
-        <div className="p-6 flex flex-col items-center justify-start overflow-y-auto h-full lg:col-span-4">
+        <div className="p-6 flex flex-col items-center justify-start lg:col-span-4">
           <div className="w-full max-w-sm flex flex-col">
             {/* Video Placeholder */}
             <div className="bg-[#111111] rounded-2xl aspect-[9/16] w-full relative flex flex-col items-center justify-center shadow-xl overflow-hidden border border-white/5">
               <div className="absolute top-4 left-4 z-10 border border-[#D4FF3F] text-[#D4FF3F] rounded-full px-4 py-1 text-sm inline-block">生成结果</div>
               {isGenerating ? (
-                <div className="flex flex-col items-center justify-center text-primary-green">
-                  <Loader2 className="h-10 w-10 animate-spin mb-4" />
-                  <div className="flex flex-col items-center gap-2">
-                    <p className="text-sm font-medium animate-pulse">{pollStatus || '正在生成，请耐心等待...'}</p>
-                    <div className="bg-primary-green/10 text-primary-green text-xs font-mono px-3 py-1 rounded-full border border-primary-green/20">
-                      已用时间: {elapsedTime} 秒
+                <div className="flex flex-col items-center justify-center h-full w-full absolute inset-0 bg-[#0a0a0a]/80 backdrop-blur-sm z-20">
+                  <Loader2 className="h-12 w-12 animate-spin text-[#D0FF2A] mb-6" />
+                  <div className="flex flex-col items-center gap-3 text-center">
+                    <p className="text-base font-bold text-white tracking-wide animate-pulse">{pollStatus || '正在拼命生成中...'}</p>
+                    <div className="bg-yellow-500/20 text-yellow-400 text-xs font-mono px-4 py-1.5 rounded-full border border-yellow-500/30">
+                      已耗时 {elapsedTime} 秒
                     </div>
                   </div>
-                  {taskId && <p className="text-xs text-primary-green/60 mt-2 font-mono">Task: {taskId}</p>}
+                  {taskId && <p className="text-[10px] text-gray-500 mt-4 font-mono">Task: {taskId}</p>}
                 </div>
               ) : generatedMediaUrl ? (
                 isImageUrl(generatedMediaUrl) ? (
