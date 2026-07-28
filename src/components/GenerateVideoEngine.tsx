@@ -1,6 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+
+enum PollStatus {
+  QUEUED = '排队中 (Queued)',
+  GENERATING = '生成中 (Generating)'
+}
+
 import { HelpCircle, UploadCloud, Loader2, Trash2, Download } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth';
@@ -31,6 +37,7 @@ export function GenerateVideoEngine() {
   const user = useAuthStore((state) => state.user);
   const setIsAuthOpen = useAuthStore((state) => state.setIsAuthOpen);
   const 积分余额 = useAuthStore((state) => state.积分余额);
+  const set积分余额 = useAuthStore((state) => state.set积分余额);
 
   useEffect(() => {
     if (toastMessage) {
@@ -200,7 +207,7 @@ export function GenerateVideoEngine() {
            }
         } else if (data && (data.code === 804 || data.code === 813)) {
            // RUNNING or QUEUED, just wait for the next tick
-           setPollStatus(data.code === 804 ? '正在拼命生成中...' : '排队中...');
+           setPollStatus(data.code === 804 ? PollStatus.GENERATING : PollStatus.QUEUED);
         } else if (data && data.code === 805) {
            if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
            localStorage.removeItem(`active_task_${workflowId}`);
@@ -361,6 +368,7 @@ export function GenerateVideoEngine() {
 
 
       setCurrentTaskId(data.taskId);
+      if (data.newPoints !== undefined) set积分余额(data.newPoints);
 
       // Store in local storage to prevent loss on refresh
       localStorage.setItem(`active_task_${workflow.id}`, data.taskId);
