@@ -61,8 +61,11 @@ export default async function Home() {
         {/* Row 2: 核心变现引擎 */}
         <section className="w-full max-w-7xl mx-auto px-6 lg:px-8 py-12">
           {workflowsList.map((workflow, index) => (
-            <div key={workflow.id} className={index !== workflowsList.length - 1 ? 'mb-24' : ''}>
+            <div key={workflow.id} className={index !== workflowsList.length - 1 ? 'mb-16' : ''}>
               <WorkflowGenerateBlock workflow={workflow} />
+              {index !== workflowsList.length - 1 && (
+                <div className="h-px w-full max-w-3xl mx-auto bg-gradient-to-r from-transparent via-white/10 to-transparent mt-16" />
+              )}
             </div>
           ))}
         </section>
