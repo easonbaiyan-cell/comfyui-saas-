@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { X, Plus, Trash2, Loader2 } from "lucide-react";
 import { getOfficialMaterials } from "@/actions/officialMaterials";
-import { getUserUploads, deleteUserUpload } from "@/actions/userUploads";
+import { getUserUploads, deleteUserUpload, saveUserUpload } from "@/actions/userUploads";
 import { useAuthStore } from "@/store/auth";
 import { supabase } from "@/lib/supabase";
 
@@ -71,11 +71,16 @@ export function MaterialLibraryModal({
           data: { publicUrl },
         } = supabase.storage.from("site-assets").getPublicUrl(fileName);
 
-        onSelect(publicUrl);
-        // Refresh uploads
         const {
           data: { session },
         } = await supabase.auth.getSession();
+
+        if (session) {
+          await saveUserUpload(session.access_token, publicUrl, file.type);
+        }
+
+        onSelect(publicUrl);
+        // Refresh uploads
         if (session) {
           const fetchedFiles = await getUserUploads(session.access_token, type);
           setUploadHistory(fetchedFiles);
@@ -102,7 +107,7 @@ export function MaterialLibraryModal({
       data: { session },
     } = await supabase.auth.getSession();
     if (!session) return;
-    const { success } = await deleteUserUpload(session.access_token, file.name);
+    const { success } = await deleteUserUpload(session.access_token, file.url);
     if (!success) {
       // Revert if failed
       setUploadHistory(previousHistory);
