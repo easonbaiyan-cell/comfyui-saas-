@@ -2,6 +2,12 @@
 
 
 import React, { useState, useEffect } from 'react';
+
+enum PollStatus {
+  QUEUED = '排队中 (Queued)',
+  GENERATING = '生成中 (Generating)'
+}
+
 import { Play, UploadCloud, HelpCircle, Minus, Plus, Zap, Heart, MessageCircle, Download, Trash2, Share2, X, Loader2, Video } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth';
@@ -409,7 +415,7 @@ export function WorkflowDirectEngine({ workflowId }: { workflowId: string }) {
 
       setTaskId(data.taskId);
 
-      // REMOVED: set积分余额(data.newPoints); // DO NOT blindly trust API
+      set积分余额(data.newPoints);
 
       // Store in local storage to prevent loss on refresh
       localStorage.setItem(`active_task_${workflowId}`, data.taskId);
@@ -535,7 +541,7 @@ export function WorkflowDirectEngine({ workflowId }: { workflowId: string }) {
            }
         } else if (data && (data.code === 804 || data.code === 813)) {
            // RUNNING or QUEUED, just wait for the next tick
-           setPollStatus(data.code === 804 ? '正在拼命生成中...' : '排队中...');
+           setPollStatus(data.code === 804 ? PollStatus.GENERATING : PollStatus.QUEUED);
         } else if (data && data.code === 805) {
            clearInterval(interval);
            localStorage.removeItem(`active_task_${workflowId}`);
