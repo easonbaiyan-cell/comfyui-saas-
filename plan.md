@@ -1,18 +1,16 @@
-1. **Define Database & Server Actions:**
-   - Create a migration script `00000000000010_create_official_materials.sql` to define the `official_materials` table with `id`, `category`, `type`, `url`, and `created_at` (Done).
-   - The migration also creates the `official_materials` storage bucket and policies (Done).
-   - Create `src/actions/officialMaterials.ts` to export Server Actions: `getOfficialMaterials`, `getAllOfficialMaterials`, `uploadOfficialMaterial`, and `deleteOfficialMaterial` using `@supabase/supabase-js` with service role key (Done).
+1. **Fix IDOR in `src/actions/userUploads.ts`**: The problem is the server action takes a `userId` from the client and trusts it blindly while using the `SUPABASE_SERVICE_ROLE_KEY`. To fix this without an `@supabase/ssr` server setup (which this codebase does not seem to have configured for Next.js App Router, it relies on client-side zustand auth `useAuthStore` and anonymous keys), we cannot easily establish the user's trusted identity in the server action if they just pass `userId` as an argument.
+Wait, if the server action cannot authenticate the user, what if we pass the `access_token` from the client to the server action, and the server action initializes a secure Supabase client with that token using `createClient(url, key, { global: { headers: { Authorization: \`Bearer \${token}\` } } })`? Yes! Then the server action executes as the user, hitting the storage objects table under RLS rules. But wait, `storage.objects` often blocks SELECT on the frontend anyway if RLS isn't explicitly configured.
+Alternatively, since the user already uploaded the file to `site-assets` (a public bucket), they just want a history. We can keep the history in a database table like `user_uploads` with RLS, OR just store it safely in `profiles` metadata, OR fix the server action to verify the token!
+Let's modify `src/actions/userUploads.ts` to accept an `accessToken` from the client. The server action will verify the token using `supabase.auth.getUser(token)` and only return/delete files if the verified `user.id` matches.
 
-2. **Admin Materials Management UI:**
-   - Create `src/app/admin/materials/page.tsx` for managing official materials (Done).
-   - It will include an upload form for uploading to Supabase Storage and saving the URL using Server Actions.
-   - It will include a grid to display uploaded materials and delete them.
-   - Update `src/app/admin/AdminSidebar.tsx` to include the "Materials" link (Done).
+```typescript
+export async function getUserUploads(accessToken: string, type: 'image' | 'video') {
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+    if (authError || !user) return [];
 
-3. **Frontend Dynamic Fetch (C-End):**
-   - Update `src/components/MaterialLibraryModal.tsx` to use `useEffect` and `getOfficialMaterials` action to fetch real materials based on `nodeCategory`.
-   - Remove the `getMockMaterials` function and render the real URLs in the "official" tab.
-
-4. **Pre-commit and Submit:**
-   - Run `pre_commit_instructions` and follow its checks.
-   - Submit the PR.
+    // Now we know the user.id is genuinely user.id.
+    const userId = user.id;
+    // ... proceed with service role to query storage objects by owner=userId
+}
+```
+2. **Update `MaterialLibraryModal.tsx`**: Pass `(await supabase.auth.getSession()).data.session?.access_token` when calling `getUserUploads` and `deleteUserUpload`.
