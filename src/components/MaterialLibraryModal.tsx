@@ -32,6 +32,14 @@ export function MaterialLibraryModal({
   const [officialMaterials, setOfficialMaterials] = useState<any[]>([]);
   const [loadingOfficial, setLoadingOfficial] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [toastMessage, setToastMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
+
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
 
   useEffect(() => {
     if (isOpen && activeTab === "uploads" && user) {
@@ -41,11 +49,25 @@ export function MaterialLibraryModal({
           const {
             data: { session },
           } = await supabase.auth.getSession();
-          if (!session) return;
-          const files = await getUserUploads(session.access_token, type);
-          setUploadHistory(files);
+          if (!session || !session.access_token) {
+             setUploadHistory([]);
+             setLoadingUploads(false);
+             setToastMessage({ text: '请先登录', type: 'error' });
+             return;
+          }
+          const res = await getUserUploads(session.access_token, type);
+          if (res && res.success) {
+             setUploadHistory(res.data);
+          } else {
+             setUploadHistory(res?.data || []);
+             if (res?.error) {
+               setToastMessage({ text: res.error, type: 'error' });
+             }
+          }
         } catch (e) {
-          console.error(e);
+          console.error("fetchUploads error", e);
+          setUploadHistory([]);
+          setToastMessage({ text: '获取记录失败', type: 'error' });
         }
         setLoadingUploads(false);
       };
@@ -75,15 +97,26 @@ export function MaterialLibraryModal({
           data: { session },
         } = await supabase.auth.getSession();
 
-        if (session) {
-          await saveUserUpload(session.access_token, publicUrl, file.type);
+        if (session && session.access_token) {
+          const res = await saveUserUpload(session.access_token, publicUrl, file.type);
+          if (res && !res.success) {
+            setToastMessage({ text: res.error === 'Unauthorized' ? '请先登录' : '上传记录保存失败', type: 'error' });
+          }
+        } else {
+          setToastMessage({ text: '请先登录', type: 'error' });
         }
 
         onSelect(publicUrl);
         // Refresh uploads
         if (session) {
-          const fetchedFiles = await getUserUploads(session.access_token, type);
-          setUploadHistory(fetchedFiles);
+          const fetchedRes = await getUserUploads(session.access_token, type);
+          if (fetchedRes && fetchedRes.success) {
+            setUploadHistory(fetchedRes.data);
+          } else {
+            if (fetchedRes?.error) {
+               setToastMessage({ text: fetchedRes.error, type: 'error' });
+            }
+          }
         }
       } catch (err) {
         console.error("Upload failed:", err);
@@ -126,6 +159,11 @@ export function MaterialLibraryModal({
         className="bg-[#111111] border border-white/10 rounded-2xl w-[80vw] max-w-4xl h-[80vh] flex flex-col overflow-hidden shadow-2xl relative"
         onClick={(e) => e.stopPropagation()}
       >
+        {toastMessage && (
+          <div className={`absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg text-sm font-medium z-[100] transition-all shadow-lg ${toastMessage.type === 'error' ? 'bg-danger-red text-white' : 'bg-primary-green text-black'}`}>
+            {toastMessage.text}
+          </div>
+        )}
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
           <h2 className="text-xl font-bold text-white">{title}</h2>

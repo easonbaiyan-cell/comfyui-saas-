@@ -8,7 +8,14 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function saveUserUpload(accessToken: string, fileUrl: string, fileType: string) {
   try {
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+    if (!accessToken || typeof accessToken !== 'string') {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    const authResult = await supabase.auth.getUser(accessToken).catch(e => ({ data: { user: null }, error: e }));
+    const user = authResult?.data?.user;
+    const authError = authResult?.error;
+
     if (authError || !user) {
       console.error('Unauthorized request to saveUserUpload');
       return { success: false, error: 'Unauthorized' };
@@ -35,10 +42,16 @@ export async function saveUserUpload(accessToken: string, fileUrl: string, fileT
 
 export async function getUserUploads(accessToken: string, type: 'image' | 'video') {
   try {
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+    if (!accessToken || typeof accessToken !== 'string') {
+      return { success: false, data: [], error: '请先登录' };
+    }
+
+    const authResult = await supabase.auth.getUser(accessToken).catch(e => ({ data: { user: null }, error: e }));
+    const user = authResult?.data?.user;
+    const authError = authResult?.error;
+
     if (authError || !user) {
-      console.error('Unauthorized request to getUserUploads');
-      return [];
+      return { success: false, data: [], error: '请先登录' };
     }
     const userId = user.id;
 
@@ -50,25 +63,34 @@ export async function getUserUploads(accessToken: string, type: 'image' | 'video
 
     if (error) {
       console.error('Error fetching user uploads:', error);
-      return [];
+      return { success: false, data: [], error: '获取失败' };
     }
 
-    // Map to the format expected by MaterialLibraryModal
-    return data.map((record: any) => ({
-      name: record.file_url.split('/').pop(), // Extract filename from URL as a fallback if needed
+    if (!data) return { success: true, data: [] };
+
+    const mapped = data.map((record: any) => ({
+      name: record.file_url ? record.file_url.split('/').pop() : 'unknown',
       url: record.file_url,
       updated_at: record.created_at
     }));
+    return { success: true, data: mapped };
 
   } catch (error: any) {
     console.error('Failed to get user uploads:', error);
-    return [];
+    return { success: false, data: [], error: '获取失败' };
   }
 }
 
 export async function deleteUserUpload(accessToken: string, fileUrl: string) {
   try {
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+    if (!accessToken || typeof accessToken !== 'string') {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    const authResult = await supabase.auth.getUser(accessToken).catch(e => ({ data: { user: null }, error: e }));
+    const user = authResult?.data?.user;
+    const authError = authResult?.error;
+
     if (authError || !user) {
       return { success: false, error: 'Unauthorized' };
     }
