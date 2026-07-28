@@ -174,6 +174,10 @@ export function Header({ logoUrl }: { logoUrl?: string, navLinks?: NavLink[] }) 
 
           {/* Right: Navigation and Actions */}
           <div className="flex items-center gap-4 ml-auto">
+            <Link href="/batch-retouch" className="hidden sm:flex items-center bg-[#1a1a1a] hover:bg-[#2a2a2a] text-white px-4 py-2 rounded-full text-sm font-medium transition-colors border border-white/10 h-10">
+              批量修图
+            </Link>
+
             {/* 1. 常驻展示区：放在鉴权判断的外部，永远显示 */}
             <button
               onClick={() => setIsInviteOpen(true)}
