@@ -58,7 +58,7 @@ export default function BillingPage() {
 
   // Calculate summary stats
   const totalTasks = tasks.length;
-  const totalPoints = tasks.reduce((sum, task) => sum + (task.cost_points || 0), 0);
+  const totalPoints = tasks.reduce((sum, task) => sum + Number(task.cost_points || 0), 0);
 
   const handleCopyId = (id: string) => {
     navigator.clipboard.writeText(id).catch(console.error);
