@@ -39,7 +39,8 @@ export async function POST(req: Request) {
       );
     }
 
-    const { workflowId, formValues } = body;
+    const { formValues } = body;
+    const workflowId = body.workflowId || body.workflow_id;
 
     console.log('Received workflowId:', workflowId);
 
@@ -63,7 +64,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Workflow not found in local database.' }, { status: 404 });
     }
 
-    const cost = workflow?.cost_points !== undefined ? Number(workflow.cost_points) : 0;
+    const cost = Number(workflow?.cost_points) || 0;
 
     // Fetch profile points
     const { data: profile, error: profileError } = await supabase
@@ -86,9 +87,9 @@ export async function POST(req: Request) {
     const newPoints = currentPoints - cost;
 
     // 🌟 STRICT FIX: DEDUCT POINTS BEFORE SENDING TO GPU API
-    // 强制真实扣除积分 (UPDATE User Points)
+    // 强制真实扣除积分 (UPDATE User Points) - 使用 supabaseAdmin 绕过 RLS 静默拦截
     if (cost > 0) {
-      const { error: deductError } = await supabase
+      const { error: deductError } = await supabaseAdmin
         .from('profiles')
         .update({ points: newPoints })
         .eq('id', user.id);
@@ -145,7 +146,7 @@ export async function POST(req: Request) {
 
       // GPU 请求失败，触发回滚补偿机制 (Rollback points)
       if (cost > 0) {
-        const { error: rollbackError } = await supabase
+        const { error: rollbackError } = await supabaseAdmin
           .from('profiles')
           .update({ points: currentPoints })
           .eq('id', user.id);
@@ -167,7 +168,7 @@ export async function POST(req: Request) {
     const taskId = String(rhData.data.taskId);
 
     // 核心记账逻辑：立即向 video_tasks 写入数据库日志，记录真实扣费积分
-    const { data: dbTask, error: insertError } = await supabase
+    const { data: dbTask, error: insertError } = await supabaseAdmin
       .from('video_tasks')
       .insert({
         task_id: taskId,
