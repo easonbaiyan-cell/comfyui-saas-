@@ -171,7 +171,7 @@ export async function POST(req: Request) {
     const { data: dbTask, error: insertError } = await supabaseAdmin
       .from('video_tasks')
       .insert({
-        task_id: taskId,
+        input_data: { task_id: taskId },
         user_id: user.id,
         workflow_id: workflowId,
         status: 'processing',

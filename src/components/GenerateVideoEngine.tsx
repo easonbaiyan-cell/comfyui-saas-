@@ -158,6 +158,9 @@ export function GenerateVideoEngine() {
            if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
            localStorage.removeItem(`active_task_${workflowId}`);
            localStorage.removeItem(`task_start_${workflowId}`);
+           const activeDbTask = localStorage.getItem(`active_db_task_${workflowId}`);
+           localStorage.removeItem(`active_db_task_${workflowId}`);
+
            if (data.data && data.data.length > 0 && data.data[0].fileUrl) {
               const fileUrl = data.data[0].fileUrl;
               setGeneratedMediaUrl(fileUrl);
@@ -183,21 +186,41 @@ export function GenerateVideoEngine() {
               }
 
               // 3. 执行入库
-              const { error: insertError } = await supabase
+              if (activeDbTask) {
+                const { error: updateError } = await supabase
                   .from('video_tasks')
-                  .insert({
-                      user_id: finalUserId,   // 使用实时获取到的真实 ID
-                      workflow_id: workflowId,
+                  .update({
                       result_video_url: fileUrl,
-                      cost_points: 0
-                  });
+                      status: 'success'
+                  })
+                  .eq('id', activeDbTask);
 
-              if (insertError) {
-                  console.error("❌ 数据库写入彻底失败:", insertError);
-                  setToastMessage({ text: `云端保存失败: ${insertError.message}`, type: "error" });
+                if (updateError) {
+                    console.error("❌ 数据库写入彻底失败:", updateError);
+                    setToastMessage({ text: `云端保存失败: ${updateError.message}`, type: "error" });
+                } else {
+                    console.log("✅ 资产已成功写入 video_tasks 表！");
+                    setToastMessage({ text: "生成成功！已保存至我的创作", type: "success" });
+                }
               } else {
-                  console.log("✅ 资产已成功写入 video_tasks 表！");
-                  setToastMessage({ text: "生成成功！已保存至我的创作", type: "success" });
+                const calculatedCost = workflow?.cost_points !== undefined && workflow?.cost_points !== null ? Number(workflow.cost_points) : 10;
+                const { error: insertError } = await supabase
+                    .from('video_tasks')
+                    .insert({
+                        user_id: finalUserId,   // 使用实时获取到的真实 ID
+                        workflow_id: workflowId,
+                        result_video_url: fileUrl,
+                        status: 'success',
+                        cost_points: calculatedCost
+                    });
+
+                if (insertError) {
+                    console.error("❌ 数据库写入彻底失败:", insertError);
+                    setToastMessage({ text: `云端保存失败: ${insertError.message}`, type: "error" });
+                } else {
+                    console.log("✅ 资产已成功写入 video_tasks 表！");
+                    setToastMessage({ text: "生成成功！已保存至我的创作", type: "success" });
+                }
               }
               // ==== 核心入库逻辑结束 ====
 
@@ -212,6 +235,7 @@ export function GenerateVideoEngine() {
            if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
            localStorage.removeItem(`active_task_${workflowId}`);
            localStorage.removeItem(`task_start_${workflowId}`);
+           localStorage.removeItem(`active_db_task_${workflowId}`);
            const errorData = data.data?.failedReason || '生成失败';
            setToastMessage({ type: "error", text: extractErrorMessage(errorData) });
            setIsGenerating(false);
@@ -219,6 +243,7 @@ export function GenerateVideoEngine() {
            if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
            localStorage.removeItem(`active_task_${workflowId}`);
            localStorage.removeItem(`task_start_${workflowId}`);
+           localStorage.removeItem(`active_db_task_${workflowId}`);
            const errorData = data.msg || data.message || '未知状态异常';
            setToastMessage({ type: "error", text: extractErrorMessage(errorData) });
            setIsGenerating(false);
@@ -275,6 +300,7 @@ export function GenerateVideoEngine() {
     if (workflow?.id) {
        localStorage.removeItem(`active_task_${workflow.id}`);
        localStorage.removeItem(`task_start_${workflow.id}`);
+       localStorage.removeItem(`active_db_task_${workflow.id}`);
     }
     if (currentTaskId) {
       try {
@@ -373,6 +399,9 @@ export function GenerateVideoEngine() {
       // Store in local storage to prevent loss on refresh
       localStorage.setItem(`active_task_${workflow.id}`, data.taskId);
       localStorage.setItem(`task_start_${workflow.id}`, Date.now().toString());
+      if (data.dbTaskId) {
+        localStorage.setItem(`active_db_task_${workflow.id}`, data.dbTaskId);
+      }
 
       pollForResult(data.taskId, workflow.id);
 
