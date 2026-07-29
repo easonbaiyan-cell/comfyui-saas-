@@ -85,6 +85,20 @@ export async function POST(req: Request) {
 
     const newPoints = currentPoints - cost;
 
+    // 🌟 STRICT FIX: DEDUCT POINTS BEFORE SENDING TO GPU API
+    // 强制真实扣除积分 (UPDATE User Points)
+    if (cost > 0) {
+      const { error: deductError } = await supabase
+        .from('profiles')
+        .update({ points: newPoints })
+        .eq('id', user.id);
+
+      if (deductError) {
+        console.error('Failed to deduct points upfront:', deductError);
+        return NextResponse.json({ error: '系统异常，扣除积分失败，请求中止' }, { status: 500 });
+      }
+    }
+
     // Call RunningHub Submit API
     let nodeInfoList = [];
     if (body.rh_payload_template && body.rh_payload_template.nodeInfoList) {
@@ -129,6 +143,19 @@ export async function POST(req: Request) {
       console.error('【RunningHub API 校验失败/报错】请求 Payload:', JSON.stringify(payload, null, 2));
       console.error('【RunningHub API 错误响应】:', JSON.stringify(rhData, null, 2));
 
+      // GPU 请求失败，触发回滚补偿机制 (Rollback points)
+      if (cost > 0) {
+        const { error: rollbackError } = await supabase
+          .from('profiles')
+          .update({ points: currentPoints })
+          .eq('id', user.id);
+        if (rollbackError) {
+           console.error('CRITICAL: Failed to rollback points after RH failure:', rollbackError);
+        } else {
+           console.log('Successfully rolled back points due to RH API failure.');
+        }
+      }
+
       const errorMsg = rhData.msg || rhData.message || '第三方接口调用失败';
       return NextResponse.json({
         code: rhData.code || 400,
@@ -139,22 +166,28 @@ export async function POST(req: Request) {
 
     const taskId = String(rhData.data.taskId);
 
-    // Deduct points AFTER successful RH submission
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({ points: newPoints })
-      .eq('id', user.id);
+    // 核心记账逻辑：立即向 video_tasks 写入数据库日志，记录真实扣费积分
+    const { data: dbTask, error: insertError } = await supabase
+      .from('video_tasks')
+      .insert({
+        task_id: taskId,
+        user_id: user.id,
+        workflow_id: workflowId,
+        status: 'processing',
+        cost_points: cost
+      })
+      .select('id')
+      .single();
 
-    if (updateError) {
-      console.error('Update points error:', updateError);
-      // NOTE: Task was dispatched, but points failed to deduct.
-      // In production, we'd want a robust fallback/queue for this.
+    if (insertError) {
+      console.error('Failed to create task log:', insertError);
     }
 
     return NextResponse.json({
       success: true,
       taskId: taskId,
-      newPoints: newPoints
+      newPoints: newPoints,
+      dbTaskId: dbTask?.id || null
     });
 
   } catch (error: unknown) {
